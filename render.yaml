@@ -2,6 +2,7 @@ services:
   - type: web
     name: hotel-management-system
     env: python
+    runtime: python-3.11.0
     plan: free
     
     # Build command
