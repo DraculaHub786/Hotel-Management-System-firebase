@@ -9,7 +9,7 @@ services:
     buildCommand: pip install -r requirements.txt
     
     # Start command
-    startCommand: python app.py
+    startCommand: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python python app.py
     
     # Environment variables
     envVars:

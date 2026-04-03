@@ -1,9 +1,13 @@
-﻿# app.py - Main Flask Application  Firebase connection ke saath!
+# app.py - Main Flask Application  Firebase connection ke saath!
+import os
+
+# CRITICAL: Must be set before importing any dependency that may touch protobuf
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from chatbot import get_bot_response, chatbot_instance
-import os
 import secrets
 from functools import wraps
 import re
@@ -13,9 +17,6 @@ import json
 from dotenv import load_dotenv
 import bcrypt
 import logging
-
-# CRITICAL: Force protobuf to use pure Python implementation (Python 3.14 compatibility)
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 # Load environment variables
 load_dotenv()

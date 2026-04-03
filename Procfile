@@ -1,1 +1,1 @@
-web: python app.py
+web: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python python app.py
