@@ -14,6 +14,9 @@ from dotenv import load_dotenv
 import bcrypt
 import logging
 
+# CRITICAL: Force protobuf to use pure Python implementation (Python 3.14 compatibility)
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+
 # Load environment variables
 load_dotenv()
 

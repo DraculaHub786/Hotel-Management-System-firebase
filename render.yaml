@@ -13,6 +13,8 @@ services:
     
     # Environment variables
     envVars:
+      - key: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+        value: python
       - key: FLASK_ENV
         value: production
       - key: HOST
