@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+
+{% block title %}Newsletter Subscribers - Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Admin Newsletter Styles */
+    .admin-newsletter-container {
+        padding-top: 100px;
+        min-height: 100vh;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .admin-page-header {
+        background: var(--glass-bg);
+        border-radius: 15px;
+        padding: 40px;
+        margin-bottom: 40px;
+        box-shadow: var(--glass-shadow);
+        border: var(--glass-border);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .admin-page-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 30% 50%, rgba(212, 175, 55, 0.1), transparent 50%);
+        z-index: 0;
+    }
+    
+    .admin-page-header-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .admin-page-header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 10px;
+        font-family: 'Cinzel', serif;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .admin-page-header h1 i {
+        font-size: 36px;
+    }
+    
+    .admin-page-header p {
+        color: var(--text-secondary);
+        font-size: 15px;
+        margin-left: 51px;
+    }
+    
+    /* Statistics Cards - Complete Styles */
+    .admin-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        margin-bottom: 40px;
+        
+    }
+
+    .stat-card {
+        background: var(--glass-bg);
+        border-radius: 10px;
+        padding: 30px;
+        box-shadow: var(--glass-shadow);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border: var(--glass-border);
+    }
+
+    .stat-card:hover {
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        border-color: var(--primary-color);
+        transform: translateY(-5px);
+    }
+
+    .stat-icon {
+        height: 65px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        margin-bottom: 20px;
+        width: 65px;
+    }
+
+    .stat-icon.primary {
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), transparent);
+    }
+
+    .stat-icon.success {
+        color: var(--success-color);
+        border: 1px solid var(--success-color);
+        background: linear-gradient(135deg, rgba(0, 134, 112, 0.2), transparent);
+    }
+
+    .stat-icon.warning {
+        color: var(--warning-color);
+        border: 1px solid var(--warning-color);
+        background: linear-gradient(135deg, rgba(255, 152, 0, 0.2), transparent);
+    }
+
+    .stat-icon.info {
+        color: var(--info-color);
+        border: 1px solid var(--info-color);
+        background: linear-gradient(135deg, rgba(33, 150, 243, 0.2), transparent);
+    }
+
+    .stat-value {
+        font-size: 40px;
+        font-weight: 800;
+        color: var(--text-bright);
+        margin-bottom: 8px;
+        font-family: 'Cinzel', serif;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    
+    .subscriber-table-container {
+        background: var(--glass-bg);
+        border-radius: 15px;
+        padding: 35px;
+        box-shadow: var(--glass-shadow);
+        border: var(--glass-border);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+    }
+    
+    .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid rgba(212, 175, 55, 0.2);
+    }
+    
+    .table-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary-color);
+        font-family: 'Cinzel', serif;
+        margin: 0;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+    }
+    
+    .subscriber-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .subscriber-table thead {
+        background: rgba(212, 175, 55, 0.1);
+    }
+    
+    .subscriber-table th {
+        padding: 18px 15px;
+        text-align: left;
+        color: var(--primary-color);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 1.5px;
+        border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+    }
+    
+    .subscriber-table td {
+        padding: 18px 15px;
+        color: var(--text-primary);
+        border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        font-size: 14px;
+    }
+    
+    .subscriber-table tbody tr {
+        transition: all 0.3s ease;
+    }
+    
+    .subscriber-table tbody tr:hover {
+        background: rgba(212, 175, 55, 0.05);
+        transform: translateX(3px);
+    }
+    
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 15px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: inline-block;
+    }
+    
+    .status-active {
+        background: rgba(0, 134, 112, 0.15);
+        color: var(--success-color);
+        border: 1px solid var(--success-color);
+    }
+    
+    .status-unsubscribed {
+        background: rgba(199, 0, 57, 0.15);
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 25px;
+        opacity: 0.4;
+        color: var(--primary-color);
+    }
+    
+    .empty-state h3 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+    }
+    
+    .empty-state p {
+        font-size: 15px;
+    }
+    
+    .action-buttons {
+        margin-top: 35px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .admin-newsletter-container {
+            padding-top: 80px;
+        }
+        
+        .admin-page-header {
+            padding: 25px;
+        }
+        
+        .admin-page-header h1 {
+            font-size: 24px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .admin-page-header p {
+            margin-left: 0;
+        }
+        
+        .table-wrapper {
+            overflow-x: scroll;
+        }
+        
+        .subscriber-table {
+            min-width: 600px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .action-buttons button,
+        .action-buttons a {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-newsletter-container">
+    <div class="admin-page-header">
+        <div class="admin-page-header-content">
+            <h1>
+                <i class="fas fa-envelope-open-text"></i>
+                Newsletter Subscribers
+            </h1>
+            <p>Manage and view all newsletter subscriptions</p>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="admin-stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ stats.total }}</div>
+            <div class="stat-label">TOTAL SUBSCRIBERS</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ stats.active }}</div>
+            <div class="stat-label">ACTIVE</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="fas fa-user-slash"></i>
+            </div>
+            <div class="stat-value">{{ stats.unsubscribed }}</div>
+            <div class="stat-label">UNSUBSCRIBED</div>
+        </div>
+    </div>
+    
+    <!-- Subscriber List -->
+    <div class="subscriber-table-container">
+        <div class="table-header">
+            <h2>Subscriber List</h2>
+            <span style="color: var(--text-secondary); font-size: 14px;">
+                Total: {{ subscribers|length }} subscribers
+            </span>
+        </div>
+        
+        {% if subscribers and subscribers|length > 0 %}
+        <div class="table-wrapper">
+            <table class="subscriber-table">
+                <thead>
+                    <tr>
+                        <th>Email</th>
+                        <th>Subscribed Date</th>
+                        <th>Status</th>
+                        <th>Source</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subscriber in subscribers %}
+                    <tr>
+                        <td><strong>{{ subscriber.email }}</strong></td>
+                        <td>{{ subscriber.subscribed_at }}</td>
+                        <td>
+                            {% if subscriber.status == 'active' %}
+                            <span class="status-badge status-active">
+                                <i class="fas fa-check"></i> ACTIVE
+                            </span>
+                            {% else %}
+                            <span class="status-badge status-unsubscribed">
+                                <i class="fas fa-times"></i> UNSUBSCRIBED
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ subscriber.source }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h3>No Newsletter Subscribers Yet</h3>
+            <p>Subscribers will appear here once someone signs up for the newsletter</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <button onclick="exportSubscribers()" class="btn btn-primary">
+            <i class="fas fa-download"></i> EXPORT AS CSV
+        </button>
+        <a href="/dashboard" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> BACK TO DASHBOARD
+        </a>
+    </div>
+</div>
+
+<script>
+async function exportSubscribers() {
+    try {
+        NotificationSystem.info('Preparing export...', 'Please Wait');
+        
+        const response = await fetch('/api/newsletter/export');
+        const data = await response.json();
+        
+        if (!data.success || !data.subscribers || data.subscribers.length === 0) {
+            NotificationSystem.warning('No subscribers to export', 'No Data');
+            return;
+        }
+        
+        const subscribers = data.subscribers;
+        
+        // Create CSV with BOM for Excel
+        const BOM = '\uFEFF';
+        let csv = BOM + 'Email,Subscribed Date,Status,Source\n';
+        
+        subscribers.forEach(sub => {
+            csv += `"${sub.email}","${sub.subscribed_at}","${sub.status}","${sub.source}"\n`;
+        });
+        
+        // Download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        const fileName = `newsletter_subscribers_${new Date().toISOString().split('T')[0]}.csv`;
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', fileName);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        window.URL.revokeObjectURL(url);
+        
+        NotificationSystem.success(`Exported ${subscribers.length} subscribers`, 'Export Complete ✓');
+        
+    } catch (error) {
+        console.error('Export error:', error);
+        NotificationSystem.error('Error exporting subscribers. Please try again.', 'Export Error');
+    }
+}
+</script>
+{% endblock %}

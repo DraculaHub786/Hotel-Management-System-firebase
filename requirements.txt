@@ -1,0 +1,9 @@
+Flask==3.0.3
+Flask-CORS==4.0.1
+firebase-admin==6.5.0
+google-cloud-firestore==2.16.1
+python-dotenv==1.0.1
+Werkzeug==3.0.3
+requests==2.31.0
+bcrypt==4.1.2
+google-auth==2.27.0

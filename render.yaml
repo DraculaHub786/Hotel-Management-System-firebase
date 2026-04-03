@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: hotel-management-system
+    env: python
+    plan: free
+    
+    # Build command
+    buildCommand: pip install -r requirements.txt
+    
+    # Start command
+    startCommand: python app.py
+    
+    # Environment variables
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 5000
+      - key: SECRET_KEY
+        scope: secret
+      - key: FIREBASE_CREDENTIALS_PATH
+        value: firebase-credentials.json
+    
+    # Health check
+    healthCheckPath: /api/health
+
+# Note: Set environment variables securely via Render Dashboard
+# - Add FIREBASE_CREDENTIALS_PATH and SECRET_KEY as secrets
+# - Copy firebase-credentials.json to the instance

@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Nur-e-Haya{% endblock %}
+
+{% block extra_css %}
+<style>
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-container::before {
+    content: '';
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: linear-gradient(var(--secondary-color), var(--primary-color));
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+    animation: float 15s infinite ease-in-out reverse;
+    z-index: -1;
+    top: 20%;
+    right: 20%;
+}
+
+.auth-container::after {
+    content: '';
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    background: linear-gradient(var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+    animation: float 18s infinite ease-in-out;
+    z-index: -1;
+    bottom: 20%;
+    left: 20%;
+}
+
+@keyframes float {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+    }
+    50% {
+        transform: translate(50px, 30px) rotate(180deg);
+    }
+    100% {
+        transform: translate(0, 0) rotate(360deg);
+    }
+}
+
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--primary-glow);
+    animation: twinkle 4s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+    0%, 100% {
+        opacity: 0.2;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.2);
+    }
+}
+
+.arabic-pattern {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='%23d4af37' fill-opacity='0.03'%3E%3Cpath d='M0 0h40v40H0V0zm40 40h40v40H40V40zm0-40h2l-2 2V0zm0 4l4-4h2l-6 6V4zm0 4l8-8h2L40 10V8zm0 4L52 0h2L40 14v-2zm0 4L56 0h2L40 18v-2zm0 4L60 0h2L40 22v-2zm0 4L64 0h2L40 26v-2zm0 4L68 0h2L40 30v-2zm0 4L72 0h2L40 34v-2zm0 4L76 0h2L40 38v-2zm0 4L80 0v2L42 40h-2zm4 0L80 4v2L46 40h-2zm4 0L80 8v2L50 40h-2zm4 0l28-28v2L54 40h-2zm4 0l24-24v2L58 40h-2zm4 0l20-20v2L62 40h-2zm4 0l16-16v2L66 40h-2zm4 0l12-12v2L70 40h-2zm4 0l8-8v2l-6 6h-2zm4 0l4-4v2l-2 2h-2z'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 450px;
+    background: rgba(18, 18, 23, 0.85);
+    border-radius: 20px;
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 30px rgba(212, 175, 55, 0.1);
+    padding: 50px;
+    backdrop-filter: blur(30px);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transition: all 0.4s ease;
+}
+
+.auth-card:hover {
+    border-color: rgba(212, 175, 55, 0.25);
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.6), 0 0 40px rgba(212, 175, 55, 0.15);
+}
+
+.auth-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+    opacity: 0.7;
+    z-index: 2;
+}
+
+.auth-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d4af37' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+    z-index: -1;
+    opacity: 0.1;
+}
+
+.corner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.corner svg {
+    width: 100%;
+    height: 100%;
+    stroke-dasharray: 12;
+    animation: dashOffset 20s linear infinite;
+}
+
+@keyframes dashOffset {
+    from {
+        stroke-dashoffset: 0;
+    }
+    to {
+        stroke-dashoffset: 100;
+    }
+}
+
+.corner-top-left {
+    top: 15px;
+    left: 15px;
+}
+
+.corner-top-right {
+    top: 15px;
+    right: 15px;
+    transform: rotate(90deg);
+}
+
+.corner-bottom-left {
+    bottom: 15px;
+    left: 15px;
+    transform: rotate(270deg);
+}
+
+.corner-bottom-right {
+    bottom: 15px;
+    right: 15px;
+    transform: rotate(180deg);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.auth-title {
+    font-size: 38px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    position: relative;
+    display: inline-block;
+    background: linear-gradient(45deg, var(--primary-color), #fff8e0, var(--primary-color));
+    background-size: 200% auto;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    text-shadow: 0 2px 15px var(--primary-glow);
+    font-family: 'Cinzel', serif;
+    animation: shine 6s linear infinite;
+}
+
+@keyframes shine {
+    to {
+        background-position: 200% center;
+    }
+}
+
+.auth-title::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -8px;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(to right, transparent, var(--primary-color), transparent);
+    border-radius: 3px;
+}
+
+.auth-subtitle {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin-top: 18px;
+    font-family: 'Raleway', sans-serif;
+    letter-spacing: 0.5px;
+    opacity: 0.85;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 15px;
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+.auth-footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    position: relative;
+    padding: 0 3px;
+}
+
+.auth-footer a:hover {
+    color: #fff;
+    text-shadow: 0 0 10px var(--primary-glow);
+}
+
+.auth-footer a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background: var(--primary-color);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease-out;
+}
+
+.auth-footer a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+.form-group {
+    margin-bottom: 28px;
+    position: relative;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.form-control {
+    width: 100%;
+    padding: 16px 20px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 8px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+    font-family: 'Raleway', sans-serif;
+    letter-spacing: 0.5px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2), 0 5px 15px rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.btn-primary {
+    padding: 16px 28px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 1.2px;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: var(--dark-bg);
+    box-shadow: 0 5px 20px rgba(212, 175, 55, 0.3), 0 0 0 1px rgba(212, 175, 55, 0.4);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    font-family: 'Cinzel', serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transform: translateX(-100%);
+    transition: all 0.6s ease;
+}
+
+.btn-primary:hover::after {
+    transform: translateX(100%);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 7px 25px rgba(212, 175, 55, 0.4), 0 0 0 1px rgba(212, 175, 55, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
+    box-shadow: 0 3px 15px rgba(212, 175, 55, 0.3), 0 0 0 1px rgba(212, 175, 55, 0.4);
+}
+
+.alert {
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+    border-left: 3px solid var(--danger-color);
+    padding: 16px 20px;
+    box-shadow: 0 0 15px rgba(199, 0, 57, 0.2);
+    border-radius: 6px;
+    margin-bottom: 25px;
+    color: #f8d7da;
+    font-size: 14px;
+}
+
+.alert-success {
+    border-left: 3px solid var(--success-color);
+    box-shadow: 0 0 15px rgba(40, 167, 69, 0.2);
+    color: #d4edda;
+}
+
+@media (max-width: 768px) {
+    .auth-card {
+        padding: 40px 25px;
+    }
+
+    .auth-title {
+        font-size: 34px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 35px 20px;
+    }
+
+    .auth-title {
+        font-size: 30px;
+    }
+
+    .form-control {
+        padding: 14px 16px;
+    }
+
+    .btn-primary {
+        padding: 14px 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="arabic-pattern"></div>
+
+<div class="particles">
+</div>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="corner corner-top-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+                <path d="M1 1V16M1 1H16" stroke="rgba(212, 175, 55, 0.7)" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="corner corner-top-right">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+                <path d="M1 1V16M1 1H16" stroke="rgba(212, 175, 55, 0.7)" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="corner corner-bottom-left">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+                <path d="M1 1V16M1 1H16" stroke="rgba(212, 175, 55, 0.7)" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="corner corner-bottom-right">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+                <path d="M1 1V16M1 1H16" stroke="rgba(212, 175, 55, 0.7)" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <div class="auth-header">
+            <h1 class="auth-title">CREATE NUR-E-HAYA ID</h1>
+            <p class="auth-subtitle">Register for accommodation access</p>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <form id="registerForm">
+            <div class="form-group">
+                <label class="form-label" for="name">FULL NAME</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="Enter full name" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">EMAIL ADDRESS</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="google@gmail.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">PASSWORD</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required minlength="6">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="confirmPassword">CONFIRM PASSWORD</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                CREATE ACCOUNT
+            </button>
+        </form>
+
+        <div class="auth-footer">
+            Already registered? <a href="/login">ACCESS PORTAL</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function createParticles() {
+    const particlesContainer = document.querySelector('.particles');
+    const particleCount = 50;
+
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        const size = Math.random() * 2 + 1;
+        const left = Math.random() * 100;
+        const top = Math.random() * 100;
+        const delay = Math.random() * 4;
+
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${left}%`;
+        particle.style.top = `${top}%`;
+        particle.style.animationDelay = `${delay}s`;
+
+        particlesContainer.appendChild(particle);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', createParticles);
+
+const registerForm = document.getElementById('registerForm');
+const alertContainer = document.getElementById('alertContainer');
+
+function showAlert(message, type = 'error') {
+    alertContainer.innerHTML = `
+        <div class="alert alert-${type}">
+            ${message}
+        </div>
+    `;
+    setTimeout(() => {
+        alertContainer.innerHTML = '';
+    }, 5000);
+}
+
+registerForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (password !== confirmPassword) {
+        showAlert('Passwords do not match');
+        return;
+    }
+
+    const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        password: password
+    };
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include', 
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+
+            window.location.href = data.redirect || '/dashboard';
+        } else {
+            showAlert(data.message);
+        }
+    } catch (error) {
+        showAlert('An error occurred. Please try again.');
+    }
+});
+</script>
+
+{% endblock %}
