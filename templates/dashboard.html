@@ -3063,6 +3063,12 @@ textarea.form-control {
     border: 1px solid var(--success-color);
 }
 
+.status-completed {
+    background: rgba(33, 150, 243, 0.1);
+    color: #2196F3;
+    border: 1px solid #2196F3;
+}
+
 .status-cancelled {
     background: rgba(199, 0, 57, 0.1);
     color: var(--danger-color);
@@ -3744,9 +3750,6 @@ button.chat-bubble .chat-badge {
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-    
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="/static/css/main.css">
     
     <!-- Structured Data for SEO -->
     <script type="application/ld+json">
@@ -5669,11 +5672,10 @@ function displayBookings(filter) {
             b.status === 'confirmed' && new Date(b.check_in) > today
         );
     } else if (filter === 'completed') {
-        const today = new Date();
-        filteredBookings = allBookings.filter(b => 
-            b.status === 'confirmed' && new Date(b.check_out) < today
-        );
+        // Filter for completed bookings (automatically marked when checkout passes)
+        filteredBookings = allBookings.filter(b => b.status === 'completed');
     } else if (filter !== 'all') {
+        // Filter by exact status (confirmed, cancelled, completed)
         filteredBookings = allBookings.filter(b => b.status === filter);
     }
     
@@ -5694,8 +5696,18 @@ function displayBookings(filter) {
 function createBookingCard(booking) {
     const checkIn = new Date(booking.check_in).toLocaleDateString('en-IN');
     const checkOut = new Date(booking.check_out).toLocaleDateString('en-IN');
-    const statusClass = booking.status === 'confirmed' ? 'status-confirmed' : 'status-cancelled';
-    const statusText = booking.status === 'confirmed' ? 'ACTIVE' : 'CANCELLED';
+    
+    let statusClass, statusText;
+    if (booking.status === 'cancelled') {
+        statusClass = 'status-cancelled';
+        statusText = 'CANCELLED';
+    } else if (booking.status === 'completed') {
+        statusClass = 'status-completed';
+        statusText = 'COMPLETED';
+    } else {
+        statusClass = 'status-confirmed';
+        statusText = 'ACTIVE';
+    }
     
     const roomInfo = {
         '101': { type: 'Single', image: '/static/images/single-room.jpg' },

@@ -147,6 +147,49 @@ def is_valid_password(password: str) -> bool:
     has_digit = any(c.isdigit() for c in password)
     return has_upper and has_lower and has_digit
 
+def update_expired_bookings(email: str = None):
+    """Update status of expired bookings to 'completed'"""
+    try:
+        now = datetime.now().isoformat()
+        
+        # Get all bookings that need status update
+        if email:
+            bookings = bookings_collection.where('user_email', '==', email).stream()
+        else:
+            bookings = bookings_collection.stream()
+        
+        updated_count = 0
+        for booking in bookings:
+            booking_data = booking.to_dict()
+            
+            # Only update if status is 'confirmed' (not cancelled or already completed)
+            if booking_data.get('status') == 'confirmed':
+                check_out_str = booking_data.get('check_out', '')
+                
+                try:
+                    check_out_date = datetime.fromisoformat(check_out_str.replace('Z', '+00:00'))
+                    current_date = datetime.now(check_out_date.tzinfo) if check_out_date.tzinfo else datetime.now()
+                    
+                    # If checkout date has passed, mark as completed
+                    if check_out_date < current_date:
+                        booking.reference.update({
+                            'status': 'completed',
+                            'completed_at': now,
+                            'updated_at': now
+                        })
+                        updated_count += 1
+                        logger.info(f"Updated booking {booking.id} to completed")
+                except Exception as e:
+                    logger.warning(f"Error parsing date for booking {booking.id}: {str(e)}")
+        
+        if updated_count > 0:
+            logger.info(f"✅ Updated {updated_count} bookings to completed status")
+        
+        return updated_count
+    except Exception as e:
+        logger.error(f"Error updating expired bookings: {str(e)}")
+        return 0
+
 def log_activity(user_email, action, details=""):
     log_entry = {
         "timestamp": datetime.now().isoformat(),
@@ -469,18 +512,24 @@ def process_payment():
 @login_required
 def handle_bookings():
     if request.method == 'GET':
-        
-        bookings = bookings_collection.where('user_email', '==', session['user_email']).stream()
-        bookings_list = [{"id": booking.id, **booking.to_dict()} for booking in bookings]
-        
-        
-        bookings_list.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-        
-        return jsonify(bookings_list)
+        try:
+            # Update expired bookings first
+            update_expired_bookings(session['user_email'])
+            
+            bookings = bookings_collection.where('user_email', '==', session['user_email']).stream()
+            bookings_list = [{"id": booking.id, **booking.to_dict()} for booking in bookings]
+            
+            # Sort by created_at descending
+            bookings_list.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+            
+            logger.info(f"✅ Fetched {len(bookings_list)} bookings for {session['user_email']}")
+            return jsonify(bookings_list)
+        except Exception as e:
+            logger.error(f"Get bookings error: {str(e)}")
+            return jsonify({"error": str(e)}), 500
     
     elif request.method == 'POST':
         data = request.json
-        
         
         required_fields = ['room_id', 'room_number', 'check_in', 'check_out', 'guests', 'total_price']
         for field in required_fields:
@@ -541,56 +590,82 @@ def handle_bookings():
 @app.route('/api/bookings/<booking_id>/cancel', methods=['POST'])
 @login_required
 def cancel_booking(booking_id):
-    booking_ref = bookings_collection.document(booking_id)
-    booking = booking_ref.get()
-    
-    if not booking.exists:
-        return jsonify({"success": False, "message": "Booking not found"}), 404
-    
-    booking_data = booking.to_dict()
-    
-    if booking_data['user_email'] != session['user_email']:
-        return jsonify({"success": False, "message": "Unauthorized"}), 403
-    
-    
-    booking_ref.update({
-        "status": "cancelled",
-        "cancelled_at": datetime.now().isoformat()
-    })
-    
-    
-    if booking_data.get('transaction_id'):
-        try:
-            transaction_ref = transactions_collection.document(booking_data['transaction_id'])
-            transaction_ref.update({
-                "payment_status": "refunded",
-                "updated_at": datetime.now().isoformat()
-            })
-            print(f"✅ Transaction {booking_data['transaction_id']} marked as refunded")
-        except Exception as e:
-            print(f"⚠️ Could not update transaction: {str(e)}")
-    
-    log_activity(session['user_email'], "Booking cancelled", f"Booking ID: {booking_id}")
-    
-    return jsonify({"success": True})
+    try:
+        booking_ref = bookings_collection.document(booking_id)
+        booking = booking_ref.get()
+        
+        if not booking.exists:
+            return jsonify({"success": False, "message": "Booking not found"}), 404
+        
+        booking_data = booking.to_dict()
+        
+        if booking_data['user_email'] != session['user_email']:
+            return jsonify({"success": False, "message": "Unauthorized"}), 403
+        
+        booking_ref.update({
+            "status": "cancelled",
+            "cancelled_at": datetime.now().isoformat()
+        })
+        
+        if booking_data.get('transaction_id'):
+            try:
+                transaction_ref = transactions_collection.document(booking_data['transaction_id'])
+                transaction_ref.update({
+                    "payment_status": "refunded",
+                    "updated_at": datetime.now().isoformat()
+                })
+                logger.info(f"✅ Transaction {booking_data['transaction_id']} marked as refunded")
+            except Exception as e:
+                logger.warning(f"Could not update transaction: {str(e)}")
+        
+        log_activity(session['user_email'], "Booking cancelled", f"Booking ID: {booking_id}")
+        logger.info(f"✅ Booking {booking_id} cancelled")
+        
+        return jsonify({"success": True})
+    except Exception as e:
+        logger.error(f"Cancel booking error: {str(e)}")
+        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/api/dashboard-stats', methods=['GET'])
 @login_required
 def get_dashboard_stats():
-    bookings = bookings_collection.where('user_email', '==', session['user_email']).stream()
-    user_bookings = [{"id": booking.id, **booking.to_dict()} for booking in bookings]
-    
-    
-    user_bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-    
-    stats = {
-        "total_bookings": len(user_bookings),
-        "active_bookings": len([b for b in user_bookings if b['status'] == 'confirmed']),
-        "total_spent": sum(b['total_price'] for b in user_bookings if b['status'] == 'confirmed'),
-        "recent_bookings": user_bookings[:5]
-    }
-    
-    return jsonify(stats)
+    try:
+        # Update expired bookings first
+        update_expired_bookings(session['user_email'])
+        
+        bookings = bookings_collection.where('user_email', '==', session['user_email']).stream()
+        user_bookings = [{"id": booking.id, **booking.to_dict()} for booking in bookings]
+        
+        # Sort by created_at descending
+        user_bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        
+        # Calculate active bookings (confirmed status AND checkout date in future)
+        now = datetime.now()
+        active_count = 0
+        
+        for booking in user_bookings:
+            if booking.get('status') == 'confirmed':
+                try:
+                    check_out_str = booking.get('check_out', '')
+                    check_out_date = datetime.fromisoformat(check_out_str.replace('Z', '+00:00'))
+                    current_date = datetime.now(check_out_date.tzinfo) if check_out_date.tzinfo else now
+                    
+                    if check_out_date > current_date:
+                        active_count += 1
+                except Exception as e:
+                    logger.warning(f"Error parsing checkout date: {str(e)}")
+        
+        stats = {
+            "total_bookings": len(user_bookings),
+            "active_bookings": active_count,  # Only count future bookings
+            "total_spent": sum(b['total_price'] for b in user_bookings if b['status'] == 'confirmed'),
+            "recent_bookings": user_bookings[:5]
+        }
+        
+        return jsonify(stats)
+    except Exception as e:
+        logger.error(f"Dashboard stats error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 
