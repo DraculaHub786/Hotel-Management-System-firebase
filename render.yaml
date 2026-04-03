@@ -13,6 +13,8 @@ services:
     
     # Environment variables
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.11
       - key: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
         value: python
       - key: FLASK_ENV
