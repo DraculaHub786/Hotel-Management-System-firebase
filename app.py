@@ -14,6 +14,7 @@ import re
 import time
 import random
 import json
+import base64
 from dotenv import load_dotenv
 import bcrypt
 import logging
@@ -50,14 +51,28 @@ app.config.update(
 
 CORS(app)
 
-# Load Firebase credentials from environment variable
+# Load Firebase credentials from either file path or environment content
 firebase_creds_path = os.getenv('FIREBASE_CREDENTIALS_PATH', 'firebase-credentials.json')
-if not os.path.exists(firebase_creds_path):
-    logger.error(f"Firebase credentials file not found: {firebase_creds_path}")
-    raise FileNotFoundError(f"Firebase credentials file not found at {firebase_creds_path}")
+firebase_creds_json = os.getenv('FIREBASE_CREDENTIALS_JSON')
+firebase_creds_base64 = os.getenv('FIREBASE_CREDENTIALS_BASE64')
 
 try:
-    cred = credentials.Certificate(firebase_creds_path)
+    if os.path.exists(firebase_creds_path):
+        cred = credentials.Certificate(firebase_creds_path)
+    elif firebase_creds_json:
+        cred = credentials.Certificate(json.loads(firebase_creds_json))
+    elif firebase_creds_base64:
+        decoded_json = base64.b64decode(firebase_creds_base64).decode('utf-8')
+        cred = credentials.Certificate(json.loads(decoded_json))
+    else:
+        logger.error(
+            "Firebase credentials not found. Set FIREBASE_CREDENTIALS_PATH to a valid file "
+            "or provide FIREBASE_CREDENTIALS_JSON / FIREBASE_CREDENTIALS_BASE64."
+        )
+        raise FileNotFoundError(
+            f"Firebase credentials file not found at {firebase_creds_path}"
+        )
+
     firebase_admin.initialize_app(cred)
     db = firestore.client()
     logger.info("✅ Firebase initialized successfully")
