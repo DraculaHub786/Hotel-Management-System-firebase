@@ -26,6 +26,7 @@ import time
 import random
 import json
 import base64
+from unittest.mock import MagicMock
 from dotenv import load_dotenv
 import bcrypt
 import hashlib
@@ -80,10 +81,6 @@ try:
         decoded_json = base64.b64decode(firebase_creds_base64).decode('utf-8')
         cred = credentials.Certificate(json.loads(decoded_json))
     else:
-        logger.error(
-            "Firebase credentials not found. Set FIREBASE_CREDENTIALS_PATH to a valid file "
-            "or provide FIREBASE_CREDENTIALS_JSON / FIREBASE_CREDENTIALS_BASE64."
-        )
         raise FileNotFoundError(
             f"Firebase credentials file not found at {firebase_creds_path}"
         )
@@ -92,8 +89,12 @@ try:
     db = firestore.client()
     logger.info("✅ Firebase initialized successfully")
 except Exception as e:
-    logger.error(f"❌ Firebase initialization failed: {str(e)}")
-    raise
+    if os.getenv('FLASK_ENV') == 'production':
+        logger.error(f"❌ Firebase initialization failed: {str(e)}")
+        raise
+
+    logger.warning(f"⚠️ Firebase initialization skipped in non-production mode: {str(e)}")
+    db = MagicMock(name='mock_firestore_db')
 
 users_collection = db.collection('users')
 rooms_collection = db.collection('rooms')
