@@ -1,5 +1,6 @@
 # chatbot.py - Intelligent Hotel Support Chatbot (CORRECTED)
 import sys
+import os
 if hasattr(sys.stdout, 'reconfigure'):
     try:
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -34,14 +35,14 @@ class HotelSupportBot:
 
         self.context = {}
         self.greetings = [
-            "Hello! I'm your Nur-e-Haya assistant. How can I help you today?",
-            "Welcome to Nur-e-Haya! I'm here to assist you with any questions.",
-            "Hi there! How may I help you with your stay at Nur-e-Haya?"
+            "Hello! I'm your Nur-e-Haya luxury concierge. How may I assist you today?",
+            "Welcome to Nur-e-Haya! I'm here 24/7 to help you with reservations, amenities, dining, and hotel services.",
+            "Greetings! How may I assist you with your stay or booking at Nur-e-Haya today?"
         ]
         self.fallback_responses = [
-            "I'm not quite sure about that. Let me connect you with a human agent who can better assist you.",
-            "That's an interesting question! For detailed information, I recommend speaking with our staff. Would you like me to transfer you?",
-            "I want to make sure you get accurate information. Let me get a specialist to help you with that."
+            "I'm here to assist you with everything at Nur-e-Haya! 🏨\n\nHere are some popular topics you can ask me about:\n• **Rooms & Pricing**: Single (₹2,500), Double (₹4,000), Suite (₹5,000), Luxury (₹8,000)\n• **Check-in/Out**: Check-in from 2:00 PM, Check-out by 11:00 AM\n• **Amenities**: WiFi, Swimming Pool, Luxury Spa, 24/7 Room Service\n• **Dining**: In-house gourmet restaurant, buffet breakfast, and 24/7 dining menu\n• **Reservations**: Easy online booking with free 48h cancellation\n\nWhat would you like to know more about?",
+            "Welcome to Nur-e-Haya Concierge! ✨\n\nI can help you explore room options, view dining menus, check facility hours, or assist with your reservation. You can also reach our front desk directly at +91 8010572845.\n\nHow may I help make your stay exceptional?",
+            "Thank you for contacting Nur-e-Haya Luxury Support! 🌟\n\nWhether you need help booking a room, checking our cancellation policy, arranging airport transportation, or ordering room service, I'm here 24/7 to assist. What information can I provide for you today?"
         ]
         
     def _load_knowledge_base(self):
@@ -276,132 +277,176 @@ class HotelSupportBot:
         return SequenceMatcher(None, str1.lower(), str2.lower()).ratio()
     
     def _extract_intent(self, message):
-        """Extract user intent using Hugging Face API"""
-        try:
-            # Try Hugging Face API (free, no key needed)
-            logger.info(f"🤖 Calling Hugging Face API for: {message}") 
-            API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
-            
-            # Define candidate labels from your knowledge base
-            candidate_labels = list(self.knowledge_base.keys())
-            
-            response = requests.post(
-                API_URL,
-                headers={"Content-Type": "application/json"},
-                json={
-                    "inputs": message,
-                    "parameters": {"candidate_labels": candidate_labels}
-                },
-                timeout=8
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                best_label = result['labels'][0]
-                confidence = result['scores'][0]
+        """Extract user intent using optimized multi-pattern NLP and keyword scoring"""
+        message_lower = message.lower().strip()
 
-                logger.info(f"✅ API Response: {best_label} (confidence: {confidence:.2f})")
-                
-                if confidence > 0.3:
-                    return best_label
-            
-        except requests.exceptions.Timeout:
-            logger.warning("Hugging Face API timeout, using fallback")
-        except requests.exceptions.RequestException as e:
-            logger.warning(f"Hugging Face API error: {str(e)}, using fallback")
-        except Exception as e:
-            logger.error(f"Unexpected error in API call: {str(e)}")
-        
-        # Fallback to original keyword matching
-        message_lower = message.lower()
+        # Optional Hugging Face check if API key is explicitly configured
+        hf_token = os.environ.get('HUGGINGFACE_API_KEY')
+        if hf_token:
+            try:
+                API_URL = "https://api-inference.huggingface.co/models/facebook/bart-large-mnli"
+                candidate_labels = list(self.knowledge_base.keys())[:10]
+                response = requests.post(
+                    API_URL,
+                    headers={"Content-Type": "application/json", "Authorization": f"Bearer {hf_token}"},
+                    json={"inputs": message, "parameters": {"candidate_labels": candidate_labels}},
+                    timeout=2
+                )
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get('scores') and result['scores'][0] > 0.45:
+                        return result['labels'][0]
+            except Exception as e:
+                logger.debug(f"Hugging Face notice: {str(e)}")
+
         best_match = None
-        best_score = 0
-        
+        best_score = 0.0
+
         for category, data in self.knowledge_base.items():
-            score = 0
-            
-            keywords = data.get("keywords", data.get("primary_keywords", []))
-            for keyword in keywords:
-                if keyword in message_lower:
-                    score += 2
-            
-            secondary_keywords = data.get("secondary_keywords", [])
-            for keyword in secondary_keywords:
-                if keyword in message_lower:
-                    score += 1
-            
+            score = 0.0
+
+            # 1. Regex patterns (high confidence)
             patterns = data.get("patterns", [])
             for pattern in patterns:
-                if re.search(pattern, message_lower):
-                    score += 3
-            
-            similarity = self._calculate_similarity(category, message_lower)
-            score += similarity
-            
+                try:
+                    if re.search(pattern, message_lower, re.IGNORECASE):
+                        score += 4.0
+                except Exception:
+                    pass
+
+            # 2. Keywords / Primary keywords
+            keywords = data.get("keywords", data.get("primary_keywords", []))
+            for kw in keywords:
+                kw_clean = kw.lower().strip()
+                if kw_clean and kw_clean in message_lower:
+                    if re.search(r'\b' + re.escape(kw_clean) + r'\b', message_lower):
+                        score += 3.0
+                    else:
+                        score += 1.5
+
+            # 3. Secondary keywords
+            secondary_keywords = data.get("secondary_keywords", [])
+            for skw in secondary_keywords:
+                skw_clean = skw.lower().strip()
+                if skw_clean and skw_clean in message_lower:
+                    if re.search(r'\b' + re.escape(skw_clean) + r'\b', message_lower):
+                        score += 2.0
+                    else:
+                        score += 1.0
+
+            # 4. Variations
+            variations = data.get("variations", [])
+            for var in variations:
+                if var.lower() in message_lower:
+                    score += 3.5
+
+            # 5. Semantic string similarity
+            cat_clean = category.replace('_', ' ')
+            similarity = self._calculate_similarity(cat_clean, message_lower)
+            if similarity > 0.45:
+                score += similarity * 2.0
+
             if score > best_score:
                 best_score = score
                 best_match = category
-        
-        return best_match if best_score > 1.5 else None
+
+        return best_match if best_score >= 1.2 else None
     
     def _get_response(self, intent):
         """Get appropriate response for detected intent"""
         if intent and intent in self.knowledge_base:
-            responses = self.knowledge_base[intent]["responses"]
-            return random.choice(responses)
+            responses = self.knowledge_base[intent].get("responses", [])
+            if isinstance(responses, list) and responses:
+                return random.choice(responses)
+            elif isinstance(responses, str):
+                return responses
         return None
     
     def _handle_greeting(self, message):
         """Detect and respond to greetings"""
-        greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste"]
-        message_lower = message.lower()
+        greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening", "namaste", "hola", "greetings"]
+        message_lower = message.lower().strip()
+        words = message_lower.split()
         
         for greeting in greetings:
-            if greeting in message_lower:
+            if greeting in words or message_lower.startswith(greeting) or re.search(r'\b' + re.escape(greeting) + r'\b', message_lower):
                 return random.choice(self.greetings)
         return None
     
     def _handle_thanks(self, message):
         """Detect and respond to gratitude"""
-        thanks = ["thank", "thanks", "appreciate", "grateful"]
+        thanks = ["thank", "thanks", "appreciate", "grateful", "thankyou"]
         message_lower = message.lower()
         
         for thank in thanks:
             if thank in message_lower:
                 return random.choice([
-                    "You're very welcome! Is there anything else I can help you with?",
-                    "Happy to help! Feel free to ask if you have more questions.",
-                    "My pleasure! Let me know if you need anything else.",
-                    "Glad I could assist! Don't hesitate to reach out anytime."
+                    "You're very welcome! Is there anything else I can help you with today?",
+                    "Happy to assist you! Feel free to ask if you have more questions about Nur-e-Haya.",
+                    "My absolute pleasure! Let me know if you need assistance with rooms, dining, or amenities.",
+                    "Glad I could help! Don't hesitate to reach out anytime during your stay."
                 ])
         return None
     
     def _handle_goodbye(self, message):
         """Detect and respond to farewells"""
-        goodbyes = ["bye", "goodbye", "see you", "thanks bye", "that's all"]
+        goodbyes = ["bye", "goodbye", "see you", "thanks bye", "that's all", "good night"]
         message_lower = message.lower()
         
         for goodbye in goodbyes:
             if goodbye in message_lower:
                 return random.choice([
                     "Goodbye! Have a wonderful day. We look forward to hosting you at Nur-e-Haya! 🌟",
-                    "Thank you for chatting! If you need anything else, I'm always here. Have a great day! ✨",
-                    "Farewell! We can't wait to welcome you to Nur-e-Haya. Safe travels! 🏨",
-                    "Take care! Feel free to return anytime you have questions. Have an amazing day! 😊"
+                    "Thank you for chatting with us! If you need anything else, our concierge is always here 24/7. Have a great day! ✨",
+                    "Farewell! We can't wait to welcome you to Nur-e-Haya Luxury Resort. Safe travels! 🏨",
+                    "Take care! Feel free to return anytime you have questions. Wishing you a pleasant experience! 😊"
                 ])
+        return None
+
+    def _handle_identity(self, message):
+        """Detect questions about bot identity and capabilities"""
+        patterns = [
+            r"who are you", r"what are you", r"your name", r"what can you do", r"tell me about yourself", r"are you (a )?bot", r"are you (an )?ai"
+        ]
+        message_lower = message.lower()
+        for p in patterns:
+            if re.search(p, message_lower):
+                return (
+                    "I am the AI Concierge of Nur-e-Haya Luxury Hotel & Spa! 🏨✨\n\n"
+                    "I can assist you 24/7 with:\n"
+                    "• **Rooms & Suites**: Details and rates for Single, Double, Suite, Luxury, & Family rooms\n"
+                    "• **Reservations**: Booking procedures, modifications, and instant confirmations\n"
+                    "• **Policies**: Check-in (2:00 PM), Check-out (11:00 AM), & free cancellation rules\n"
+                    "• **Dining**: In-house fine dining, buffet breakfast, and 24/7 room service\n"
+                    "• **Amenities**: High-speed WiFi, Infinity Pool, Luxury Spa, & Airport Shuttles\n"
+                    "• **Direct Contact**: 24/7 Front Desk at +91 8010572845\n\n"
+                    "How can I help you right now?"
+                )
+        return None
+
+    def _handle_wellbeing(self, message):
+        """Detect questions like how are you"""
+        patterns = [r"how are you", r"how('s| is) it going", r"how do you do", r"how are u"]
+        message_lower = message.lower()
+        for p in patterns:
+            if re.search(p, message_lower):
+                return (
+                    "I'm doing wonderful, thank you for asking! 😊\n\n"
+                    "I'm delighted to help you experience the very best of Nur-e-Haya. Are you planning a new reservation or inquiring about your stay?"
+                )
         return None
     
     def _handle_confusion(self, message):
         """Detect confusion and offer help"""
         confusion = ["confused", "don't understand", "not clear", "what", "huh", "help"]
-        message_lower = message.lower()
+        message_lower = message.lower().strip()
         
         for word in confusion:
             if word in message_lower and len(message.split()) < 5:
                 return random.choice([
-                    "I'm here to help! You can ask me about:\n• Booking rooms\n• Check-in/out times\n• Cancellation policy\n• Room types & prices\n• Payment methods\n• Contact information\n\nWhat would you like to know?",
-                    "Let me assist you! I can help with reservations, policies, amenities, payments, and more. What specific information do you need?",
-                    "No worries! I can answer questions about our rooms, bookings, policies, facilities, and contact details. What interests you?"
+                    "I'm here to help! You can ask me about:\n• Booking rooms & real-time rates\n• Check-in/out times (2 PM / 11 AM)\n• Cancellation & refund policies\n• Dining menus & room service\n• Payment methods (Cards, UPI, NetBanking)\n\nWhat would you like to know?",
+                    "Let me assist you! I can help with room reservations, hotel amenities, payments, and dining. What specific information do you need?",
+                    "No worries at all! Feel free to ask about our luxury rooms, booking dates, facilities, or contact details. How can I assist you?"
                 ])
         return None
     
@@ -416,79 +461,108 @@ class HotelSupportBot:
         Returns:
             dict: Response with message and metadata
         """
-        # Store user context
         if user_email:
             self.context[user_email] = {
                 "last_message": message,
                 "timestamp": datetime.now().isoformat()
             }
         
-        # Handle empty messages
         if not message or not message.strip():
             return {
-                "response": "I didn't catch that. Could you please try again?",
+                "response": "I didn't catch that. Could you please type your question?",
                 "intent": None,
-                "confidence": 0
+                "confidence": 0,
+                "suggestions": self.get_suggested_questions()[:4]
             }
         
-        # Check for greetings
+        # 1. Check Identity / Who are you
+        identity_response = self._handle_identity(message)
+        if identity_response:
+            return {
+                "response": identity_response,
+                "intent": "identity",
+                "confidence": 1.0,
+                "suggestions": ["Room types & prices", "Check-in times", "Dining menu", "Cancellation policy"]
+            }
+
+        # 2. Check Wellbeing / How are you
+        wellbeing_response = self._handle_wellbeing(message)
+        if wellbeing_response:
+            return {
+                "response": wellbeing_response,
+                "intent": "wellbeing",
+                "confidence": 1.0,
+                "suggestions": ["How do I book a room?", "What are your room rates?", "Do you have a pool?"]
+            }
+
+        # 3. Check Greetings
         greeting_response = self._handle_greeting(message)
         if greeting_response:
             return {
                 "response": greeting_response,
                 "intent": "greeting",
-                "confidence": 1.0
+                "confidence": 1.0,
+                "suggestions": ["What are your room rates?", "Check-in and check-out times?", "Is breakfast included?"]
             }
         
-        # Check for thanks
+        # 4. Check Thanks
         thanks_response = self._handle_thanks(message)
         if thanks_response:
             return {
                 "response": thanks_response,
                 "intent": "gratitude",
-                "confidence": 1.0
+                "confidence": 1.0,
+                "suggestions": ["Explore luxury rooms", "View hotel facilities", "Contact front desk"]
             }
         
-        # Check for goodbye
+        # 5. Check Goodbye
         goodbye_response = self._handle_goodbye(message)
         if goodbye_response:
             return {
                 "response": goodbye_response,
                 "intent": "farewell",
-                "confidence": 1.0
+                "confidence": 1.0,
+                "suggestions": []
             }
         
-        # Check for confusion
+        # 6. Check Confusion
         confusion_response = self._handle_confusion(message)
         if confusion_response:
             return {
                 "response": confusion_response,
                 "intent": "help",
-                "confidence": 1.0
+                "confidence": 1.0,
+                "suggestions": self.get_suggested_questions()[:4]
             }
         
-        # Extract intent
+        # 7. Extract intent from knowledge base
         intent = self._extract_intent(message)
         
-        # Get response
         if intent:
             response = self._get_response(intent)
-            return {
-                "response": response,
-                "intent": intent,
-                "confidence": 0.85
-            }
+            if response:
+                return {
+                    "response": response,
+                    "intent": intent,
+                    "confidence": 0.88,
+                    "suggestions": [
+                        "How do I book a room?",
+                        "What are your check-in times?",
+                        "What is your cancellation policy?",
+                        "What payment methods do you accept?"
+                    ]
+                }
         
-        # Fallback response
+        # 8. Dynamic Fallback response with rotating answers
         return {
             "response": random.choice(self.fallback_responses),
             "intent": "unknown",
-            "confidence": 0.2,
+            "confidence": 0.35,
             "suggestions": [
                 "How do I book a room?",
+                "What are your room rates?",
                 "What are your check-in times?",
-                "Tell me about room types",
-                "What payment methods do you accept?"
+                "What is your cancellation policy?"
             ]
         }
     
@@ -498,7 +572,7 @@ class HotelSupportBot:
             "How do I book a room?",
             "What are the check-in and check-out times?",
             "What is your cancellation policy?",
-            "What room types do you offer?",
+            "What room types and prices do you offer?",
             "What payment methods do you accept?",
             "How can I contact customer support?",
             "Do you offer airport shuttle service?",
@@ -507,93 +581,11 @@ class HotelSupportBot:
             "How do I modify my booking?"
         ]
 
-
 # Singleton instance
 chatbot_instance = HotelSupportBot()
 
 def get_bot_response(message, user_email=None):
     """
     Convenient function to get bot response
-    
-    Args:
-        message (str): User's message
-        user_email (str): User's email (optional)
-        
-    Returns:
-        dict: Bot response
     """
-    # Store user context
-    if user_email:
-        chatbot_instance.context[user_email] = {
-            "last_message": message,
-            "timestamp": datetime.now().isoformat()
-        }
-    
-    # Handle empty messages
-    if not message or not message.strip():
-        return {
-            "response": "I didn't catch that. Could you please try again?",
-            "intent": None,
-            "confidence": 0
-        }
-    
-    # Check for greetings
-    greeting_response = chatbot_instance._handle_greeting(message)
-    if greeting_response:
-        return {
-            "response": greeting_response,
-            "intent": "greeting",
-            "confidence": 1.0
-        }
-    
-    # Check for thanks
-    thanks_response = chatbot_instance._handle_thanks(message)
-    if thanks_response:
-        return {
-            "response": thanks_response,
-            "intent": "gratitude",
-            "confidence": 1.0
-        }
-    
-    # Check for goodbye
-    goodbye_response = chatbot_instance._handle_goodbye(message)
-    if goodbye_response:
-        return {
-            "response": goodbye_response,
-            "intent": "farewell",
-            "confidence": 1.0
-        }
-    
-    # Check for confusion
-    confusion_response = chatbot_instance._handle_confusion(message)
-    if confusion_response:
-        return {
-            "response": confusion_response,
-            "intent": "help",
-            "confidence": 1.0
-        }
-    
-    # Extract intent
-    intent = chatbot_instance._extract_intent(message)
-    
-    # Get response
-    if intent:
-        response = chatbot_instance._get_response(intent)
-        return {
-            "response": response,
-            "intent": intent,
-            "confidence": 0.85
-        }
-    
-    # Fallback response
-    return {
-        "response": random.choice(chatbot_instance.fallback_responses),
-        "intent": "unknown",
-        "confidence": 0.2,
-        "suggestions": [
-            "How do I book a room?",
-            "What are your check-in times?",
-            "Tell me about room types",
-            "What payment methods do you accept?"
-        ]
-    }
+    return chatbot_instance.process_message(message, user_email)

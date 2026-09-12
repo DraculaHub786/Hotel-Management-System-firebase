@@ -186,28 +186,44 @@
             text-transform: uppercase;
         }
 
-        .form-control {
+        .form-control,
+        input,
+        textarea,
+        select,
+        .form-select {
             width: 100%;
             padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(212, 175, 55, 0.2);
-            border-radius: 5px;
+            background: rgba(15, 26, 42, 0.85) !important;
+            border: 1px solid rgba(212, 175, 55, 0.3) !important;
+            border-radius: 6px;
             font-size: 14px;
             transition: all 0.3s ease;
-            color: var(--text-primary);
+            color: #fff9e6 !important;
+            -webkit-text-fill-color: #fff9e6 !important;
             font-family: 'Raleway', sans-serif;
             letter-spacing: 0.5px;
+            caret-color: #d4af37 !important;
         }
 
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px var(--primary-glow);
-            background: rgba(0, 0, 0, 0.5);
+        .form-control:focus,
+        input:focus,
+        textarea:focus,
+        select:focus,
+        .form-select:focus {
+            outline: none !important;
+            border-color: #d4af37 !important;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.35), 0 0 15px rgba(212, 175, 55, 0.2) !important;
+            background: rgba(22, 34, 54, 0.95) !important;
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+            caret-color: #d4af37 !important;
         }
 
-        .form-control::placeholder {
-            color: rgba(255, 255, 255, 0.3);
+        .form-control::placeholder,
+        input::placeholder,
+        textarea::placeholder {
+            color: rgba(232, 223, 193, 0.45) !important;
+            -webkit-text-fill-color: rgba(232, 223, 193, 0.45) !important;
         }
 
         .alert {
@@ -584,25 +600,25 @@
         <!-- Main Wrapper with Topbar & Content Area -->
         <div class="app-main d-flex flex-column flex-grow-1 overflow-auto">
             <!-- Topbar (Section M spec) -->
-            <header class="app-topbar bg-white border-bottom px-4 py-2 d-flex align-items-center justify-content-between sticky-top">
+            <header class="app-topbar luxury-topbar px-4 py-2 d-flex align-items-center justify-content-between sticky-top">
                 <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-sm btn-light border d-md-none" onclick="toggleMobileSidebar()">
+                    <button class="btn btn-sm btn-outline-warning border d-md-none" onclick="toggleMobileSidebar()">
                         <i class="fas fa-bars"></i>
                     </button>
                     <!-- Context-aware search -->
                     <div class="input-group input-group-sm" style="max-width: 320px;">
-                        <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" class="form-control bg-light border-0" placeholder="Search rooms, guests, tasks..." id="topbarSearch">
+                        <span class="input-group-text bg-transparent border-end-0 text-warning" style="border-color: rgba(212, 175, 55, 0.3);"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control border-start-0 topbar-search-input" placeholder="Search rooms, guests, tasks..." id="topbarSearch" style="border-color: rgba(212, 175, 55, 0.3); background: rgba(22, 34, 54, 0.7) !important;">
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3">
                     <!-- Shift Clock-In/Out Widget (Staff roles only, per Section M spec) -->
                     {% if role not in ['guest'] %}
-                    <div class="shift-widget d-flex align-items-center gap-2 bg-light px-3 py-1 rounded-pill border">
-                        <span class="badge rounded-circle bg-success p-1 d-inline-block" style="width: 8px; height: 8px;"></span>
-                        <span class="small fw-semibold text-dark" id="shiftStatusLabel">On Duty</span>
-                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="toggleShift()">
+                    <div class="shift-widget d-flex align-items-center gap-2 px-3 py-1 rounded-pill" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.3);">
+                        <span class="badge rounded-circle bg-success p-1 d-inline-block" style="width: 8px; height: 8px; box-shadow: 0 0 8px #008670;"></span>
+                        <span class="small fw-semibold text-warning" id="shiftStatusLabel">On Duty</span>
+                        <button class="btn btn-sm btn-outline-warning py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="toggleShift()">
                             Clock Out
                         </button>
                     </div>
@@ -610,17 +626,17 @@
 
                     <!-- Notification Bell with Dropdown -->
                     <div class="dropdown">
-                        <button class="btn btn-light rounded-circle p-2 position-relative border" data-bs-toggle="dropdown">
-                            <i class="fas fa-bell text-secondary"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                        <button class="btn btn-dark-glass rounded-circle p-2 position-relative border" data-bs-toggle="dropdown" style="background: rgba(22, 34, 54, 0.85); border-color: rgba(212, 175, 55, 0.3) !important;">
+                            <i class="fas fa-bell text-warning"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle">
                                 <span class="visually-hidden">New alerts</span>
                             </span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 p-2" style="width: 280px;">
-                            <li class="dropdown-header fw-bold text-dark">Notifications (Recent)</li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li class="px-2 py-1 small text-muted"><i class="fas fa-check-circle text-success me-1"></i> System online & operational</li>
-                            <li class="px-2 py-1 small text-muted"><i class="fas fa-door-open text-primary me-1"></i> Room turnover sync active</li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border rounded-3 p-2" style="width: 290px; background: #162236; border-color: rgba(212, 175, 55, 0.3) !important; color: #fff9e6;">
+                            <li class="dropdown-header fw-bold text-warning" style="font-family: 'Cinzel', serif; letter-spacing: 0.5px;">Notifications (Recent)</li>
+                            <li><hr class="dropdown-divider" style="border-color: rgba(212, 175, 55, 0.2);"></li>
+                            <li class="px-2 py-1 small" style="color: #e8dfc1;"><i class="fas fa-check-circle text-success me-1"></i> System online & operational</li>
+                            <li class="px-2 py-1 small" style="color: #e8dfc1;"><i class="fas fa-door-open text-warning me-1"></i> Room turnover sync active</li>
                         </ul>
                     </div>
                 </div>
@@ -636,6 +652,18 @@
     <style>
     .app-shell {
         min-height: 100vh;
+    }
+    .luxury-topbar {
+        background: rgba(15, 26, 42, 0.95) !important;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.25) !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(15px);
+        color: var(--text-primary);
+        z-index: 1020;
+    }
+    .topbar-search-input:focus {
+        border-color: #d4af37 !important;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.3) !important;
     }
     .app-sidebar {
         width: 240px;

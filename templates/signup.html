@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Guest Sign up — Nur-e-Haya Hotel Management System{% endblock %}
+{% block title %}Sign up — Nur-e-Haya Hotel Management System{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -14,19 +14,19 @@
 
     .signup-card {
         width: 100%;
-        max-width: 440px;
-        background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+        max-width: 460px;
+        background: var(--glass-bg, rgba(22, 34, 54, 0.9));
         border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.15);
-        border-radius: 14px;
-        padding: 36px 32px;
+        border-radius: 16px;
+        padding: 36px 30px;
         backdrop-filter: blur(25px);
         position: relative;
     }
 
     .signup-header {
         text-align: center;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
 
     .signup-logo {
@@ -43,7 +43,7 @@
 
     .signup-heading {
         font-family: 'Cinzel', serif;
-        font-size: 19px;
+        font-size: 20px;
         font-weight: 700;
         color: var(--text-bright, #fff9e6);
         margin: 0;
@@ -53,6 +53,69 @@
         font-size: 13px;
         color: var(--text-secondary, #bda568);
         margin-top: 4px;
+    }
+
+    /* Account Type Switcher Tabs */
+    .account-type-tabs {
+        display: flex;
+        background: rgba(15, 26, 42, 0.85);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        border-radius: 10px;
+        padding: 4px;
+        gap: 4px;
+        margin-bottom: 18px;
+    }
+
+    .type-tab {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 8px;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        color: var(--text-secondary, #bda568);
+        font-family: 'Cinzel', serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .type-tab:hover {
+        color: var(--primary-color, #d4af37);
+    }
+
+    .type-tab.active {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(16, 78, 139, 0.35));
+        border-color: rgba(212, 175, 55, 0.45);
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+    }
+
+    .type-tab.active i {
+        color: var(--primary-color, #d4af37);
+        filter: drop-shadow(0 0 5px var(--primary-glow));
+    }
+
+    /* Input text legibility */
+    .signup-card .form-control {
+        color: #fff9e6 !important;
+        -webkit-text-fill-color: #fff9e6 !important;
+        background: rgba(15, 26, 42, 0.85) !important;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        caret-color: #d4af37 !important;
+    }
+
+    .signup-card .form-control:focus {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background: rgba(22, 34, 54, 0.95) !important;
+        border-color: #d4af37 !important;
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.35) !important;
     }
 
     .signin-prompt {
@@ -71,6 +134,15 @@
     .signin-prompt a:hover {
         text-decoration: underline;
     }
+
+    /* Staff invite section box */
+    .staff-invite-panel {
+        background: rgba(15, 26, 42, 0.6);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+    }
 </style>
 {% endblock %}
 
@@ -81,90 +153,140 @@
             <div class="signup-logo">
                 <i class="fas fa-hotel"></i> Nur-e-Haya
             </div>
-            <h2 class="signup-heading">Create Guest Account</h2>
-            <p class="signup-sub">Experience luxury hospitality and personalized services</p>
+            <h2 class="signup-heading" id="signupTitle">Create Account</h2>
+            <p class="signup-sub" id="signupSubtitle">Choose your registration type below</p>
         </div>
 
-        <form id="signupForm" novalidate>
-            <!-- Name -->
-            <div class="form-group">
-                <label class="form-label required" for="name">Full Name</label>
-                <input 
-                    type="text" 
-                    id="name" 
-                    name="name" 
-                    class="form-control" 
-                    placeholder="Jane Doe" 
-                    required 
-                    autofocus
-                >
-                <div class="form-field-error" data-for="name"></div>
-            </div>
-
-            <!-- Email -->
-            <div class="form-group">
-                <label class="form-label required" for="email">Email address</label>
-                <input 
-                    type="email" 
-                    id="email" 
-                    name="email" 
-                    class="form-control" 
-                    placeholder="jane@example.com" 
-                    required 
-                    autocomplete="email"
-                >
-                <div class="form-field-error" data-for="email"></div>
-            </div>
-
-            <!-- Phone -->
-            <div class="form-group">
-                <label class="form-label" for="phone">Phone number</label>
-                <input 
-                    type="tel" 
-                    id="phone" 
-                    name="phone" 
-                    class="form-control" 
-                    placeholder="+1 (555) 000-0000"
-                >
-                <div class="form-field-error" data-for="phone"></div>
-            </div>
-
-            <!-- Password -->
-            <div class="form-group">
-                <label class="form-label required" for="password">Password (min 8 chars)</label>
-                <input 
-                    type="password" 
-                    id="password" 
-                    name="password" 
-                    class="form-control" 
-                    placeholder="••••••••" 
-                    required 
-                    minlength="8"
-                    autocomplete="new-password"
-                >
-                <div class="form-field-error" data-for="password"></div>
-            </div>
-
-            <!-- Confirm Password -->
-            <div class="form-group">
-                <label class="form-label required" for="confirm_password">Confirm Password</label>
-                <input 
-                    type="password" 
-                    id="confirm_password" 
-                    name="confirm_password" 
-                    class="form-control" 
-                    placeholder="••••••••" 
-                    required 
-                    minlength="8"
-                >
-                <div class="form-field-error" data-for="confirm_password"></div>
-            </div>
-
-            <!-- Submit -->
-            <button type="submit" class="btn btn-primary" id="btnSignUp" style="width: 100%; margin-top: 10px;">
-                CREATE ACCOUNT
+        <!-- Account Type Switcher Tabs -->
+        <div class="account-type-tabs" role="tablist" aria-label="Select Account Type">
+            <button type="button" class="type-tab active" id="tabGuest" onclick="selectType('guest')" role="tab" aria-selected="true">
+                <i class="fas fa-user"></i>
+                <span>Guest Account</span>
             </button>
-        </form>
+            <button type="button" class="type-tab" id="tabStaff" onclick="selectType('staff')" role="tab" aria-selected="false">
+                <i class="fas fa-id-badge"></i>
+                <span>Staff Member</span>
+            </button>
+        </div>
+
+        <!-- 1. GUEST REGISTRATION FORM -->
+        <div id="guestSignupSection">
+            <form id="signupForm" novalidate>
+                <!-- Name -->
+                <div class="form-group">
+                    <label class="form-label required" for="name">Full Name</label>
+                    <input 
+                        type="text" 
+                        id="name" 
+                        name="name" 
+                        class="form-control" 
+                        placeholder="Jane Doe" 
+                        required 
+                        autofocus
+                    >
+                    <div class="form-field-error" data-for="name"></div>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label class="form-label required" for="email">Email address</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        class="form-control" 
+                        placeholder="jane@example.com" 
+                        required 
+                        autocomplete="email"
+                    >
+                    <div class="form-field-error" data-for="email"></div>
+                </div>
+
+                <!-- Phone -->
+                <div class="form-group">
+                    <label class="form-label" for="phone">Phone number</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        class="form-control" 
+                        placeholder="+1 (555) 000-0000"
+                    >
+                    <div class="form-field-error" data-for="phone"></div>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label class="form-label required" for="password">Password (min 8 chars)</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="••••••••" 
+                        required 
+                        minlength="8"
+                        autocomplete="new-password"
+                    >
+                    <div class="form-field-error" data-for="password"></div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group">
+                    <label class="form-label required" for="confirm_password">Confirm Password</label>
+                    <input 
+                        type="password" 
+                        id="confirm_password" 
+                        name="confirm_password" 
+                        class="form-control" 
+                        placeholder="••••••••" 
+                        required 
+                        minlength="8"
+                    >
+                    <div class="form-field-error" data-for="confirm_password"></div>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-primary" id="btnSignUp" style="width: 100%; margin-top: 10px;">
+                    CREATE GUEST ACCOUNT
+                </button>
+            </form>
+        </div>
+
+        <!-- 2. STAFF INVITE REDEEM SECTION -->
+        <div id="staffInviteSection" style="display: none;">
+            <div class="staff-invite-panel">
+                <i class="fas fa-shield-alt text-warning fs-1 mb-3"></i>
+                <h3 style="font-family: 'Cinzel', serif; font-size: 16px; color: #fff9e6; margin-bottom: 8px;">Staff & Department Onboarding</h3>
+                <p class="small text-secondary mb-3" style="font-size: 12px; line-height: 1.5;">
+                    Staff members must be invited by Hotel Administration. If you received an invitation token, enter it below to set your credentials and activate your role.
+                </p>
+
+                <form id="inviteRedeemForm" onsubmit="handleRedeemInvite(event)">
+                    <div class="form-group text-start">
+                        <label class="form-label required" for="inviteTokenInput">Invitation Token</label>
+                        <input 
+                            type="text" 
+                            id="inviteTokenInput" 
+                            class="form-control" 
+                            placeholder="e.g. inv_demo_hsk_123" 
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                        REDEEM INVITATION
+                    </button>
+                </form>
+
+                <div class="mt-3 pt-3 border-top border-secondary-subtle">
+                    <span class="small text-secondary d-block mb-1" style="font-size: 11px;">Testing Demo Invite:</span>
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="fillDemoInvite()" style="font-size: 11px;">
+                        <i class="fas fa-magic me-1"></i> Use Demo Invite (Housekeeping)
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <div class="signin-prompt">
             Already have an account? <a href="/login">Sign in</a>
@@ -175,9 +297,54 @@
 
 {% block extra_js %}
 <script>
+function selectType(type) {
+    const tabGuest = document.getElementById('tabGuest');
+    const tabStaff = document.getElementById('tabStaff');
+    const guestSection = document.getElementById('guestSignupSection');
+    const staffSection = document.getElementById('staffInviteSection');
+    const signupTitle = document.getElementById('signupTitle');
+    const signupSubtitle = document.getElementById('signupSubtitle');
+
+    if (type === 'staff') {
+        tabStaff.classList.add('active');
+        tabGuest.classList.remove('active');
+        guestSection.style.display = 'none';
+        staffSection.style.display = 'block';
+        signupTitle.textContent = 'Staff Onboarding';
+        signupSubtitle.textContent = 'Redeem your department invitation token';
+    } else {
+        tabGuest.classList.add('active');
+        tabStaff.classList.remove('active');
+        guestSection.style.display = 'block';
+        staffSection.style.display = 'none';
+        signupTitle.textContent = 'Create Guest Account';
+        signupSubtitle.textContent = 'Experience luxury hospitality and personalized services';
+    }
+}
+
+function fillDemoInvite() {
+    const input = document.getElementById('inviteTokenInput');
+    if (input) input.value = 'inv_demo_hsk_123';
+}
+
+function handleRedeemInvite(e) {
+    e.preventDefault();
+    const token = (document.getElementById('inviteTokenInput').value || '').trim();
+    if (!token) {
+        Toast.error('Please enter your invitation token.');
+        return;
+    }
+    window.location.href = `/invite/${encodeURIComponent(token)}`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roleParam = urlParams.get('role') || urlParams.get('type');
+    if (roleParam && roleParam.toLowerCase() === 'staff') {
+        selectType('staff');
+    }
+
     const signupForm = document.getElementById('signupForm');
-    
     AppForm.bind(signupForm, {
         onSubmit: async (data, form) => {
             if (data.password !== data.confirm_password) {

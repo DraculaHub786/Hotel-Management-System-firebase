@@ -247,11 +247,13 @@ body {
    ============================================ */
 .dashboard-header {
     background: var(--glass-bg);
-    border-bottom: var(--glass-border);
+    border: var(--glass-border);
+    border-radius: 14px;
     box-shadow: var(--glass-shadow);
     backdrop-filter: blur(10px);
-    padding: 40px 0;
-    margin-bottom: 40px;
+    padding: 32px 24px;
+    margin-top: 8px;
+    margin-bottom: 32px;
     position: relative;
     overflow: hidden;
 }
@@ -3906,63 +3908,6 @@ button.chat-bubble .chat-badge {
         </div>
     </div>
 
-    <!-- Main Navigation -->
-    <nav class="navbar" role="navigation" aria-label="Main navigation">
-        <div class="container">
-            <div class="navbar-content">
-                <a href="/dashboard" class="navbar-brand" aria-label="Nur-e-Haya Home">
-                    <i class="fas fa-hotel"></i> <span>Nur-e-Haya</span>
-                </a>
-                
-                <!-- Online Status Indicator -->
-                <div class="connection-status" id="connectionStatus">
-                    <i class="fas fa-wifi"></i>
-                    <span>Online</span>
-                </div>
-                
-                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu" aria-expanded="false">
-                    <i class="fas fa-bars"></i>
-                </button>
-                
-                <div class="navbar-menu" id="navbarMenu">
-                    <div class="navbar-links">
-                        <a href="#" class="navbar-link active" onclick="showDashboard(); closeMobileMenu();" aria-current="page">
-                            <i class="fas fa-tachometer-alt"></i> DASHBOARD
-                        </a>
-                        <a href="#" class="navbar-link" onclick="showBookings(); closeMobileMenu();">
-                            <i class="fas fa-calendar-check"></i> MY BOOKINGS
-                        </a>
-                        <a href="#" class="navbar-link" onclick="showNewBooking(); closeMobileMenu();">
-                            <i class="fas fa-plus-circle"></i> NEW BOOKING
-                        </a>
-                        <!-- ADMIN ONLY: Newsletter Link -->
-                        {% if user_email == 'test1@gmail.com' %}
-                        <a href="/admin/newsletter" class="navbar-link">
-                            <i class="fas fa-envelope-open-text"></i> NEWSLETTER
-                        </a>
-                        {% endif %}
-                        
-                        <a href="#" class="navbar-link" onclick="showSupport(); closeMobileMenu();">
-                            <i class="fas fa-headset"></i> SUPPORT
-                        </a>
-                    </div>
-                    
-                    <div class="user-info">
-                        <div class="user-avatar" aria-label="User profile">
-                            {{ user_email[0].upper() }}
-                        </div>
-                        <span class="user-email">{{ user_email }}</span>
-                        <button class="btn btn-secondary" onclick="logout()" aria-label="Logout">
-                            <i class="fas fa-sign-out-alt"></i> LOGOUT
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Mobile Menu Overlay -->
-    <div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
 
     <!-- Main Content -->
     <main id="main-content" class="dashboard-container">

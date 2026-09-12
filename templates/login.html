@@ -12,22 +12,22 @@
         padding: 30px 15px;
     }
 
-    /* Centered card, 400px wide per Section B.2 */
+    /* Centered card with luxury glass styling */
     .login-card {
         width: 100%;
-        max-width: 400px;
-        background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+        max-width: 440px;
+        background: var(--glass-bg, rgba(22, 34, 54, 0.9));
         border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
         box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.15);
-        border-radius: 14px;
-        padding: 36px 32px;
+        border-radius: 16px;
+        padding: 36px 30px;
         backdrop-filter: blur(25px);
         position: relative;
     }
 
     .login-header {
         text-align: center;
-        margin-bottom: 28px;
+        margin-bottom: 22px;
     }
 
     .login-logo {
@@ -40,7 +40,7 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
     }
 
     .login-heading {
@@ -49,6 +49,125 @@
         font-weight: 700;
         color: var(--text-bright, #fff9e6);
         margin: 0;
+    }
+
+    /* Portal selection tabs */
+    .portal-tabs {
+        display: flex;
+        background: rgba(15, 26, 42, 0.85);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        border-radius: 10px;
+        padding: 4px;
+        gap: 4px;
+        margin-bottom: 18px;
+    }
+
+    .portal-tab {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 8px;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 7px;
+        color: var(--text-secondary, #bda568);
+        font-family: 'Cinzel', serif;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .portal-tab:hover {
+        color: var(--primary-color, #d4af37);
+    }
+
+    .portal-tab.active {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(16, 78, 139, 0.35));
+        border-color: rgba(212, 175, 55, 0.45);
+        color: #ffffff;
+        box-shadow: 0 0 12px rgba(212, 175, 55, 0.25);
+    }
+
+    .portal-tab.active i {
+        color: var(--primary-color, #d4af37);
+        filter: drop-shadow(0 0 5px var(--primary-glow));
+    }
+
+    .portal-info-box {
+        background: rgba(15, 26, 42, 0.6);
+        border-left: 3px solid var(--primary-color, #d4af37);
+        border-radius: 0 6px 6px 0;
+        padding: 8px 12px;
+        margin-bottom: 18px;
+        font-size: 12px;
+        color: var(--text-primary, #e8dfc1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Demo Quick Logins */
+    .demo-login-box {
+        background: rgba(15, 26, 42, 0.7);
+        border: 1px dashed rgba(212, 175, 55, 0.3);
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 20px;
+    }
+
+    .demo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 11px;
+        color: var(--text-secondary, #bda568);
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-family: 'Cinzel', serif;
+    }
+
+    .demo-chip {
+        background: rgba(22, 34, 54, 0.9);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        color: var(--text-primary, #e8dfc1);
+        border-radius: 20px;
+        padding: 4px 10px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .demo-chip:hover {
+        background: rgba(212, 175, 55, 0.2);
+        border-color: #d4af37;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+    }
+
+    /* Input text legibility */
+    .login-card .form-control {
+        color: #fff9e6 !important;
+        -webkit-text-fill-color: #fff9e6 !important;
+        background: rgba(15, 26, 42, 0.85) !important;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        caret-color: #d4af37 !important;
+    }
+
+    .login-card .form-control:focus {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+        background: rgba(22, 34, 54, 0.95) !important;
+        border-color: #d4af37 !important;
+        box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.35) !important;
     }
 
     .password-wrapper {
@@ -72,17 +191,71 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 22px;
         font-size: 13px;
     }
 
     .remember-me-label {
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         color: var(--text-primary, #e8dfc1);
         cursor: pointer;
         user-select: none;
+        font-size: 13px;
+        transition: color 0.2s ease;
+    }
+
+    .remember-me-label:hover {
+        color: #ffffff;
+    }
+
+    .remember-me-label input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 1.5px solid rgba(212, 175, 55, 0.5);
+        border-radius: 4px;
+        background: rgba(15, 26, 42, 0.85);
+        cursor: pointer;
+        display: grid;
+        place-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        flex-shrink: 0;
+        margin: 0;
+    }
+
+    .remember-me-label input[type="checkbox"]::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        transform: scale(0);
+        transform-origin: center;
+        transition: 150ms transform ease-in-out;
+        background: #0d1726;
+    }
+
+    .remember-me-label input[type="checkbox"]:checked {
+        background: linear-gradient(135deg, #d4af37, #f3e5ab);
+        border-color: #d4af37;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.45);
+    }
+
+    .remember-me-label input[type="checkbox"]:checked::before {
+        transform: scale(1);
+    }
+
+    .remember-me-label input[type="checkbox"]:hover {
+        border-color: #d4af37;
+        box-shadow: 0 0 6px rgba(212, 175, 55, 0.3);
+    }
+
+    .remember-me-label input[type="checkbox"]:focus-visible {
+        outline: 2px solid #d4af37;
+        outline-offset: 2px;
     }
 
     .forgot-link {
@@ -99,7 +272,7 @@
     .auth-divider {
         display: flex;
         align-items: center;
-        margin: 24px 0;
+        margin: 22px 0;
         color: var(--text-secondary, #bda568);
         font-size: 12px;
         text-transform: uppercase;
@@ -120,7 +293,7 @@
 
     .signup-prompt {
         text-align: center;
-        margin-top: 22px;
+        margin-top: 20px;
         font-size: 13px;
         color: var(--text-secondary, #bda568);
     }
@@ -145,7 +318,41 @@
             <div class="login-logo">
                 <i class="fas fa-hotel"></i> Nur-e-Haya
             </div>
-            <h2 class="login-heading">Sign in</h2>
+            <h2 class="login-heading" id="loginHeaderTitle">Portal Sign In</h2>
+        </div>
+
+        <!-- Portal Selector Tabs -->
+        <div class="portal-tabs" role="tablist" aria-label="Select Login Portal">
+            <button type="button" class="portal-tab active" id="tabGuest" onclick="selectPortal('guest')" role="tab" aria-selected="true">
+                <i class="fas fa-user-circle"></i>
+                <span>Guest Portal</span>
+            </button>
+            <button type="button" class="portal-tab" id="tabStaff" onclick="selectPortal('staff')" role="tab" aria-selected="false">
+                <i class="fas fa-id-badge"></i>
+                <span>Staff & Admin</span>
+            </button>
+        </div>
+
+        <!-- Context Description -->
+        <div class="portal-info-box" id="portalInfoBox">
+            <i class="fas fa-compass text-warning"></i>
+            <span id="portalDescText">Guest Portal: Access reservations, dining, amenities & billing.</span>
+        </div>
+
+        <!-- Quick Demo Login Presets -->
+        <div class="demo-login-box">
+            <div class="demo-header">
+                <span><i class="fas fa-bolt text-warning me-1"></i> Quick Demo Logins</span>
+                <span class="badge bg-warning text-dark fw-bold" style="font-size: 9px;">Password: Hotel@123</span>
+            </div>
+            <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="demo-chip" onclick="fillDemo('guest')"><i class="fas fa-user"></i> Guest</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('admin')"><i class="fas fa-user-shield"></i> Admin</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('frontdesk')"><i class="fas fa-concierge-bell"></i> Front Desk</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('housekeeping')"><i class="fas fa-broom"></i> Housekeeping</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('kitchen')"><i class="fas fa-utensils"></i> Kitchen</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('manager')"><i class="fas fa-briefcase"></i> Manager</button>
+            </div>
         </div>
 
         <!-- Section B.2 Login Form -->
@@ -158,7 +365,7 @@
                     id="email" 
                     name="email" 
                     class="form-control" 
-                    placeholder="you@example.com" 
+                    placeholder="user@nur-e-haya.com" 
                     required 
                     autofocus
                     autocomplete="email"
@@ -202,28 +409,30 @@
             </button>
         </form>
 
-        <!-- Divider "or" -->
-        <div class="auth-divider">
-            <span>or</span>
+        <!-- Divider "or" (shown for guests) -->
+        <div id="googleAuthSection">
+            <div class="auth-divider">
+                <span>or</span>
+            </div>
+
+            <!-- Continue with Google button -->
+            <div id="g_id_onload"
+                 data-client_id="851707665415-ahf7difr035p39bn9cmi948tvngpol2f.apps.googleusercontent.com"
+                 data-callback="handleGoogleSignIn"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="filled_black"
+                 data-text="continue_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 data-width="380">
+            </div>
         </div>
 
-        <!-- Continue with Google button -->
-        <div id="g_id_onload"
-             data-client_id="851707665415-ahf7difr035p39bn9cmi948tvngpol2f.apps.googleusercontent.com"
-             data-callback="handleGoogleSignIn"
-             data-auto_prompt="false">
-        </div>
-        <div class="g_id_signin"
-             data-type="standard"
-             data-size="large"
-             data-theme="filled_black"
-             data-text="continue_with"
-             data-shape="rectangular"
-             data-logo_alignment="left"
-             data-width="336">
-        </div>
-
-        <!-- Don't have an account? Sign up (hidden if role query param indicates staff-only context) -->
+        <!-- Don't have an account? Sign up / Staff Redeem -->
         <div class="signup-prompt" id="signupPrompt">
             Don't have an account? <a href="/signup">Sign up</a>
         </div>
@@ -233,14 +442,75 @@
 
 {% block extra_js %}
 <script>
+const demoAccounts = {
+    guest: { email: 'user@nur-e-haya.com', pass: 'Hotel@123', portal: 'guest', title: 'Guest Traveler' },
+    admin: { email: 'admin@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'System Administrator' },
+    frontdesk: { email: 'frontdesk@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Front Desk Officer' },
+    housekeeping: { email: 'cleaning@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Housekeeping Lead' },
+    kitchen: { email: 'chef@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Head Chef' },
+    manager: { email: 'manager@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'General Manager' }
+};
+
+function selectPortal(type) {
+    const tabGuest = document.getElementById('tabGuest');
+    const tabStaff = document.getElementById('tabStaff');
+    const portalDescText = document.getElementById('portalDescText');
+    const signupPrompt = document.getElementById('signupPrompt');
+    const googleSection = document.getElementById('googleAuthSection');
+    const emailInput = document.getElementById('email');
+
+    if (type === 'staff') {
+        tabStaff.classList.add('active');
+        tabGuest.classList.remove('active');
+        portalDescText.textContent = 'Staff & Admin Portal: Front Desk, Housekeeping, Kitchen, Maintenance & Admin.';
+        if (signupPrompt) {
+            signupPrompt.innerHTML = 'Have a staff invitation code? <a href="/invite/inv_demo_hsk_123">Redeem Invite Token</a>';
+        }
+        if (googleSection) googleSection.style.display = 'none';
+        if (emailInput && !emailInput.value) emailInput.placeholder = 'staff@nur-e-haya.com';
+    } else {
+        tabGuest.classList.add('active');
+        tabStaff.classList.remove('active');
+        portalDescText.textContent = 'Guest Portal: Access reservations, dining, amenities & billing.';
+        if (signupPrompt) {
+            signupPrompt.innerHTML = "Don't have an account? <a href=\"/signup\">Sign up</a>";
+        }
+        if (googleSection) googleSection.style.display = 'block';
+        if (emailInput && !emailInput.value) emailInput.placeholder = 'user@nur-e-haya.com';
+    }
+}
+
+function fillDemo(key) {
+    const acc = demoAccounts[key];
+    if (!acc) return;
+    selectPortal(acc.portal);
+    const emailInput = document.getElementById('email');
+    const passInput = document.getElementById('password');
+    if (emailInput) emailInput.value = acc.email;
+    if (passInput) passInput.value = acc.pass;
+    if (window.AppConventions && AppConventions.Toast) {
+        AppConventions.Toast.info(`Loaded ${acc.title} credentials (${acc.email})`);
+    } else if (window.Toast) {
+        Toast.info(`Loaded ${acc.title} credentials`);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const roleParam = urlParams.get('role');
     
-    // Hide signup prompt if staff context per Section B.2
-    if (roleParam && roleParam.toLowerCase() === 'staff') {
-        const prompt = document.getElementById('signupPrompt');
-        if (prompt) prompt.style.display = 'none';
+    // Auto-select staff portal if role query param indicates staff context
+    if (roleParam && (roleParam.toLowerCase() === 'staff' || roleParam.toLowerCase() === 'admin')) {
+        selectPortal('staff');
+    }
+
+    // Check if user just logged out
+    if (urlParams.has('logged_out')) {
+        if (window.AppConventions && AppConventions.Toast) {
+            AppConventions.Toast.success('You have been logged out successfully.');
+        } else if (window.Toast) {
+            Toast.success('You have been logged out successfully.');
+        }
     }
 
     // Password show/hide toggle
@@ -271,7 +541,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = result.redirect || '/dashboard';
                 }, 600);
             } catch (err) {
-                // If 429 rate limit or invalid credentials, Toast shows message per Section B.2
                 if (err.status === 429) {
                     Toast.error(err.message || 'Too many attempts. Please try again later.');
                 } else if (err.status === 401) {

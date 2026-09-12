@@ -549,3 +549,73 @@ label.required::after,
 .app-modal-overlay.active .app-modal-card {
     transform: scale(1);
 }
+
+/* ==========================================================================
+   Universal Form Input High-Contrast & Text Legibility Rules
+   Prevents dark text while typing across all inputs, textareas, and selects
+   ========================================================================== */
+input,
+textarea,
+select,
+.form-control,
+.form-select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+input[type="datetime-local"],
+input[type="search"] {
+    color: #fff9e6 !important;
+    -webkit-text-fill-color: #fff9e6 !important;
+    background-color: rgba(15, 26, 42, 0.85) !important;
+    border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    font-family: 'Raleway', sans-serif;
+    letter-spacing: 0.5px;
+    caret-color: #d4af37 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.form-control:focus,
+.form-select:focus,
+.form-control:active,
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+input[type="search"]:focus {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    background-color: rgba(22, 34, 54, 0.95) !important;
+    border-color: #d4af37 !important;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.35), 0 0 15px rgba(212, 175, 55, 0.2) !important;
+    outline: none !important;
+    caret-color: #d4af37 !important;
+}
+
+input::placeholder,
+textarea::placeholder,
+.form-control::placeholder {
+    color: rgba(232, 223, 193, 0.45) !important;
+    -webkit-text-fill-color: rgba(232, 223, 193, 0.45) !important;
+}
+
+/* Chrome/Safari autofill override to preserve dark background and bright text */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #162236 inset !important;
+    box-shadow: 0 0 0 1000px #162236 inset !important;
+    -webkit-text-fill-color: #fff9e6 !important;
+    color: #fff9e6 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}

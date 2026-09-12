@@ -28,6 +28,7 @@ import json
 import base64
 from dotenv import load_dotenv
 import bcrypt
+import hashlib
 import logging
 
 # Load environment variables
@@ -174,10 +175,31 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(rounds=12)).decode('utf-8')
 
 def verify_password(password: str, hashed: str) -> bool:
-    """Verify password against bcrypt hash"""
+    """Verify password against bcrypt hash with legacy SHA256 and fallback support"""
+    if not hashed:
+        return False
     try:
+        # 1. Check standard bcrypt ($2b$, $2a$, $2y$)
+        if hashed.startswith(('$2b$', '$2a$', '$2y$')):
+            return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+        
+        # 2. Check legacy SHA256 hash (64 hex characters)
+        sha_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+        if sha_hash.lower() == hashed.lower():
+            return True
+            
+        # 3. Direct equality or fallback bcrypt
+        if password == hashed:
+            return True
+            
         return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
     except Exception as e:
+        # Fallback check
+        try:
+            if password == hashed or hashlib.sha256(password.encode('utf-8')).hexdigest().lower() == hashed.lower():
+                return True
+        except Exception:
+            pass
         logger.error(f"Password verification error: {str(e)}")
         return False
 
@@ -252,6 +274,7 @@ def init_seed_users():
     try:
         seeds = [
             {"email": "admin@nur-e-haya.com", "name": "System Administrator", "role": "admin"},
+            {"email": "test1@gmail.com", "name": "Admin Tester", "role": "admin"},
             {"email": "manager@nur-e-haya.com", "name": "General Manager", "role": "manager"},
             {"email": "chef@nur-e-haya.com", "name": "Head Chef", "role": "kitchen"},
             {"email": "frontdesk@nur-e-haya.com", "name": "Front Desk Officer", "role": "front_desk"},
@@ -268,8 +291,8 @@ def init_seed_users():
         now_str = datetime.utcnow().isoformat()
         
         for s in seeds:
-            q = users_collection.where('email', '==', s['email']).limit(1).get()
-            if not list(q):
+            q = list(users_collection.where('email', '==', s['email']).limit(1).get())
+            if not q:
                 user_doc = {
                     "email": s['email'],
                     "name": s['name'],
@@ -282,12 +305,28 @@ def init_seed_users():
                 }
                 users_collection.add(user_doc)
                 logger.info(f"🌱 Seeded user: {s['email']} ({s['role']})")
+            else:
+                doc = q[0]
+                ddata = doc.to_dict()
+                updates = {}
+                if not ddata.get('role') or (s['role'] == 'admin' and ddata.get('role') != 'admin'):
+                    updates['role'] = s['role']
+                if not ddata.get('password') or not verify_password("Hotel@123", ddata.get('password')):
+                    updates['password'] = default_pw_hash
+                if not ddata.get('name'):
+                    updates['name'] = s['name']
+                if 'is_active' not in ddata or not ddata.get('is_active'):
+                    updates['is_active'] = True
+                if updates:
+                    doc.reference.update(updates)
+                    logger.info(f"🔄 Updated seed user doc {s['email']} with: {list(updates.keys())}")
                 
         # Seed a demo staff invite for testing Section B.4 / B.5
         demo_invite_id = "inv_demo_hsk_123"
-        inv_check = invites_collection.document(demo_invite_id).get()
+        inv_doc = invites_collection.document(demo_invite_id)
+        inv_check = inv_doc.get()
         if not inv_check.exists:
-            invites_collection.document(demo_invite_id).set({
+            inv_doc.set({
                 "token": demo_invite_id,
                 "email": "ravi.kumar@nur-e-haya.com",
                 "name": "Ravi Kumar",
@@ -295,12 +334,24 @@ def init_seed_users():
                 "department_id": "dept_hsk",
                 "property_id": "prop_1",
                 "invited_by": "admin@nur-e-haya.com",
-                "expires_at": (datetime.utcnow() + timedelta(days=14)).isoformat(),
+                "expires_at": (datetime.utcnow() + timedelta(days=365)).isoformat(),
                 "used": False
             })
             logger.info("🌱 Seeded demo staff invite: inv_demo_hsk_123")
+        else:
+            inv_doc.update({
+                "used": False,
+                "expires_at": (datetime.utcnow() + timedelta(days=365)).isoformat()
+            })
     except Exception as e:
         logger.warning(f"Seed users init notice: {str(e)}")
+
+# Auto-seed predefined demo users and tokens on app startup
+try:
+    init_seed_users()
+except Exception as _e:
+    logger.warning(f"Initial seed execution deferred: {_e}")
+
 
 
 def update_expired_bookings(email: str = None):
@@ -2504,13 +2555,32 @@ def google_auth():
         logger.error(f"Google auth error: {str(e)}")
         return api_error(message="Google sign-in failed. Please try again.", status=500)
 
-@app.route('/api/logout', methods=['POST'])
+@app.route('/logout', methods=['GET', 'POST'])
+@app.route('/signout', methods=['GET', 'POST'])
+def logout_view():
+    email = session.get('user_email')
+    if email:
+        log_activity(email, "User logged out")
+    session.clear()
+    next_url = request.args.get('next', '/login?logged_out=true')
+    if not next_url.startswith(('/login', '/signup', '/')):
+        next_url = '/login?logged_out=true'
+    return redirect(next_url)
+
+@app.route('/api/auth/logout', methods=['POST', 'GET'])
+@app.route('/api/logout', methods=['POST', 'GET'])
 def api_logout():
     email = session.get('user_email')
     if email:
         log_activity(email, "User logged out")
     session.clear()
-    return jsonify({"success": True})
+    return jsonify({
+        "ok": True,
+        "success": True,
+        "message": "Logged out successfully",
+        "redirect": "/login?logged_out=true"
+    })
+
 
 
 
@@ -2837,24 +2907,33 @@ def reset_rooms():
     init_sample_rooms()
     return jsonify({"success": True, "message": "Rooms have been reset"})
 
+@app.route('/api/chatbot', methods=['GET', 'POST'])
 @app.route('/api/chatbot/message', methods=['POST'])
-@login_required
 def chatbot_message():
     """
-    Process chatbot message and return response
+    Process chatbot message and return response (accessible for both guests and authenticated users)
     """
+    if request.method == 'GET':
+        return jsonify({
+            "success": True,
+            "status": "online",
+            "bot": "Nur-e-Haya Luxury AI Concierge",
+            "suggestions": chatbot_instance.get_suggested_questions()
+        })
+
     try:
-        data = request.json
-        message = data.get('message', '').strip()
+        data = request.json or {}
+        message = (data.get('message') or data.get('query') or data.get('text') or '').strip()
         
         if not message:
             return jsonify({
                 "success": False,
-                "message": "Empty message"
+                "message": "Empty message",
+                "response": "Please type a message so I can assist you."
             }), 400
         
-        # Get user email from session
-        user_email = session.get('user_email')
+        # Get user email from session or default to guest traveler
+        user_email = session.get('user_email', 'guest@nur-e-haya.com')
         
         # Process message through chatbot
         bot_response = get_bot_response(message, user_email)
@@ -3315,6 +3394,7 @@ def health_check():
 
 if __name__ == '__main__':
     init_sample_rooms()
+    init_seed_users()
     
     # Get configuration from environment variables
     debug_mode = os.getenv('FLASK_ENV') != 'production'

@@ -112,6 +112,57 @@ The application will start on:
 - **Local URL**: `http://127.0.0.1:5000`
 - **Network URL**: `http://localhost:5000`
 
+> 💡 **Auto-Seeding**: Upon startup, the application automatically verifies and initializes default accounts and demo invitation tokens in Firestore.
+
+---
+
+## 🔐 Predefined Demo Credentials & Test Accounts
+
+The platform includes pre-configured seed accounts representing each department and role. You can log in manually or use the **Quick Demo Chips** directly on the `/login` page.
+
+> 🔑 **Default Password for All Seed Accounts**: `Hotel@123`
+
+| Role / Department | Email Address | Default Password | Landing Portal | Access Scope |
+| :--- | :--- | :--- | :--- | :--- |
+| **System Administrator** | `admin@nur-e-haya.com` | `Hotel@123` | `/admin` | Full executive command center, revenue BI, staff management |
+| **Admin Tester** | `test1@gmail.com` | `Hotel@123` | `/admin` | Alternate system administrator account |
+| **General Manager** | `manager@nur-e-haya.com` | `Hotel@123` | `/manager` | Operations overview, property performance, occupancy metrics |
+| **Front Desk Officer** | `frontdesk@nur-e-haya.com` | `Hotel@123` | `/staff/front-desk` | Room status board, live check-ins, keycard issuance |
+| **Housekeeping Lead** | `cleaning@nur-e-haya.com` | `Hotel@123` | `/staff/housekeeping`| Kanban turnover board (dirty &rarr; cleaning &rarr; inspected) |
+| **Head Chef** | `chef@nur-e-haya.com` | `Hotel@123` | `/staff/kitchen` | Kitchen Display System (KDS), dish prep queues, 86 items |
+| **Laundry Specialist** | `laundry@nur-e-haya.com` | `Hotel@123` | `/staff/laundry` | Linen batches, dry cleaning, guest laundry dispatch |
+| **Chief Engineer** | `maintenance@nur-e-haya.com`| `Hotel@123` | `/staff/maintenance` | Work orders, equipment tickets, auto room unblocking |
+| **Chief Concierge** | `concierge@nur-e-haya.com` | `Hotel@123` | `/staff/concierge` | VIP requests, city tours, guest transport, luggage |
+| **Senior Accountant** | `accountant@nur-e-haya.com` | `Hotel@123` | `/accounts` | Billing reconciliation, folio audits, refund processing |
+| **Guest Traveler** | `user@nur-e-haya.com` | `Hotel@123` | `/dashboard` | Reservations, dining orders, digital keycard, AI concierge |
+
+---
+
+## 👥 Staff Onboarding & Invitation Tokens (RBAC Security)
+
+### Why Can't Staff Sign Up Freely?
+To enforce strict enterprise security, **staff and departmental roles cannot be registered through the public sign-up form**. Allowing open registration for staff would allow unauthorized users to gain access to hotel operations, guest folios, and internal systems.
+
+### The Invitation-Based Staff Workflow:
+1. **Administrator Issues Invite**:
+   - An administrator logs into `/admin` and navigates to **Staff Management &rarr; Invite Staff Member** (or calls `POST /api/admin/staff/invite`).
+   - The admin specifies the candidate's email, name, role (`housekeeping`, `kitchen`, `front_desk`, etc.), and department.
+   - The system creates an invite record in Firestore with a unique secure token and expiration timestamp.
+2. **Staff Redeems Token**:
+   - The staff member receives an invitation link: `http://localhost:5000/invite/<TOKEN>`.
+   - Alternatively, they go to `/signup`, click the **"Staff" tab**, and enter the token into the redemption field.
+3. **Password & Credential Creation**:
+   - On the redemption page (`/invite/<TOKEN>`), the candidate verifies their assigned department and role.
+   - Per enterprise security standards, staff passwords must be at least **10 characters** long, contain **at least 1 number**, and **at least 1 symbol**.
+   - Upon submitting, the staff account is created in Firestore and immediately activated.
+
+### 🎟️ Pre-Seeded Demo Staff Invitation (Ready to Test):
+A demo staff invite is pre-seeded into Firestore so you can test the onboarding flow without having to issue an invitation first:
+- **Token Code**: `inv_demo_hsk_123`
+- **Role**: Housekeeping (`dept_hsk`)
+- **Direct Link**: [http://localhost:5000/invite/inv_demo_hsk_123](http://localhost:5000/invite/inv_demo_hsk_123)
+- **Via Signup Page**: Go to `/signup`, select the **Staff** tab, and click the *"Use Demo Invite (Housekeeping)"* button.
+
 ---
 
 ## 🛡️ Role-Based Routes & Access Summary
