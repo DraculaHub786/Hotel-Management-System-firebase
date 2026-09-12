@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Front Desk — Today's Arrivals & Departures — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 70px;">
+    <!-- Topbar per Section A.2 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-concierge-bell"></i> Front Desk: Arrivals & Departures
+        </div>
+        <div class="topbar-actions">
+            <a href="/staff/front-desk/rooms" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-th"></i> Room Status Board
+            </a>
+            <button type="button" class="btn btn-primary" onclick="openDirectCheckinModal()" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-key"></i> Quick Check-in
+            </button>
+        </div>
+    </div>
+
+    <!-- Filterbar per Section A.2 -->
+    <div class="screen-filterbar" style="margin-top: 15px;">
+        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Queue:</span>
+        <div class="filter-pills" id="deskQueuePills">
+            <button type="button" class="filter-pill active" data-queue="arrivals">Today's Arrivals</button>
+            <button type="button" class="filter-pill" data-queue="departures">Today's Departures</button>
+            <button type="button" class="filter-pill" data-queue="in_house">Currently In-House</button>
+        </div>
+    </div>
+
+    <!-- Queue Table -->
+    <div id="deskQueueArea" style="margin-top: 25px;">
+        <!-- Injected via JS -->
+    </div>
+</div>
+
+<!-- Modal: Quick Check-in per Section D.3 -->
+<div class="app-modal-overlay" id="quickCheckinModal">
+    <div class="app-modal-card" style="max-width: 500px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 10px;">
+            <h3 style="font-size: 18px; color: var(--text-bright); margin: 0;">Guest Check-In</h3>
+            <button type="button" onclick="closeCheckinModal()" style="background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer;">&times;</button>
+        </div>
+
+        <form id="frontDeskCheckinForm" novalidate>
+            <!-- Booking Ref typeahead -->
+            <div class="form-group">
+                <label class="form-label required" for="modalBookingId">Booking Reference</label>
+                <input type="text" id="modalBookingId" name="booking_id" class="form-control" placeholder="e.g. bk_5521" required>
+                <div class="form-field-error" data-for="booking_id"></div>
+            </div>
+
+            <!-- Room assignment dropdown -->
+            <div class="form-group">
+                <label class="form-label required" for="modalRoomId">Assign Room</label>
+                <select id="modalRoomId" name="room_id" class="form-control" required>
+                    <option value="101">Room 101 — Single (Floor 1)</option>
+                    <option value="102">Room 102 — Suite (Floor 1)</option>
+                    <option value="103">Room 103 — Luxury Suite (Floor 1)</option>
+                    <option value="104">Room 104 — Double (Floor 1)</option>
+                    <option value="204" selected>Room 204 — Deluxe (Floor 2)</option>
+                </select>
+                <div class="form-field-error" data-for="room_id"></div>
+            </div>
+
+            <!-- ID verification confirmed checkbox -->
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; color: var(--text-primary); font-size: 13px; cursor: pointer;">
+                    <input type="checkbox" id="modalIdVerified" name="id_verified" required>
+                    <span><strong>Government Photo ID</strong> verified and photocopied</span>
+                </label>
+                <div class="form-field-error" data-for="id_verified"></div>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+                <label class="form-label" for="modalNotes">Check-in Notes</label>
+                <textarea id="modalNotes" name="notes" class="form-control" rows="2" placeholder="Keycards issued, baggage assistance requested..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeCheckinModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btnConfirmCheckin">Confirm Check-in</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentQueue = 'arrivals';
+const area = document.getElementById('deskQueueArea');
+const modal = document.getElementById('quickCheckinModal');
+
+const mockData = {
+    arrivals: [
+        { id: 'bk_5521', guest: 'Jane Doe', room: 'Room 204', dates: 'Today → +2 nights', status: 'confirmed', notes: 'VIP Guest — Late arrival' },
+        { id: 'bk_6602', guest: 'Michael Smith', room: 'Room 102', dates: 'Today → +1 night', status: 'confirmed', notes: 'Needs airport taxi tomorrow' }
+    ],
+    departures: [
+        { id: 'bk_4129', guest: 'Robert Davis', room: 'Room 103', dates: 'Check-out Today', status: 'checked_in', notes: 'Baggage holding required' }
+    ],
+    in_house: [
+        { id: 'bk_4129', guest: 'Robert Davis', room: 'Room 103', dates: 'In stay until 12 PM', status: 'checked_in', notes: '' },
+        { id: 'bk_3310', guest: 'Elena Rostova', room: 'Room 105', dates: 'Stay ends in 3 days', status: 'checked_in', notes: 'Daily housekeeping requested' }
+    ]
+};
+
+function renderQueue(type) {
+    const list = mockData[type] || [];
+    if (list.length === 0) {
+        AppStates.renderEmpty(area, {
+            icon: 'fa-calendar-check',
+            title: 'Queue Clear',
+            message: `No ${type} scheduled for today.`
+        });
+        return;
+    }
+
+    const rows = list.map(item => `
+        <tr>
+            <td>
+                <strong style="color: var(--primary-color); font-family: monospace;">${item.id}</strong>
+            </td>
+            <td>
+                <strong style="color: var(--text-bright);">${item.guest}</strong>
+            </td>
+            <td>${item.room}</td>
+            <td style="font-size: 13px; color: var(--text-secondary);">${item.dates}</td>
+            <td style="font-size: 12px; color: var(--text-primary); font-style: italic;">${item.notes || '—'}</td>
+            <td style="text-align: right;">
+                ${type === 'arrivals' ? `
+                    <button type="button" class="btn btn-primary" onclick="openDirectCheckinModal('${item.id}', '${item.room}')" style="font-size: 11px; padding: 5px 12px;">
+                        Check-in
+                    </button>
+                ` : type === 'departures' ? `
+                    <button type="button" class="btn btn-danger" onclick="triggerCheckout('${item.id}')" style="font-size: 11px; padding: 5px 12px;">
+                        Check-out
+                    </button>
+                ` : `
+                    <span style="background: rgba(16,78,139,0.2); color: #4da3ff; padding: 3px 8px; border-radius: 10px; font-size: 11px;">In House</span>
+                `}
+            </td>
+        </tr>
+    `).join('');
+
+    area.innerHTML = `
+        <div class="screen-content">
+            <table class="app-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Guest Name</th>
+                        <th>Assigned Room</th>
+                        <th>Stay Window</th>
+                        <th>Special Notes</th>
+                        <th style="text-align: right;">Front Desk Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+window.openDirectCheckinModal = (bkId = '', room = '') => {
+    modal.classList.add('active');
+    if (bkId) document.getElementById('modalBookingId').value = bkId;
+};
+
+window.closeCheckinModal = () => {
+    modal.classList.remove('active');
+};
+
+window.triggerCheckout = async (bookingId) => {
+    if (!confirm(`Confirm check-out for ${bookingId}? This will automatically dispatch a housekeeping turnover cleaning task.`)) return;
+
+    try {
+        const res = await AppAPI.post('/api/front-desk/checkout', { booking_id: bookingId });
+        Toast.success(`Check-out complete! Housekeeping clean task #${res.housekeeping_task_id} generated.`);
+        renderQueue(currentQueue);
+    } catch (e) {
+        Toast.error(e.message || 'Check-out failed');
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    renderQueue('arrivals');
+
+    document.querySelectorAll('#deskQueuePills .filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('#deskQueuePills .filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            currentQueue = pill.dataset.queue;
+            renderQueue(currentQueue);
+        });
+    });
+
+    const form = document.getElementById('frontDeskCheckinForm');
+    AppForm.bind(form, {
+        onSubmit: async (data) => {
+            const res = await AppAPI.post('/api/front-desk/checkin', {
+                booking_id: data.booking_id,
+                room_id: data.room_id,
+                id_verified: data.id_verified === 'on' || data.id_verified === true,
+                notes: data.notes || ''
+            });
+
+            Toast.success(`Guest checked in to Room ${data.room_id}! Keycards active.`);
+            closeCheckinModal();
+            renderQueue(currentQueue);
+        }
+    });
+});
+</script>
+{% endblock %}

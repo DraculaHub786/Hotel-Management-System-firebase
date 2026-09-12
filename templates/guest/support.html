@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Support & Concierge Chat — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 70px;">
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-headset"></i> 24/7 Guest Concierge & Support
+        </div>
+        <div class="topbar-actions">
+            <a href="/dashboard" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">Dashboard</a>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 25px; margin-top: 25px;">
+        <!-- Left Help Channels -->
+        <div class="card">
+            <h3 style="font-size: 17px; color: var(--text-bright); margin-bottom: 14px;">Direct Channels</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13px;">
+                <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px;">
+                    <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-phone-alt"></i> Front Desk Hotline</div>
+                    <div style="color: var(--text-primary); margin-top: 4px;">Dial 0 from room telephone or call +91 (800) 555-NUR</div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px;">
+                    <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-bell"></i> Room Service Express</div>
+                    <div style="color: var(--text-primary); margin-top: 4px;">Dial 9 for immediate culinary and dining delivery</div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.25); padding: 12px; border-radius: 8px;">
+                    <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-ambulance"></i> Medical Assistance</div>
+                    <div style="color: var(--text-primary); margin-top: 4px;">On-call doctor available 24/7 for guest wellness</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Live Chat Window -->
+        <div class="card" style="display: flex; flex-direction: column; height: 520px; padding: 0; overflow: hidden;">
+            <div style="padding: 16px 20px; background: rgba(15,26,42,0.85); border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; align-items: center; gap: 12px;">
+                <div style="width: 10px; height: 10px; border-radius: 50%; background: #2ee59d;"></div>
+                <div>
+                    <strong style="color: var(--text-bright); font-size: 14px;">Nur-e-Haya Intelligent Assistant</strong>
+                    <div style="font-size: 11px; color: var(--text-secondary);">Always active to assist with requests, bookings, and services</div>
+                </div>
+            </div>
+
+            <!-- Chat message log -->
+            <div id="chatMessages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+                <div style="align-self: flex-start; max-width: 80%; background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; padding: 12px 16px; color: var(--text-primary); font-size: 13px; line-height: 1.5;">
+                    Greetings! I am your Nur-e-Haya concierge assistant. How may I serve you today? You can inquire about your room booking, order room service, or book a spa session.
+                </div>
+            </div>
+
+            <!-- Input bar -->
+            <form id="chatForm" style="padding: 14px 18px; background: rgba(15,26,42,0.7); border-top: 1px solid rgba(212,175,55,0.2); display: flex; gap: 10px;">
+                <input type="text" id="chatInput" class="form-control" placeholder="Ask a question or request a service..." required style="padding: 10px 16px;">
+                <button type="submit" class="btn btn-primary" style="padding: 10px 20px; font-size: 13px;">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const chatForm = document.getElementById('chatForm');
+    const chatInput = document.getElementById('chatInput');
+    const messages = document.getElementById('chatMessages');
+
+    chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        // User message
+        const userMsg = document.createElement('div');
+        userMsg.style.cssText = 'align-self: flex-end; max-width: 80%; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: var(--dark-bg); font-weight: 500; border-radius: 12px; padding: 10px 16px; font-size: 13px;';
+        userMsg.textContent = text;
+        messages.appendChild(userMsg);
+
+        chatInput.value = '';
+        messages.scrollTop = messages.scrollHeight;
+
+        // Bot response
+        try {
+            const res = await fetch('/api/chatbot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+            const botText = data.response || 'Our concierge team has received your inquiry and will attend to you promptly.';
+
+            const botMsg = document.createElement('div');
+            botMsg.style.cssText = 'align-self: flex-start; max-width: 80%; background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; padding: 12px 16px; color: var(--text-primary); font-size: 13px; line-height: 1.5;';
+            botMsg.textContent = botText;
+            messages.appendChild(botMsg);
+            messages.scrollTop = messages.scrollHeight;
+        } catch (err) {
+            const botMsg = document.createElement('div');
+            botMsg.style.cssText = 'align-self: flex-start; max-width: 80%; background: rgba(255,255,255,0.06); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; padding: 12px 16px; color: var(--text-primary); font-size: 13px; line-height: 1.5;';
+            botMsg.textContent = 'Thank you for contacting concierge. We are pleased to assist you with all amenities.';
+            messages.appendChild(botMsg);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Luxury Rooms & Suites — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 50px;">
+    <!-- Topbar per Section A.2 / C.1 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-bed"></i> Luxury Accommodations
+        </div>
+        <div class="topbar-actions">
+            <div class="screen-search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="roomSearchInput" placeholder="Search by room type, number...">
+            </div>
+            <a href="/cart" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-shopping-cart"></i> Cart <span id="cartCountBadge" style="background: var(--primary-color); color: var(--dark-bg); padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: bold;">0</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filterbar per Section A.2 -->
+    <div class="screen-filterbar" style="margin-top: 15px;">
+        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Filter by Type:</span>
+        <div class="filter-pills" id="roomFilterPills">
+            <button type="button" class="filter-pill active" data-filter="all">All Rooms</button>
+            <button type="button" class="filter-pill" data-filter="Single">Single</button>
+            <button type="button" class="filter-pill" data-filter="Double">Double</button>
+            <button type="button" class="filter-pill" data-filter="Suite">Suites</button>
+            <button type="button" class="filter-pill" data-filter="Luxury">Luxury</button>
+            <button type="button" class="filter-pill" data-filter="Family">Family</button>
+        </div>
+    </div>
+
+    <!-- Rooms Container -->
+    <div id="roomsContainer" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+        <!-- Loading skeletons injected by AppStates.renderLoading -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const container = document.getElementById('roomsContainer');
+    AppStates.renderLoading(container, { type: 'card', count: 6 });
+
+    // Update cart badge
+    function updateCartBadge() {
+        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+        const badge = document.getElementById('cartCountBadge');
+        if (badge) badge.textContent = cart.length;
+    }
+    updateCartBadge();
+
+    let allRooms = [];
+
+    async function loadRooms() {
+        try {
+            const rooms = await AppAPI.get('/api/rooms');
+            allRooms = rooms || [];
+            renderRooms(allRooms);
+        } catch (err) {
+            AppStates.renderError(container, {
+                message: 'Failed to retrieve available rooms.',
+                onRetry: loadRooms
+            });
+        }
+    }
+
+    function renderRooms(rooms) {
+        if (!rooms || rooms.length === 0) {
+            AppStates.renderEmpty(container, {
+                icon: 'fa-bed',
+                title: 'No Rooms Found',
+                message: 'No accommodations match your filter criteria at this moment.'
+            });
+            return;
+        }
+
+        container.innerHTML = rooms.map(room => `
+            <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="height: 200px; background: url('https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
+                    <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
+                        ₹${room.price} / night
+                    </div>
+                    <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(0, 0, 0, 0.7); border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #fff;">
+                        Room ${room.number}
+                    </div>
+                </div>
+                <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">${room.type} Room</h3>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                            <i class="fas fa-user-friends" style="margin-right: 4px;"></i> Max Guests: ${room.max_guests || 2}
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px;">
+                            ${(room.amenities || ['WiFi', 'AC', 'TV']).map(a => `<span style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 2px 8px; font-size: 11px; color: var(--text-primary);">${a}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="/rooms/${room.id}" class="btn btn-secondary" style="flex: 1; text-align: center; font-size: 12px; padding: 10px;">Details</a>
+                        <button type="button" class="btn btn-primary add-cart-btn" data-id="${room.id}" data-name="${room.type} Room ${room.number}" data-price="${room.price}" style="flex: 1; font-size: 12px; padding: 10px;">
+                            <i class="fas fa-cart-plus"></i> Book
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        // Attach book/cart handlers
+        container.querySelectorAll('.add-cart-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = {
+                    type: 'room',
+                    ref_id: btn.dataset.id,
+                    name: btn.dataset.name,
+                    unit_price: parseFloat(btn.dataset.price),
+                    check_in: new Date().toISOString().split('T')[0],
+                    check_out: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+                    qty: 1
+                };
+
+                const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+                cart.push(item);
+                localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+                updateCartBadge();
+                Toast.success(`${btn.dataset.name} added to cart!`);
+            });
+        });
+    }
+
+    // Filter pills
+    document.querySelectorAll('#roomFilterPills .filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('#roomFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            const filter = pill.dataset.filter;
+            if (filter === 'all') {
+                renderRooms(allRooms);
+            } else {
+                renderRooms(allRooms.filter(r => r.type && r.type.toLowerCase() === filter.toLowerCase()));
+            }
+        });
+    });
+
+    // Search input
+    document.getElementById('roomSearchInput').addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase().trim();
+        renderRooms(allRooms.filter(r => 
+            (r.type && r.type.toLowerCase().includes(term)) || 
+            (r.number && r.number.toString().includes(term))
+        ));
+    });
+
+    loadRooms();
+});
+</script>
+{% endblock %}

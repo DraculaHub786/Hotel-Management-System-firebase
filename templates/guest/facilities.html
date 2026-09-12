@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Hotel Facilities & Experiences — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-spa"></i> Experiences & Facilities
+        </div>
+        <div class="topbar-actions">
+            <a href="/cart" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-shopping-cart"></i> Cart
+            </a>
+        </div>
+    </div>
+
+    <!-- Facilities Grid -->
+    <div style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="height: 200px; background: url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
+                <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
+                    ₹3,200 / session
+                </div>
+            </div>
+            <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">Nur-e-Sultana Luxury Spa</h3>
+                    <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px;">
+                        Holistic wellness therapies, Moroccan bath, and authentic aromatherapy by certified specialists.
+                    </p>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                        <i class="fas fa-clock" style="margin-right: 4px;"></i> Duration: 90 mins | Available Daily
+                    </div>
+                </div>
+                <a href="/facilities/fac_spa" class="btn btn-primary" style="text-align: center;">Book Slot</a>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="height: 200px; background: url('https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
+                <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
+                    ₹1,200 / session
+                </div>
+            </div>
+            <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">Rooftop Infinity Heated Pool</h3>
+                    <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px;">
+                        Panoramic city skyline view, private heated cabanas, sun loungers, and complimentary mocktails.
+                    </p>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                        <i class="fas fa-clock" style="margin-right: 4px;"></i> Duration: 120 mins | Towels Provided
+                    </div>
+                </div>
+                <a href="/facilities/fac_pool" class="btn btn-primary" style="text-align: center;">Book Slot</a>
+            </div>
+        </div>
+
+        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="height: 200px; background: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
+                <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
+                    ₹800 / session
+                </div>
+            </div>
+            <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">Fitness Arena & Sauna</h3>
+                    <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px;">
+                        Olympic grade strength and cardio machines, certified trainers, and post-workout eucalyptus sauna.
+                    </p>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                        <i class="fas fa-clock" style="margin-right: 4px;"></i> Duration: 60 mins | Open 24 Hours
+                    </div>
+                </div>
+                <a href="/facilities/fac_gym" class="btn btn-primary" style="text-align: center;">Book Slot</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

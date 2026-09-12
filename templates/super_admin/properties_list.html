@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Property Management - Super Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-secondary-subtle text-secondary fw-medium px-2 py-1 rounded-pill">Multi-Property</span>
+                <span class="badge bg-primary-subtle text-primary px-2 py-1 rounded-pill">2 Properties Active</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Hotel Properties Directory</h2>
+            <p class="text-muted small mb-0">Multi-tenant hotel resort chain properties and estate settings</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/super-admin/properties/new" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-plus me-1"></i> Add Property
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold mb-1">Nur-E-Haya Luxury Resort & Spa</h5>
+                    <span class="badge bg-success">Flagship Active</span>
+                </div>
+                <p class="text-muted small mb-3">Beachfront luxury villa & suites resort with full dining & wellness.</p>
+                <div class="text-muted small mb-3">
+                    <div><i class="fas fa-map-marker-alt text-danger me-1"></i> Goa Coastal Highway, India</div>
+                    <div><i class="fas fa-bed text-primary me-1"></i> 30 Rooms & Suites &bull; 3 Facilities</div>
+                </div>
+                <div class="d-flex justify-content-end border-top pt-3 mt-auto">
+                    <a href="/super-admin/properties/prop_flagship" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Configure Property</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold mb-1">Nur-E-Haya Grand City Suites</h5>
+                    <span class="badge bg-primary">Operating</span>
+                </div>
+                <p class="text-muted small mb-3">Metropolitan business hotel with executive lounges and meeting centers.</p>
+                <div class="text-muted small mb-3">
+                    <div><i class="fas fa-map-marker-alt text-danger me-1"></i> Central Business District, Mumbai</div>
+                    <div><i class="fas fa-bed text-primary me-1"></i> 65 Rooms &bull; 2 Facilities</div>
+                </div>
+                <div class="d-flex justify-content-end border-top pt-3 mt-auto">
+                    <a href="/super-admin/properties/prop_city" class="btn btn-outline-secondary btn-sm rounded-pill px-3">Configure Property</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

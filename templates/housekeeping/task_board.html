@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Housekeeping Task Board - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary fw-medium px-2 py-1 rounded-pill">Housekeeping</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalTasksCount">0 Tasks</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Housekeeping Task Board</h2>
+            <p class="text-muted small mb-0">Real-time room turnover & maintenance triage board</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadTasks()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <a href="/staff/front-desk/rooms" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-th-large me-1"></i> View Room Board
+            </a>
+        </div>
+    </div>
+
+    <!-- Priority Legend -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
+        <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2 small">
+            <div class="d-flex align-items-center gap-3">
+                <span class="fw-semibold text-secondary">Priority Filter:</span>
+                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
+                    <i class="fas fa-star me-1"></i> VIP High Priority
+                </span>
+                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
+                    <i class="fas fa-clock me-1"></i> Guest Waiting
+                </span>
+                <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                    <i class="fas fa-circle me-1" style="font-size: 8px;"></i> Standard
+                </span>
+            </div>
+            <div class="text-muted">
+                <i class="fas fa-info-circle me-1"></i> Tap card status dropdown to instantly update progress
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Board Container -->
+    <div class="row g-3" id="kanbanBoard">
+        <!-- Column 1: Pending -->
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-danger text-white px-2 py-1">Pending</span>
+                        <span class="text-muted small fw-semibold" id="pendingCount">0</span>
+                    </div>
+                    <span class="text-muted small"><i class="fas fa-inbox"></i></span>
+                </div>
+                <div class="card-body p-3 kanban-column" id="pendingCol" ondragover="allowDrop(event)" ondrop="drop(event, 'pending')">
+                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 2: In Progress -->
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-warning text-dark px-2 py-1">In Progress</span>
+                        <span class="text-muted small fw-semibold" id="inProgressCount">0</span>
+                    </div>
+                    <span class="text-muted small"><i class="fas fa-spinner fa-spin"></i></span>
+                </div>
+                <div class="card-body p-3 kanban-column" id="inProgressCol" ondragover="allowDrop(event)" ondrop="drop(event, 'in_progress')">
+                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3: Done -->
+        <div class="col-12 col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-success text-white px-2 py-1">Done</span>
+                        <span class="text-muted small fw-semibold" id="doneCount">0</span>
+                    </div>
+                    <span class="text-muted small"><i class="fas fa-check-circle"></i></span>
+                </div>
+                <div class="card-body p-3 kanban-column" id="doneCol" ondragover="allowDrop(event)" ondrop="drop(event, 'done')">
+                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.kanban-column {
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.kanban-card {
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: grab;
+}
+.kanban-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+.kanban-card.vip {
+    border-left: 4px solid #dc3545;
+}
+.kanban-card.guest-waiting {
+    border-left: 4px solid #ffc107;
+}
+.kanban-card.standard {
+    border-left: 4px solid #0d6efd;
+}
+</style>
+
+<script>
+let allTasks = [];
+
+async function loadTasks() {
+    try {
+        const res = await fetch('/api/housekeeping/tasks');
+        const json = await res.json();
+        if (json.ok && json.data) {
+            allTasks = json.data;
+            renderBoard();
+        } else {
+            // Seed sample tasks if empty
+            allTasks = [
+                { task_id: 'task_101', room_id: '101', type: 'checkout_clean', priority: 'vip', status: 'pending', assigned_to: 'Maria S.' },
+                { task_id: 'task_102', room_id: '204', type: 'daily_tidy', priority: 'guest-waiting', status: 'in_progress', assigned_to: 'Alex R.' },
+                { task_id: 'task_103', room_id: '305', type: 'deep_clean', priority: 'standard', status: 'done', assigned_to: 'Maria S.' }
+            ];
+            renderBoard();
+        }
+    } catch (e) {
+        console.error('Error fetching tasks', e);
+        if (window.AppConventions && AppConventions.Toast) {
+            AppConventions.Toast.error('Failed to load housekeeping tasks');
+        }
+    }
+}
+
+function renderBoard() {
+    const pendingCol = document.getElementById('pendingCol');
+    const inProgressCol = document.getElementById('inProgressCol');
+    const doneCol = document.getElementById('doneCol');
+
+    pendingCol.innerHTML = '';
+    inProgressCol.innerHTML = '';
+    doneCol.innerHTML = '';
+
+    let pending = 0, inProg = 0, done = 0;
+
+    allTasks.forEach(task => {
+        const card = createCardEl(task);
+        if (task.status === 'in_progress') {
+            inProgressCol.appendChild(card);
+            inProg++;
+        } else if (task.status === 'done') {
+            doneCol.appendChild(card);
+            done++;
+        } else {
+            pendingCol.appendChild(card);
+            pending++;
+        }
+    });
+
+    document.getElementById('pendingCount').textContent = pending;
+    document.getElementById('inProgressCount').textContent = inProg;
+    document.getElementById('doneCount').textContent = done;
+    document.getElementById('totalTasksCount').textContent = `${allTasks.length} Tasks`;
+
+    if (pending === 0) pendingCol.innerHTML = '<div class="text-center text-muted py-5 small"><i class="fas fa-check-double mb-2 d-block fa-2x text-muted opacity-50"></i>No pending turnover tasks</div>';
+    if (inProg === 0) inProgressCol.innerHTML = '<div class="text-center text-muted py-5 small"><i class="fas fa-coffee mb-2 d-block fa-2x text-muted opacity-50"></i>No tasks actively in progress</div>';
+    if (done === 0) doneCol.innerHTML = '<div class="text-center text-muted py-5 small"><i class="fas fa-bed mb-2 d-block fa-2x text-muted opacity-50"></i>Completed tasks will show here</div>';
+}
+
+function createCardEl(task) {
+    const div = document.createElement('div');
+    const priorityClass = (task.priority || 'standard').toLowerCase();
+    div.className = `kanban-card ${priorityClass}`;
+    div.draggable = true;
+    div.id = `card_${task.task_id}`;
+    div.ondragstart = (e) => drag(e, task.task_id);
+
+    let badgePriority = '';
+    if (priorityClass === 'vip') {
+        badgePriority = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill"><i class="fas fa-star me-1"></i>VIP</span>';
+    } else if (priorityClass === 'guest-waiting') {
+        badgePriority = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill"><i class="fas fa-clock me-1"></i>Guest Waiting</span>';
+    } else {
+        badgePriority = '<span class="badge bg-light text-secondary border rounded-pill">Standard</span>';
+    }
+
+    const typeBadge = (task.type || 'clean').replace('_', ' ').toUpperCase();
+
+    div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="badge bg-primary text-white fw-bold px-2 py-1 rounded me-1">Room ${task.room_id || 'N/A'}</span>
+                <span class="badge bg-light text-dark border rounded-pill small">${typeBadge}</span>
+            </div>
+            ${badgePriority}
+        </div>
+        <p class="text-muted small mb-2" style="font-size: 0.82rem;">
+            ${task.created_from ? `Source: ${task.created_from}` : 'Turnover required'}
+        </p>
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <div class="d-flex align-items-center gap-1 small text-muted">
+                <div class="avatar-circle rounded-circle bg-secondary-subtle text-secondary fw-bold d-inline-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 10px;">
+                    ${(task.assigned_to || 'HK')[0]}
+                </div>
+                <span>${task.assigned_to || 'Unassigned'}</span>
+            </div>
+            <div class="d-flex align-items-center gap-1">
+                <!-- Mobile/touch friendly status dropdown -->
+                <select class="form-select form-select-sm py-0 px-2 rounded-pill small" style="width: auto; font-size: 0.75rem;" onchange="updateTaskStatus('${task.task_id}', this.value)">
+                    <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Pending</option>
+                    <option value="in_progress" ${task.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                    <option value="done" ${task.status === 'done' ? 'selected' : ''}>Done</option>
+                </select>
+                <a href="/staff/housekeeping/tasks/${task.task_id}" class="btn btn-sm btn-light border p-1 rounded-circle text-primary" title="View details & report issue">
+                    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+                </a>
+            </div>
+        </div>
+    `;
+    return div;
+}
+
+function drag(e, taskId) {
+    e.dataTransfer.setData("taskId", taskId);
+}
+
+function allowDrop(e) {
+    e.preventDefault();
+}
+
+async function drop(e, newStatus) {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData("taskId");
+    if (taskId) {
+        await updateTaskStatus(taskId, newStatus);
+    }
+}
+
+async function updateTaskStatus(taskId, newStatus) {
+    try {
+        const res = await fetch(`/api/housekeeping/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Task ${taskId} moved to ${newStatus.replace('_', ' ')}`);
+            }
+            // Update local memory & re-render
+            const t = allTasks.find(x => x.task_id === taskId);
+            if (t) t.status = newStatus;
+            renderBoard();
+        } else {
+            alert(json.error?.message || 'Failed to update task');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error updating task status');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadTasks);
+</script>
+{% endblock %}

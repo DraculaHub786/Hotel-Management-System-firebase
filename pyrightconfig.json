@@ -1,0 +1,10 @@
+{
+  "include": [
+    "."
+  ],
+  "extraPaths": [
+    "C:/Users/afjal/AppData/Local/Programs/Python/Python311/Lib/site-packages",
+    "C:/Users/afjal/AppData/Local/Programs/Python/Python313/Lib/site-packages",
+    "C:/ai-env/Lib/site-packages"
+  ]
+}

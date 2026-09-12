@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Fine Dining & Room Service Menu — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-utensils"></i> Royal Dining Menu
+        </div>
+        <div class="topbar-actions">
+            <a href="/cart" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-shopping-cart"></i> Cart <span id="menuCartBadge" style="background: var(--primary-color); color: var(--dark-bg); padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: bold;">0</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Pills for Categories -->
+    <div class="screen-filterbar" style="margin-top: 15px;">
+        <div class="filter-pills" id="menuFilterPills">
+            <button type="button" class="filter-pill active" data-cat="all">All Items</button>
+            <button type="button" class="filter-pill" data-cat="food">Gourmet Food</button>
+            <button type="button" class="filter-pill" data-cat="drink">Beverages & Teas</button>
+            <button type="button" class="filter-pill" data-cat="snack">Light Bites</button>
+        </div>
+    </div>
+
+    <!-- Menu Items Grid -->
+    <div id="menuContainer" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
+        <!-- Injected via JS -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('menuContainer');
+    AppStates.renderLoading(container, { type: 'card', count: 4 });
+
+    function updateBadge() {
+        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+        const badge = document.getElementById('menuCartBadge');
+        if (badge) badge.textContent = cart.length;
+    }
+    updateBadge();
+
+    const menuItems = [
+        {
+            id: 'item_12',
+            name: 'Royal Club Sandwich',
+            category: 'food',
+            price: 450,
+            available: true,
+            diet: 'non-veg',
+            prep: '15 mins',
+            desc: 'Triple-decker smoked chicken, organic fried egg, aged cheddar, crisp lettuce with hand-cut truffle fries.',
+            img: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80'
+        },
+        {
+            id: 'item_13',
+            name: 'Dal Makhani & Garlic Naan',
+            category: 'food',
+            price: 550,
+            available: true,
+            diet: 'veg',
+            prep: '20 mins',
+            desc: 'Slow-simmered black lentils enriched with churned white butter, served with clay oven baked garlic naan.',
+            img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=600&q=80'
+        },
+        {
+            id: 'item_14',
+            name: 'Grilled Norwegian Salmon',
+            category: 'food',
+            price: 950,
+            available: true,
+            diet: 'non-veg',
+            prep: '25 mins',
+            desc: 'Pan-seared Atlantic salmon fillet, tender asparagus spears, saffron lemon butter emulsion, and mashed potatoes.',
+            img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=600&q=80'
+        },
+        {
+            id: 'item_15',
+            name: 'Kashmiri Saffron Kahwa & Baklava',
+            category: 'drink',
+            price: 320,
+            available: true,
+            diet: 'veg',
+            prep: '10 mins',
+            desc: 'Aromatic green tea infused with pure saffron strands, crushed cardamom, and sliced almonds paired with pistachio baklava.',
+            img: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80'
+        }
+    ];
+
+    function renderMenu(items) {
+        if (!items || items.length === 0) {
+            AppStates.renderEmpty(container, {
+                icon: 'fa-utensils',
+                title: 'No Dishes Found',
+                message: 'No culinary offerings in this category.'
+            });
+            return;
+        }
+
+        container.innerHTML = items.map(item => `
+            <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="height: 180px; background: url('${item.img}') center/cover; position: relative;">
+                    <div style="position: absolute; top: 10px; right: 10px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
+                        ₹${item.price}
+                    </div>
+                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 3px 8px; border-radius: 4px; font-size: 11px; color: #fff;">
+                        <i class="fas fa-clock"></i> ${item.prep}
+                    </div>
+                </div>
+                <div style="padding: 18px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                            <h3 style="font-size: 17px; color: var(--text-bright);">${item.name}</h3>
+                            <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${item.diet === 'veg' ? 'rgba(0,134,112,0.2)' : 'rgba(199,0,57,0.2)'}; color: ${item.diet === 'veg' ? '#2ee59d' : '#ff7b92'}; border: 1px solid ${item.diet === 'veg' ? '#008670' : '#c70039'};">
+                                ${item.diet}
+                            </span>
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 16px;">
+                            ${item.desc}
+                        </p>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="filter-pill qty-minus" data-id="${item.id}" style="padding: 2px 10px;">-</button>
+                            <span id="qty_${item.id}" style="font-weight: bold; font-size: 14px; min-width: 18px; text-align: center;">1</span>
+                            <button type="button" class="filter-pill qty-plus" data-id="${item.id}" style="padding: 2px 10px;">+</button>
+                        </div>
+                        <button type="button" class="btn btn-primary add-menu-btn" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}" style="font-size: 12px; padding: 8px 14px;">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        // Wire quantity steppers
+        container.querySelectorAll('.qty-plus').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const span = document.getElementById(`qty_${btn.dataset.id}`);
+                span.textContent = parseInt(span.textContent) + 1;
+            });
+        });
+        container.querySelectorAll('.qty-minus').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const span = document.getElementById(`qty_${btn.dataset.id}`);
+                const current = parseInt(span.textContent);
+                if (current > 1) span.textContent = current - 1;
+            });
+        });
+
+        // Wire add to cart
+        container.querySelectorAll('.add-menu-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const qty = parseInt(document.getElementById(`qty_${btn.dataset.id}`).textContent);
+                const item = {
+                    type: 'menu',
+                    ref_id: btn.dataset.id,
+                    name: btn.dataset.name,
+                    unit_price: parseFloat(btn.dataset.price),
+                    qty: qty
+                };
+
+                const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+                cart.push(item);
+                localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+                updateBadge();
+                Toast.success(`${qty}x ${btn.dataset.name} added to cart!`);
+            });
+        });
+    }
+
+    renderMenu(menuItems);
+
+    document.querySelectorAll('#menuFilterPills .filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('#menuFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            const cat = pill.dataset.cat;
+            if (cat === 'all') {
+                renderMenu(menuItems);
+            } else {
+                renderMenu(menuItems.filter(m => m.category === cat));
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

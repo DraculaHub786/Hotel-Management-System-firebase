@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings & Orders — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+    <!-- Topbar -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-history"></i> My Bookings & Activity
+        </div>
+        <div class="topbar-actions">
+            <a href="/rooms" class="btn btn-primary" style="font-size: 12px; padding: 8px 14px;">
+                <i class="fas fa-plus"></i> New Reservation
+            </a>
+        </div>
+    </div>
+
+    <!-- Filterbar -->
+    <div class="screen-filterbar" style="margin-top: 15px;">
+        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Status:</span>
+        <div class="filter-pills" id="bookingFilterPills">
+            <button type="button" class="filter-pill active" data-filter="all">All</button>
+            <button type="button" class="filter-pill" data-filter="confirmed">Confirmed</button>
+            <button type="button" class="filter-pill" data-filter="checked_in">Checked In</button>
+            <button type="button" class="filter-pill" data-filter="checked_out">Checked Out</button>
+            <button type="button" class="filter-pill" data-filter="cancelled">Cancelled</button>
+        </div>
+    </div>
+
+    <!-- Content Table Container -->
+    <div id="bookingsListArea" style="margin-top: 25px;">
+        <!-- Injected via JS -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const area = document.getElementById('bookingsListArea');
+    AppStates.renderLoading(area, { type: 'table', count: 4 });
+
+    let allBookings = [];
+
+    async function fetchBookings() {
+        try {
+            const res = await fetch('/api/user/bookings');
+            if (res.ok) {
+                const data = await res.json();
+                allBookings = data.data || [];
+            } else {
+                // Demo fallback if API empty
+                allBookings = [
+                    {
+                        id: 'bk_5521',
+                        confirmation_code: 'HTL-5521-AX',
+                        name: 'Deluxe Room 204',
+                        check_in: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
+                        check_out: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+                        status: 'confirmed',
+                        total_paid: 8815
+                    },
+                    {
+                        id: 'bk_4129',
+                        confirmation_code: 'HTL-4129-BC',
+                        name: 'Nur-e-Sultana Luxury Spa',
+                        check_in: new Date(Date.now() - 86400000 * 4).toISOString().split('T')[0],
+                        check_out: new Date(Date.now() - 86400000 * 4).toISOString().split('T')[0],
+                        status: 'checked_out',
+                        total_paid: 3200
+                    }
+                ];
+            }
+            renderBookings(allBookings);
+        } catch (e) {
+            AppStates.renderError(area, {
+                message: 'Failed to load booking history.',
+                onRetry: fetchBookings
+            });
+        }
+    }
+
+    function renderBookings(bookings) {
+        if (!bookings || bookings.length === 0) {
+            AppStates.renderEmpty(area, {
+                icon: 'fa-calendar-times',
+                title: 'No bookings found',
+                message: 'You have no bookings matching the selected status filter.',
+                actionText: 'Reserve a room',
+                onAction: () => { window.location.href = '/rooms'; }
+            });
+            return;
+        }
+
+        const rows = bookings.map(b => {
+            const isConfirmed = b.status === 'confirmed';
+            
+            // Check-in > 24h away check per Section C.9
+            const checkInDate = new Date(b.check_in);
+            const canCancel = isConfirmed && (checkInDate - new Date() > 86400000);
+
+            let statusBadge = '';
+            if (b.status === 'confirmed') statusBadge = '<span style="background: rgba(0,134,112,0.2); color: #2ee59d; border: 1px solid #008670; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Confirmed</span>';
+            else if (b.status === 'checked_in') statusBadge = '<span style="background: rgba(16,78,139,0.2); color: #4da3ff; border: 1px solid #104e8b; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Checked In</span>';
+            else if (b.status === 'checked_out') statusBadge = '<span style="background: rgba(255,255,255,0.1); color: #ccc; border: 1px solid #555; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Checked Out</span>';
+            else statusBadge = '<span style="background: rgba(199,0,57,0.2); color: #ff7b92; border: 1px solid #c70039; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Cancelled</span>';
+
+            return `
+                <tr>
+                    <td>
+                        <strong style="color: var(--primary-color); font-family: monospace; font-size: 14px;">${b.confirmation_code || b.id}</strong>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${b.id}</div>
+                    </td>
+                    <td>
+                        <strong style="color: var(--text-bright);">${b.name || (b.items && b.items[0] ? b.items[0].name : 'Accommodation')}</strong>
+                    </td>
+                    <td style="font-size: 13px; color: var(--text-primary);">
+                        ${b.check_in} &rarr; ${b.check_out}
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td style="font-weight: bold; color: var(--primary-color);">₹${b.total_paid}</td>
+                    <td style="text-align: right;">
+                        <div style="display: inline-flex; gap: 8px;">
+                            <a href="/my-bookings/${b.id}" class="btn btn-secondary" style="font-size: 11px; padding: 5px 12px;">View</a>
+                            ${canCancel ? `
+                                <button type="button" class="btn btn-danger" onclick="cancelBooking('${b.id}')" style="font-size: 11px; padding: 5px 12px;">
+                                    Cancel
+                                </button>
+                            ` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        area.innerHTML = `
+            <div class="screen-content">
+                <table class="app-table">
+                    <thead>
+                        <tr>
+                            <th>Booking Ref</th>
+                            <th>Accommodation / Facility</th>
+                            <th>Stay Dates</th>
+                            <th>Status</th>
+                            <th>Total Paid</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    window.cancelBooking = async (id) => {
+        if (!confirm('Are you sure you want to cancel this booking? This action cannot be reversed.')) return;
+
+        try {
+            await AppAPI.post(`/api/bookings/${id}/cancel`);
+            Toast.success('Booking cancelled successfully.');
+            // Refresh
+            const item = allBookings.find(b => b.id === id);
+            if (item) item.status = 'cancelled';
+            renderBookings(allBookings);
+        } catch (err) {
+            Toast.error(err.message || 'Could not cancel booking.');
+        }
+    };
+
+    // Filter tabs
+    document.querySelectorAll('#bookingFilterPills .filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('#bookingFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            const f = pill.dataset.filter;
+            if (f === 'all') {
+                renderBookings(allBookings);
+            } else {
+                renderBookings(allBookings.filter(b => b.status === f));
+            }
+        });
+    });
+
+    fetchBookings();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Log Security Incident - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 750px;">
+    <!-- Breadcrumb -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/staff/security" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Incident Log
+        </a>
+        <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill">
+            <i class="fas fa-shield-alt me-1"></i> Security Protocol
+        </span>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h3 class="h4 fw-bold mb-1 text-danger">
+            <i class="fas fa-exclamation-triangle me-2"></i>Report Security Incident
+        </h3>
+        <p class="text-muted small mb-4">File an immediate security or safety occurrence report across hotel premises.</p>
+
+        <form id="newIncidentForm" onsubmit="submitIncident(event)">
+            <!-- Incident Type -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold small required">Incident Category / Type</label>
+                <select class="form-select rounded-3" id="incidentType" required>
+                    <option value="" disabled selected>Select category...</option>
+                    <option value="disturbance">Disturbance / Noise Complaint</option>
+                    <option value="theft">Theft / Missing Property</option>
+                    <option value="unauthorized_access">Unauthorized Access / Trespass</option>
+                    <option value="medical">Medical Emergency</option>
+                    <option value="other">Other Incident</option>
+                </select>
+            </div>
+
+            <!-- Location / Room -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold small required">Location / Room Number</label>
+                <input type="text" class="form-control rounded-3" id="incidentLocation" placeholder="e.g. Room 309, Lobby Bar, Parking Level B1" required>
+                <div class="form-text small">Enter room number or hotel zone.</div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold small required">Incident Description</label>
+                <textarea class="form-control rounded-3" id="incidentDescription" rows="4" maxlength="1000" placeholder="Provide factual description of events, people involved, time witnessed..." required></textarea>
+                <div class="text-end text-muted small mt-1"><span id="descCount">0</span>/1000 characters</div>
+            </div>
+
+            <!-- Severity Radios -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold small required d-block">Incident Severity</label>
+                <div class="row g-2">
+                    <div class="col-6 col-md-3">
+                        <div class="border rounded-3 p-2 text-center">
+                            <input class="form-check-input" type="radio" name="severity" id="sevLow" value="low">
+                            <label class="form-check-label d-block small mt-1" for="sevLow">Low</label>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="border rounded-3 p-2 text-center">
+                            <input class="form-check-input" type="radio" name="severity" id="sevMed" value="medium" checked>
+                            <label class="form-check-label d-block small mt-1" for="sevMed">Medium</label>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="border rounded-3 p-2 text-center">
+                            <input class="form-check-input" type="radio" name="severity" id="sevHigh" value="high">
+                            <label class="form-check-label d-block small mt-1 text-warning-emphasis fw-semibold" for="sevHigh">High</label>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="border border-danger rounded-3 p-2 text-center bg-danger-subtle">
+                            <input class="form-check-input" type="radio" name="severity" id="sevCritical" value="critical">
+                            <label class="form-check-label d-block small mt-1 text-danger fw-bold" for="sevCritical">🚨 Critical</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-danger py-2 small mt-2 d-none" id="criticalWarning">
+                    <i class="fas fa-bell me-1"></i> Selecting <strong>Critical</strong> will instantly trigger an emergency push alert to General Manager & Hotel Admins.
+                </div>
+            </div>
+
+            <!-- Evidence Photo -->
+            <div class="mb-4">
+                <label class="form-label fw-semibold small">Photo / CCTV Snapshot Evidence (Optional)</label>
+                <input type="file" class="form-control rounded-3" id="incidentPhoto" accept="image/*">
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <a href="/staff/security" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn btn-danger rounded-pill px-4" id="submitBtn">
+                    <i class="fas fa-paper-plane me-1"></i> File Incident Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('incidentDescription').addEventListener('input', function() {
+    document.getElementById('descCount').textContent = this.value.length;
+});
+
+document.querySelectorAll('input[name="severity"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        const warn = document.getElementById('criticalWarning');
+        if (this.value === 'critical') {
+            warn.classList.remove('d-none');
+        } else {
+            warn.classList.add('d-none');
+        }
+    });
+});
+
+async function submitIncident(e) {
+    e.preventDefault();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Filing Report...';
+
+    const type = document.getElementById('incidentType').value;
+    const location = document.getElementById('incidentLocation').value;
+    const description = document.getElementById('incidentDescription').value;
+    const severity = document.querySelector('input[name="severity"]:checked')?.value || 'medium';
+
+    try {
+        const res = await fetch('/api/security/incidents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: type,
+                location_room_id: location,
+                description: description,
+                severity: severity
+            })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Incident report #${json.data.incident_id} filed successfully`);
+            }
+            setTimeout(() => {
+                window.location.href = `/staff/security/${json.data.incident_id}`;
+            }, 900);
+        } else {
+            alert(json.error?.message || 'Failed to file report');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> File Incident Report';
+        }
+    } catch (err) {
+        alert('Network error submitting incident report');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> File Incident Report';
+    }
+}
+</script>
+{% endblock %}

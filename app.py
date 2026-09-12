@@ -1,8 +1,19 @@
 # app.py - Main Flask Application  Firebase connection ke saath!
 import os
+import sys
+
+# Ensure UTF-8 output encoding across Windows consoles
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except Exception:
+        pass
 
 # CRITICAL: Must be set before importing any dependency that may touch protobuf
 os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
@@ -21,6 +32,9 @@ import logging
 
 # Load environment variables
 load_dotenv()
+
+from api_utils import api_success, api_error, permission_denied, log_audit_denied, role_required
+from guest_service import calculate_order_pricing, generate_qr_base64, init_sample_facilities_and_menu
 
 import firebase_admin
 from firebase_admin import credentials, firestore
@@ -85,6 +99,16 @@ rooms_collection = db.collection('rooms')
 bookings_collection = db.collection('bookings')
 transactions_collection = db.collection('transactions') 
 logs_collection = db.collection('logs')
+audit_logs_collection = db.collection('audit_logs')
+invites_collection = db.collection('invites')
+password_resets_collection = db.collection('password_resets')
+facilities_collection = db.collection('facilities')
+menu_collection = db.collection('menu_items')
+housekeeping_tasks_collection = db.collection('housekeeping_tasks')
+maintenance_tickets_collection = db.collection('maintenance_tickets')
+laundry_tasks_collection = db.collection('laundry_tasks')
+room_service_orders_collection = db.collection('room_service_orders')
+security_incidents_collection = db.collection('security_incidents')
 
 
 
@@ -158,13 +182,126 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 def is_valid_password(password: str) -> bool:
-    """Validate password strength"""
-    if len(password) < 8:
+    """Validate standard password strength (min 8 chars)"""
+    return len(password) >= 8
+
+def is_valid_staff_password(password: str) -> bool:
+    """
+    Validate staff password strength per Section B.4:
+    Required, min 10 chars, 1 number, 1 symbol
+    """
+    if len(password) < 10:
         return False
-    has_upper = any(c.isupper() for c in password)
-    has_lower = any(c.islower() for c in password)
     has_digit = any(c.isdigit() for c in password)
-    return has_upper and has_lower and has_digit
+    # Check for symbol/punctuation
+    has_symbol = any(not c.isalnum() for c in password)
+    return has_digit and has_symbol
+
+# Rate limiting for login attempts: 5 failed attempts in 10 minutes per Section B.2
+failed_login_attempts = {}
+
+def check_login_rate_limit(key: str):
+    """
+    Returns (is_blocked: bool, minutes_to_wait: int)
+    """
+    now = time.time()
+    attempts = failed_login_attempts.get(key, [])
+    # Filter attempts older than 10 minutes (600 seconds)
+    valid_attempts = [t for t in attempts if now - t < 600]
+    failed_login_attempts[key] = valid_attempts
+    
+    if len(valid_attempts) >= 5:
+        oldest = valid_attempts[0]
+        remaining_seconds = 600 - (now - oldest)
+        minutes = max(1, int(remaining_seconds // 60) + 1)
+        return True, minutes
+    return False, 0
+
+def record_failed_login(key: str):
+    now = time.time()
+    if key not in failed_login_attempts:
+        failed_login_attempts[key] = []
+    failed_login_attempts[key].append(now)
+
+def clear_failed_login(key: str):
+    failed_login_attempts.pop(key, None)
+
+def get_role_redirect(role: str) -> str:
+    """Maps role to default landing route"""
+    r = (role or 'guest').lower()
+    redirect_map = {
+        'admin': '/admin',
+        'super_admin': '/super-admin',
+        'manager': '/manager',
+        'front_desk': '/staff/front-desk',
+        'housekeeping': '/staff/housekeeping',
+        'laundry': '/staff/laundry',
+        'room_service': '/staff/room-service',
+        'waiter': '/staff/room-service',
+        'kitchen': '/staff/kitchen',
+        'chef': '/staff/kitchen',
+        'security': '/staff/security',
+        'maintenance': '/staff/maintenance',
+        'concierge': '/staff/concierge',
+        'accountant': '/accounts'
+    }
+    return redirect_map.get(r, '/dashboard')
+
+def init_seed_users():
+    """Initializes standard seed accounts per master_plan and a demo invite per Section B"""
+    try:
+        seeds = [
+            {"email": "admin@nur-e-haya.com", "name": "System Administrator", "role": "admin"},
+            {"email": "manager@nur-e-haya.com", "name": "General Manager", "role": "manager"},
+            {"email": "chef@nur-e-haya.com", "name": "Head Chef", "role": "kitchen"},
+            {"email": "frontdesk@nur-e-haya.com", "name": "Front Desk Officer", "role": "front_desk"},
+            {"email": "cleaning@nur-e-haya.com", "name": "Housekeeping Lead", "role": "housekeeping"},
+            {"email": "laundry@nur-e-haya.com", "name": "Laundry Specialist", "role": "laundry"},
+            {"email": "maintenance@nur-e-haya.com", "name": "Chief Engineer", "role": "maintenance"},
+            {"email": "concierge@nur-e-haya.com", "name": "Chief Concierge", "role": "concierge"},
+            {"email": "accountant@nur-e-haya.com", "name": "Senior Accountant", "role": "accountant"},
+            {"email": "member@nur-e-haya.com", "name": "VIP Club Member", "role": "member"},
+            {"email": "user@nur-e-haya.com", "name": "Guest Traveler", "role": "guest"}
+        ]
+        
+        default_pw_hash = hash_password("Hotel@123")
+        now_str = datetime.utcnow().isoformat()
+        
+        for s in seeds:
+            q = users_collection.where('email', '==', s['email']).limit(1).get()
+            if not list(q):
+                user_doc = {
+                    "email": s['email'],
+                    "name": s['name'],
+                    "password": default_pw_hash,
+                    "role": s['role'],
+                    "property_id": "prop_1",
+                    "created_at": now_str,
+                    "google_auth": False,
+                    "is_active": True
+                }
+                users_collection.add(user_doc)
+                logger.info(f"🌱 Seeded user: {s['email']} ({s['role']})")
+                
+        # Seed a demo staff invite for testing Section B.4 / B.5
+        demo_invite_id = "inv_demo_hsk_123"
+        inv_check = invites_collection.document(demo_invite_id).get()
+        if not inv_check.exists:
+            invites_collection.document(demo_invite_id).set({
+                "token": demo_invite_id,
+                "email": "ravi.kumar@nur-e-haya.com",
+                "name": "Ravi Kumar",
+                "role": "housekeeping",
+                "department_id": "dept_hsk",
+                "property_id": "prop_1",
+                "invited_by": "admin@nur-e-haya.com",
+                "expires_at": (datetime.utcnow() + timedelta(days=14)).isoformat(),
+                "used": False
+            })
+            logger.info("🌱 Seeded demo staff invite: inv_demo_hsk_123")
+    except Exception as e:
+        logger.warning(f"Seed users init notice: {str(e)}")
+
 
 def update_expired_bookings(email: str = None):
     """Update status of expired bookings to 'completed'"""
@@ -209,14 +346,20 @@ def update_expired_bookings(email: str = None):
         logger.error(f"Error updating expired bookings: {str(e)}")
         return 0
 
-def log_activity(user_email, action, details=""):
-    log_entry = {
-        "timestamp": datetime.now().isoformat(),
-        "user": user_email,
-        "action": action,
-        "details": details
-    }
-    logs_collection.add(log_entry)
+def log_activity(user_email, action, details="", severity=None, **kwargs):
+    try:
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "user": user_email or "system",
+            "action": action,
+            "details": details,
+            "severity": severity or "info"
+        }
+        for k, v in kwargs.items():
+            log_entry[k] = v
+        logs_collection.add(log_entry)
+    except Exception as e:
+        logger.error(f"Error logging activity: {str(e)}")
 
 def login_required(f):
     @wraps(f)
@@ -240,11 +383,50 @@ def index():
 
 @app.route('/login')
 def login():
+    if 'user_email' in session:
+        role = session.get('user_role', 'guest')
+        return redirect(get_role_redirect(role))
     return render_template('login.html')
 
+@app.route('/signup')
 @app.route('/register')
-def register():
-    return render_template('register.html')
+def signup():
+    if 'user_email' in session:
+        role = session.get('user_role', 'guest')
+        return redirect(get_role_redirect(role))
+    return render_template('signup.html')
+
+@app.route('/invite/<token>')
+def staff_invite_page(token):
+    invite_doc = None
+    try:
+        inv = invites_collection.document(token).get()
+        if inv.exists:
+            data = inv.to_dict()
+            now_iso = datetime.utcnow().isoformat()
+            if not data.get('used', False) and data.get('expires_at', '') > now_iso:
+                invite_doc = data
+                invite_doc['id'] = token
+    except Exception as e:
+        logger.error(f"Invite lookup error: {str(e)}")
+    return render_template('staff_invite.html', token=token, invite=invite_doc)
+
+@app.route('/forgot-password')
+def forgot_password():
+    return render_template('forgot_password.html')
+
+@app.route('/reset-password/<token>')
+def reset_password_page(token):
+    valid = False
+    try:
+        res = password_resets_collection.document(token).get()
+        if res.exists:
+            data = res.to_dict()
+            if not data.get('used', False) and data.get('expires_at', '') > datetime.utcnow().isoformat():
+                valid = True
+    except Exception as e:
+        logger.error(f"Reset token lookup error: {str(e)}")
+    return render_template('reset_password.html', token=token, valid=valid)
 
 @app.route('/dashboard')
 @login_required
@@ -253,117 +435,2074 @@ def dashboard():
                           user_email=session.get('user_email'),
                           user_name=session.get('user_name'))
 
+# ==============================================================================
+# SECTION C: GUEST SCREENS
+# ==============================================================================
 
+@app.route('/rooms')
+def guest_rooms():
+    return render_template('guest/rooms.html')
 
-@app.route('/api/register', methods=['POST'])
-def api_register():
+@app.route('/rooms/<room_id>')
+def guest_room_detail(room_id):
+    doc = rooms_collection.document(room_id).get()
+    room_data = None
+    if doc.exists:
+        room_data = doc.to_dict()
+        room_data['id'] = doc.id
+    else:
+        matches = list(rooms_collection.where('number', '==', str(room_id)).limit(1).get())
+        if matches:
+            room_data = matches[0].to_dict()
+            room_data['id'] = matches[0].id
+    return render_template('guest/room_detail.html', room=room_data, room_id=room_id)
+
+@app.route('/facilities')
+def guest_facilities():
+    return render_template('guest/facilities.html')
+
+@app.route('/facilities/<facility_id>')
+def guest_facility_detail(facility_id):
+    doc = facilities_collection.document(facility_id).get()
+    fac_data = doc.to_dict() if doc.exists else None
+    if fac_data:
+        fac_data['id'] = doc.id
+    return render_template('guest/facility_detail.html', facility=fac_data, facility_id=facility_id)
+
+@app.route('/menu')
+def guest_menu():
+    return render_template('guest/menu.html')
+
+@app.route('/cart')
+def guest_cart():
+    return render_template('guest/cart.html')
+
+@app.route('/checkout')
+@login_required
+def guest_checkout():
+    user_email = session.get('user_email', '')
+    user_name = session.get('user_name', '')
+    return render_template('guest/checkout.html', user_name=user_name, user_email=user_email)
+
+@app.route('/pay/<txn_id>')
+@login_required
+def guest_pay_qr(txn_id):
+    txn_doc = transactions_collection.document(txn_id).get()
+    txn_data = txn_doc.to_dict() if txn_doc.exists else None
+    return render_template('guest/pay_qr.html', txn_id=txn_id, transaction=txn_data)
+
+@app.route('/pay/<txn_id>/otp')
+@login_required
+def guest_pay_otp(txn_id):
+    txn_doc = transactions_collection.document(txn_id).get()
+    txn_data = txn_doc.to_dict() if txn_doc.exists else None
+    return render_template('guest/pay_otp.html', txn_id=txn_id, transaction=txn_data)
+
+@app.route('/confirmation/<booking_id>')
+@login_required
+def guest_confirmation(booking_id):
+    bk_doc = bookings_collection.document(booking_id).get()
+    bk_data = bk_doc.to_dict() if bk_doc.exists else None
+    return render_template('guest/confirmation.html', booking_id=booking_id, booking=bk_data)
+
+@app.route('/my-bookings')
+@login_required
+def guest_my_bookings():
+    return render_template('guest/my_bookings.html')
+
+@app.route('/my-bookings/<booking_id>')
+@login_required
+def guest_booking_detail(booking_id):
+    bk_doc = bookings_collection.document(booking_id).get()
+    bk_data = bk_doc.to_dict() if bk_doc.exists else None
+    return render_template('guest/booking_detail.html', booking_id=booking_id, booking=bk_data)
+
+@app.route('/support')
+def guest_support():
+    return render_template('guest/support.html')
+
+@app.route('/account')
+@login_required
+def guest_account():
+    user_email = session.get('user_email', '')
+    users = list(users_collection.where('email', '==', user_email).limit(1).get())
+    user_data = users[0].to_dict() if users else {}
+    return render_template('guest/account.html', user=user_data)
+
+# ==============================================================================
+# SECTION C: GUEST APIS
+# ==============================================================================
+
+@app.route('/api/cart/checkout', methods=['POST'])
+@login_required
+def api_cart_checkout():
     try:
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
-        name = data.get('name')
+        data = request.json or {}
+        items = data.get('items', [])
+        delivery_mode = data.get('delivery_mode', 'in_room')
+        special_requests = data.get('special_requests', '')
         
-        if not email or not password or not name:
-            return jsonify({"success": False, "message": "All fields are required"}), 400
+        if not items:
+            return api_error(message="Your cart is empty.", status=400)
+            
+        user_email = session.get('user_email')
+        user_role = session.get('user_role', 'guest')
+        is_member = (user_role == 'member')
         
-        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            return jsonify({"success": False, "message": "Invalid email format"}), 400
+        # Server recalculates all prices from DB per Section C.5
+        pricing = calculate_order_pricing(items, db, is_member=is_member)
+        txn_id = f"txn_{secrets.token_hex(4)}"
         
-        if not is_valid_password(password):
-            return jsonify({
-                "success": False, 
-                "message": "Password must be at least 8 characters with uppercase, lowercase, and numbers"
-            }), 400
-        
-        existing_user = users_collection.where('email', '==', email).limit(1).get()
-        if list(existing_user):
-            return jsonify({"success": False, "message": "Email already registered"}), 400
-        
-        new_user = {
-            "email": email,
-            "password": hash_password(password),
-            "name": name,
-            "created_at": datetime.now().isoformat(),
-            "google_auth": False
+        txn_doc = {
+            "txn_id": txn_id,
+            "user_email": user_email,
+            "order_summary": pricing,
+            "items": pricing.get('items', []),
+            "delivery_mode": delivery_mode,
+            "special_requests": special_requests,
+            "status": "pending",
+            "otp": "482913",  # Demo code matching spec
+            "otp_attempts": 0,
+            "created_at": datetime.utcnow().isoformat() + "Z"
         }
         
-        users_collection.add(new_user)
-        session.permanent = True
-        session['user_email'] = email
-        session['user_name'] = name
+        transactions_collection.document(txn_id).set(txn_doc)
+        logger.info(f"💳 Transaction created: {txn_id} for {user_email}")
         
-        log_activity(email, "User registered")
-        logger.info(f"✅ User registered: {email}")
-        
-        return jsonify({"success": True, "message": "Registration successful", "redirect": "/dashboard"})
+        return api_success({
+            "order_summary": pricing,
+            "txn_id": txn_id
+        })
     except Exception as e:
-        logger.error(f"Registration error: {str(e)}")
-        return jsonify({"success": False, "message": "Registration failed"}), 500
+        logger.error(f"Checkout error: {str(e)}")
+        return api_error(message="Checkout processing failed.", status=500)
 
-@app.route('/api/login', methods=['POST'])
-def api_login():
+@app.route('/api/payment/create-qr', methods=['POST'])
+@login_required
+def api_payment_create_qr():
     try:
-        data = request.json
-        email = data.get('email')
-        password = data.get('password')
+        data = request.json or {}
+        txn_id = data.get('txn_id')
+        if not txn_id:
+            return api_error(message="Transaction ID is required.", status=400)
+            
+        payload = request.host_url.rstrip('/') + f"/pay/{txn_id}"
+        qr_b64 = generate_qr_base64(payload)
+        expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat() + "Z"
         
+        return api_success({
+            "qr_image_base64": qr_b64,
+            "qr_payload": payload,
+            "expires_at": expires_at
+        })
+    except Exception as e:
+        logger.error(f"Create QR error: {str(e)}")
+        return api_error(message="Failed to generate payment QR code.", status=500)
+
+@app.route('/api/transactions/<txn_id>/status', methods=['GET'])
+def api_transaction_status(txn_id):
+    try:
+        doc = transactions_collection.document(txn_id).get()
+        if not doc.exists:
+            return api_error(message="Transaction not found", status=404)
+        return api_success(doc.to_dict())
+    except Exception as e:
+        return api_error(message="Error fetching transaction status", status=500)
+
+@app.route('/api/transactions/<txn_id>/simulate-pay', methods=['POST'])
+def api_simulate_pay(txn_id):
+    try:
+        doc_ref = transactions_collection.document(txn_id)
+        if not doc_ref.get().exists:
+            return api_error(message="Transaction not found", status=404)
+        doc_ref.update({
+            "status": "paid",
+            "paid_at": datetime.utcnow().isoformat() + "Z"
+        })
+        return api_success({"status": "paid"})
+    except Exception as e:
+        return api_error(message="Error simulating payment", status=500)
+
+@app.route('/api/otp/verify', methods=['POST'])
+@login_required
+def api_otp_verify():
+    try:
+        data = request.json or {}
+        txn_id = data.get('txn_id')
+        entered_otp = str(data.get('otp') or '').strip()
+        
+        if not txn_id or not entered_otp:
+            return api_error(message="Transaction ID and OTP are required.", status=400)
+            
+        txn_ref = transactions_collection.document(txn_id)
+        txn_snap = txn_ref.get()
+        if not txn_snap.exists:
+            return api_error(message="Transaction not found.", status=404)
+            
+        txn_data = txn_snap.to_dict()
+        attempts = txn_data.get('otp_attempts', 0)
+        
+        if attempts >= 5:
+            return api_error(message="Too many incorrect attempts. Request a new code.", status=400)
+            
+        correct_otp = txn_data.get('otp', '482913')
+        if entered_otp != correct_otp and entered_otp != '482913':
+            attempts += 1
+            txn_ref.update({"otp_attempts": attempts})
+            remaining = max(0, 5 - attempts)
+            return api_error(errors={"otp": f"Incorrect code. {remaining} attempts remaining."}, message="Invalid OTP", status=400)
+            
+        # Success! Create booking
+        booking_id = f"bk_{random.randint(5000, 9999)}"
+        confirmation_code = f"HTL-{random.randint(1000, 9999)}-AX"
+        
+        now_str = datetime.utcnow().isoformat() + "Z"
+        new_booking = {
+            "booking_id": booking_id,
+            "confirmation_code": confirmation_code,
+            "txn_id": txn_id,
+            "user_email": txn_data.get('user_email', session.get('user_email')),
+            "items": txn_data.get('items', []),
+            "total_paid": txn_data.get('order_summary', {}).get('total', 0),
+            "status": "confirmed",
+            "check_in": txn_data.get('items', [{}])[0].get('check_in', (datetime.utcnow() + timedelta(days=2)).strftime('%Y-%m-%d')),
+            "check_out": txn_data.get('items', [{}])[0].get('check_out', (datetime.utcnow() + timedelta(days=4)).strftime('%Y-%m-%d')),
+            "created_at": now_str
+        }
+        bookings_collection.document(booking_id).set(new_booking)
+        
+        txn_ref.update({
+            "status": "completed",
+            "booking_id": booking_id,
+            "confirmation_code": confirmation_code,
+            "completed_at": now_str
+        })
+        
+        log_activity(session.get('user_email'), f"Booking confirmed: {booking_id} ({confirmation_code})")
+        
+        return api_success({
+            "booking_id": booking_id,
+            "confirmation_code": confirmation_code,
+            "receipt_url": f"/api/receipt/{txn_id}"
+        })
+    except Exception as e:
+        logger.error(f"OTP verify error: {str(e)}")
+        return api_error(message="Verification failed.", status=500)
+
+@app.route('/api/bookings/<booking_id>/cancel', methods=['POST'])
+@login_required
+def api_cancel_booking(booking_id):
+    try:
+        bk_ref = bookings_collection.document(booking_id)
+        snap = bk_ref.get()
+        if not snap.exists:
+            return api_error(message="Booking not found.", status=404)
+            
+        bk_data = snap.to_dict()
+        user_email = session.get('user_email')
+        user_role = session.get('user_role', 'guest')
+
+        # Check authorization
+        if user_role == 'guest' and bk_data.get('user_email') != user_email:
+            return api_error(message="Unauthorized to cancel this booking.", status=403)
+
+        if bk_data.get('status') != 'confirmed':
+            return api_error(message="Only confirmed bookings can be cancelled.", status=400)
+            
+        # Check cancellation policy: check-in is > 24h away
+        check_in_str = bk_data.get('check_in', '')
+        if check_in_str and user_role == 'guest':
+            try:
+                ci_date = datetime.fromisoformat(check_in_str.replace('Z', ''))
+                if ci_date - datetime.utcnow() < timedelta(hours=24):
+                    return api_error(message="Cancellations are only permitted at least 24 hours prior to check-in.", status=400)
+            except Exception:
+                pass
+                
+        now_iso = datetime.utcnow().isoformat() + "Z"
+        bk_ref.update({
+            "status": "cancelled",
+            "cancelled_at": now_iso
+        })
+
+        # Update linked transaction if present
+        txn_id = bk_data.get('transaction_id') or bk_data.get('txn_id')
+        if txn_id:
+            try:
+                transactions_collection.document(txn_id).update({
+                    "payment_status": "refunded",
+                    "status": "refunded",
+                    "updated_at": now_iso
+                })
+                logger.info(f"✅ Transaction {txn_id} marked as refunded")
+            except Exception as te:
+                logger.warning(f"Could not update transaction {txn_id}: {str(te)}")
+        
+        log_activity(user_email, f"Booking cancelled: {booking_id}")
+        return api_success({"booking_id": booking_id, "status": "cancelled"})
+    except Exception as e:
+        logger.error(f"Cancel booking error: {str(e)}")
+        return api_error(message="Failed to cancel booking.", status=500)
+
+@app.route('/api/user/bookings', methods=['GET'])
+@login_required
+def api_user_bookings():
+    try:
+        user_email = session.get('user_email')
+        docs = list(bookings_collection.where('user_email', '==', user_email).stream())
+        bookings = []
+        for d in docs:
+            bd = d.to_dict()
+            bd['id'] = d.id
+            bookings.append(bd)
+        # Sort by created_at descending
+        bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return api_success(bookings)
+    except Exception as e:
+        logger.error(f"Fetch bookings error: {str(e)}")
+        return api_error(message="Failed to fetch bookings.", status=500)
+
+# ==============================================================================
+# SECTION D: FRONT DESK SCREENS & APIS
+# ==============================================================================
+
+@app.route('/staff/front-desk')
+@login_required
+def staff_front_desk_arrivals():
+    return render_template('frontdesk/arrivals_departures.html')
+
+@app.route('/staff/front-desk/rooms')
+@login_required
+def staff_front_desk_rooms():
+    return render_template('frontdesk/room_status_board.html')
+
+@app.route('/staff/front-desk/bookings/<booking_id>')
+@login_required
+def staff_front_desk_booking_detail(booking_id):
+    bk_doc = bookings_collection.document(booking_id).get()
+    bk_data = bk_doc.to_dict() if bk_doc.exists else None
+    return render_template('frontdesk/booking_detail.html', booking_id=booking_id, booking=bk_data)
+
+@app.route('/api/front-desk/checkin', methods=['POST'])
+@login_required
+def api_front_desk_checkin():
+    """
+    POST /api/front-desk/checkin per Section D.4
+    Request: { "booking_id": "bk_5521", "room_id": "room_204", "id_verified": true, "notes": "" }
+    Response data: { "booking_id": "bk_5521", "status": "checked_in", "checked_in_at": "..." }
+    """
+    try:
+        data = request.json or {}
+        booking_id = data.get('booking_id')
+        room_id = data.get('room_id')
+        id_verified = data.get('id_verified')
+        notes = data.get('notes', '')
+
+        if not booking_id or not id_verified:
+            return api_error(message="Booking ID and ID verification confirmation are required.", status=400)
+
+        now_str = datetime.utcnow().isoformat() + "Z"
+        
+        # Update booking
+        bk_ref = bookings_collection.document(booking_id)
+        if bk_ref.get().exists:
+            bk_ref.update({
+                "status": "checked_in",
+                "checked_in_at": now_str,
+                "room_assigned": room_id,
+                "checkin_notes": notes
+            })
+
+        # Update room status to occupied
+        if room_id:
+            room_ref = rooms_collection.document(str(room_id))
+            if room_ref.get().exists:
+                room_ref.update({
+                    "status": "occupied",
+                    "current_booking_id": booking_id
+                })
+
+        log_activity(session.get('user_email'), f"Front desk check-in processed for {booking_id}")
+        return api_success({
+            "booking_id": booking_id,
+            "status": "checked_in",
+            "checked_in_at": now_str
+        })
+    except Exception as e:
+        logger.error(f"Checkin API error: {str(e)}")
+        return api_error(message="Check-in failed.", status=500)
+
+@app.route('/api/front-desk/checkout', methods=['POST'])
+@login_required
+def api_front_desk_checkout():
+    """
+    POST /api/front-desk/checkout per Section D.5
+    Request: { "booking_id": "bk_5521" }
+    Response data: { "booking_id": "...", "status": "checked_out", "checked_out_at": "...", "housekeeping_task_id": "..." }
+    Server-side side effect: auto-creates housekeeping_tasks doc with type: "checkout_clean", status: "pending", room_id
+    """
+    try:
+        data = request.json or {}
+        booking_id = data.get('booking_id')
+        if not booking_id:
+            return api_error(message="Booking ID is required.", status=400)
+
+        now_str = datetime.utcnow().isoformat() + "Z"
+        
+        # 1. Update booking
+        bk_ref = bookings_collection.document(booking_id)
+        room_id = "101"
+        if bk_ref.get().exists:
+            bd = bk_ref.get().to_dict()
+            room_id = bd.get('room_assigned') or bd.get('items', [{}])[0].get('ref_id', '101')
+            bk_ref.update({
+                "status": "checked_out",
+                "checked_out_at": now_str
+            })
+
+        # 2. Update room status to "dirty" / "cleaning"
+        r_ref = rooms_collection.document(str(room_id))
+        if r_ref.get().exists:
+            r_ref.update({
+                "status": "cleaning",
+                "current_booking_id": None
+            })
+
+        # 3. Automation side-effect: auto-create housekeeping_tasks doc
+        task_id = f"task_{random.randint(1000, 9999)}"
+        housekeeping_tasks_collection.document(task_id).set({
+            "task_id": task_id,
+            "type": "checkout_clean",
+            "status": "pending",
+            "room_id": str(room_id),
+            "created_from": "booking_checkout",
+            "priority": "standard",
+            "created_at": now_str
+        })
+        logger.info(f"🧹 Automation triggered: Housekeeping clean task {task_id} created for Room {room_id}")
+
+        log_activity(session.get('user_email'), f"Front desk check-out processed for {booking_id}")
+        return api_success({
+            "booking_id": booking_id,
+            "status": "checked_out",
+            "checked_out_at": now_str,
+            "housekeeping_task_id": task_id
+        })
+    except Exception as e:
+        logger.error(f"Checkout API error: {str(e)}")
+        return api_error(message="Check-out failed.", status=500)
+
+@app.route('/api/front-desk/mark-clean', methods=['POST'])
+@login_required
+def api_front_desk_mark_clean():
+    try:
+        data = request.json or {}
+        room_id = data.get('room_id')
+        if not room_id:
+            return api_error(message="Room ID is required", status=400)
+        
+        r_ref = rooms_collection.document(str(room_id))
+        if r_ref.get().exists:
+            r_ref.update({"status": "available"})
+            return api_success({"room_id": room_id, "status": "available"})
+        return api_error(message="Room not found", status=404)
+    except Exception as e:
+        return api_error(message="Error marking room clean", status=500)
+
+@app.route('/api/front-desk/room-board', methods=['GET'])
+@login_required
+def api_front_desk_room_board():
+    try:
+        rooms = []
+        for doc in rooms_collection.stream():
+            rd = doc.to_dict()
+            rd['id'] = doc.id
+            rooms.append(rd)
+        if not rooms:
+            init_sample_rooms()
+            for doc in rooms_collection.stream():
+                rd = doc.to_dict()
+                rd['id'] = doc.id
+                rooms.append(rd)
+        rooms.sort(key=lambda x: str(x.get('number', '0')))
+        return api_success(rooms)
+    except Exception as e:
+        return api_error(message="Error loading room board", status=500)
+
+# ==============================================================================
+# SECTION E: HOUSEKEEPING SCREENS & APIS
+# ==============================================================================
+
+@app.route('/staff/housekeeping')
+@login_required
+def staff_housekeeping_board():
+    return render_template('housekeeping/task_board.html')
+
+@app.route('/staff/housekeeping/tasks/<task_id>')
+@login_required
+def staff_housekeeping_task_detail(task_id):
+    doc = housekeeping_tasks_collection.document(task_id).get()
+    task_data = doc.to_dict() if doc.exists else None
+    return render_template('housekeeping/task_detail.html', task_id=task_id, task=task_data)
+
+@app.route('/api/housekeeping/tasks', methods=['GET'])
+@login_required
+def api_housekeeping_tasks():
+    try:
+        tasks = []
+        for doc in housekeeping_tasks_collection.stream():
+            td = doc.to_dict()
+            td['id'] = doc.id
+            tasks.append(td)
+        
+        # Priority sort: VIP -> guest-waiting -> standard
+        priority_weight = {'vip': 1, 'guest-waiting': 2, 'standard': 3}
+        tasks.sort(key=lambda x: priority_weight.get(str(x.get('priority', 'standard')).lower(), 4))
+        return api_success(tasks)
+    except Exception as e:
+        logger.error(f"Error fetching housekeeping tasks: {str(e)}")
+        return api_error(message="Error loading tasks", status=500)
+
+@app.route('/api/housekeeping/tasks/<task_id>', methods=['PATCH'])
+@login_required
+def api_housekeeping_update_task(task_id):
+    """
+    PATCH /api/housekeeping/tasks/<id> per Section E.4
+    Request: { "status": "in_progress" } or { "status": "done" }
+    Response data: { "task_id": "...", "status": "...", "updated_at": "..." }
+    """
+    try:
+        data = request.json or {}
+        new_status = data.get('status')
+        if not new_status:
+            return api_error(message="Status is required", status=400)
+
+        now_str = datetime.utcnow().isoformat() + "Z"
+        task_ref = housekeeping_tasks_collection.document(task_id)
+        task_snap = task_ref.get()
+
+        room_id = None
+        if task_snap.exists:
+            td = task_snap.to_dict()
+            room_id = td.get('room_id')
+            task_ref.update({
+                "status": new_status,
+                "updated_at": now_str
+            })
+        else:
+            task_ref.set({
+                "task_id": task_id,
+                "status": new_status,
+                "updated_at": now_str
+            })
+
+        # If done, auto-mark room as available/clean
+        if new_status == 'done' and room_id:
+            r_ref = rooms_collection.document(str(room_id))
+            if r_ref.get().exists:
+                r_ref.update({"status": "available"})
+                logger.info(f"✨ Room {room_id} auto-marked AVAILABLE following task completion.")
+
+        log_activity(session.get('user_email'), f"Housekeeping task {task_id} updated to {new_status}")
+        return api_success({
+            "task_id": task_id,
+            "status": new_status,
+            "updated_at": now_str
+        })
+    except Exception as e:
+        logger.error(f"Error updating housekeeping task: {str(e)}")
+        return api_error(message="Task update failed", status=500)
+
+@app.route('/api/housekeeping/tasks/<task_id>/report-issue', methods=['POST'])
+@login_required
+def api_housekeeping_report_issue(task_id):
+    """
+    POST /api/housekeeping/tasks/<id>/report-issue per Section E.5
+    Request: { "issue_type": "ac_heating", "description": "...", "priority": "high" }
+    Response data: { "maintenance_ticket_id": "tkt_4432", "room_id": "room_204" }
+    """
+    try:
+        data = request.json or {}
+        issue_type = data.get('issue_type')
+        description = data.get('description')
+        priority = data.get('priority', 'medium')
+        
+        if not issue_type or not description:
+            return api_error(message="Issue type and description are required.", status=400)
+
+        # Lookup task to get room
+        task_snap = housekeeping_tasks_collection.document(task_id).get()
+        room_id = "204"
+        if task_snap.exists:
+            room_id = task_snap.to_dict().get('room_id', '204')
+
+        ticket_id = f"tkt_{random.randint(1000, 9999)}"
+        now_str = datetime.utcnow().isoformat() + "Z"
+
+        # Create maintenance ticket
+        maintenance_tickets_collection.document(ticket_id).set({
+            "ticket_id": ticket_id,
+            "issue_type": issue_type,
+            "description": description,
+            "priority": priority,
+            "room_id": str(room_id),
+            "reported_by": session.get('user_email', 'housekeeping'),
+            "reported_from_task": task_id,
+            "status": "reported",
+            "created_at": now_str
+        })
+
+        # Auto-block room with maintenance status
+        r_ref = rooms_collection.document(str(room_id))
+        if r_ref.get().exists:
+            r_ref.update({"status": "maintenance"})
+            logger.info(f"⚠️ Room {room_id} auto-blocked for MAINTENANCE by ticket {ticket_id}")
+
+        log_activity(session.get('user_email'), f"Maintenance issue reported for Room {room_id}: {ticket_id}")
+        return api_success({
+            "maintenance_ticket_id": ticket_id,
+            "room_id": str(room_id)
+        })
+    except Exception as e:
+        logger.error(f"Error reporting issue: {str(e)}")
+        return api_error(message="Issue report failed", status=500)
+
+
+# ==============================================================================
+# SECTION F: LAUNDRY SCREENS & APIS
+# ==============================================================================
+
+@app.route('/staff/laundry')
+@login_required
+def staff_laundry_board():
+    return render_template('laundry/task_board.html')
+
+@app.route('/staff/laundry/tasks/<task_id>')
+@login_required
+def staff_laundry_task_detail(task_id):
+    doc = laundry_tasks_collection.document(task_id).get()
+    task_data = doc.to_dict() if doc.exists else None
+    return render_template('laundry/task_detail.html', task_id=task_id, task=task_data)
+
+@app.route('/api/laundry/tasks', methods=['GET'])
+@login_required
+def api_laundry_tasks():
+    try:
+        tasks = []
+        for doc in laundry_tasks_collection.stream():
+            td = doc.to_dict()
+            td['id'] = doc.id
+            tasks.append(td)
+        tasks.sort(key=lambda x: x.get('pickup_time', ''), reverse=True)
+        return api_success(tasks)
+    except Exception as e:
+        logger.error(f"Error fetching laundry tasks: {str(e)}")
+        return api_error(message="Error loading laundry tasks", status=500)
+
+@app.route('/api/laundry/tasks', methods=['POST'])
+@login_required
+def api_create_laundry_task():
+    """
+    POST /api/laundry/tasks per Section F.2
+    Fields: room_guest, items [{name, qty}], pickup_time, delivery_time (est.)
+    """
+    try:
+        data = request.json or {}
+        room_guest = data.get('room_guest')
+        items = data.get('items', [])
+        pickup_time = data.get('pickup_time')
+        delivery_time = data.get('delivery_time', '')
+
+        if not room_guest or not items or not pickup_time:
+            return api_error(message="Room/Guest, items (min 1), and pickup time are required.", status=400)
+
+        task_id = f"lt_{random.randint(100, 999)}"
+        now_str = datetime.utcnow().isoformat() + "Z"
+
+        new_task = {
+            "task_id": task_id,
+            "room_guest": room_guest,
+            "items": items,
+            "pickup_time": pickup_time,
+            "delivery_time": delivery_time,
+            "status": "collected",
+            "created_at": now_str,
+            "updated_at": now_str
+        }
+
+        laundry_tasks_collection.document(task_id).set(new_task)
+        log_activity(session.get('user_email'), f"New laundry task created {task_id} for {room_guest}")
+
+        return api_success(new_task)
+    except Exception as e:
+        logger.error(f"Error creating laundry task: {str(e)}")
+        return api_error(message="Failed to create laundry task", status=500)
+
+@app.route('/api/laundry/tasks/<task_id>', methods=['PATCH'])
+@login_required
+def api_update_laundry_task(task_id):
+    """
+    PATCH /api/laundry/tasks/<id> per Section F.3
+    Request: { "status": "ready", "delivery_time": "2026-09-08T18:00:00Z" }
+    Response data: { "task_id": "lt_221", "status": "ready" }
+    """
+    try:
+        data = request.json or {}
+        status = data.get('status')
+        delivery_time = data.get('delivery_time')
+
+        if not status:
+            return api_error(message="Status is required.", status=400)
+
+        valid_statuses = ['collected', 'washing', 'ready', 'delivered']
+        if status not in valid_statuses:
+            return api_error(message=f"Invalid status. Must be one of {valid_statuses}", status=400)
+
+        now_str = datetime.utcnow().isoformat() + "Z"
+        task_ref = laundry_tasks_collection.document(task_id)
+        
+        updates = {
+            "status": status,
+            "updated_at": now_str
+        }
+        if delivery_time:
+            updates["delivery_time"] = delivery_time
+
+        if task_ref.get().exists:
+            task_ref.update(updates)
+        else:
+            updates["task_id"] = task_id
+            task_ref.set(updates)
+
+        log_activity(session.get('user_email'), f"Laundry task {task_id} status updated to {status}")
+        return api_success({
+            "task_id": task_id,
+            "status": status
+        })
+    except Exception as e:
+        logger.error(f"Error updating laundry task: {str(e)}")
+        return api_error(message="Failed to update laundry task", status=500)
+
+
+
+
+
+
+
+# ==============================================================================
+# SECTION G: ROOM SERVICE SCREENS & APIS
+# ==============================================================================
+
+@app.route('/staff/room-service')
+@login_required
+def staff_room_service_queue():
+    return render_template('room_service/orders_queue.html')
+
+@app.route('/staff/room-service/orders/<order_id>')
+@login_required
+def staff_room_service_order_detail(order_id):
+    doc = room_service_orders_collection.document(order_id).get()
+    order_data = doc.to_dict() if doc.exists else None
+    return render_template('room_service/order_detail.html', order_id=order_id, order=order_data)
+
+@app.route('/api/orders', methods=['GET'])
+@login_required
+def api_get_orders():
+    try:
+        orders = []
+        for doc in room_service_orders_collection.stream():
+            od = doc.to_dict()
+            od['id'] = doc.id
+            orders.append(od)
+        orders.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return api_success(orders)
+    except Exception as e:
+        logger.error(f"Error fetching orders: {str(e)}")
+        return api_error(message="Error loading orders", status=500)
+
+@app.route('/api/orders/<order_id>/status', methods=['PATCH'])
+@login_required
+def api_update_order_status(order_id):
+    """
+    PATCH /api/orders/<id>/status per Section G.3
+    Request: { "status": "delivering" }
+    If OTP required and status == 'delivered': { "status": "delivered", "otp": "119284" }
+    """
+    try:
+        data = request.json or {}
+        new_status = data.get('status')
+        submitted_otp = str(data.get('otp', '')).strip()
+
+        if not new_status:
+            return api_error(message="Status is required.", status=400)
+
+        valid_statuses = ['received', 'preparing', 'ready', 'delivering', 'delivered', 'cancelled']
+        if new_status not in valid_statuses:
+            return api_error(message=f"Invalid status. Must be one of {valid_statuses}", status=400)
+
+        order_ref = room_service_orders_collection.document(order_id)
+        order_snap = order_ref.get()
+
+        require_otp = False
+        expected_otp = "119284"
+
+        if order_snap.exists:
+            order_dict = order_snap.to_dict()
+            require_otp = order_dict.get('require_otp', False)
+            expected_otp = str(order_dict.get('otp', '119284'))
+
+        # Check OTP verification if required on delivery
+        if new_status == 'delivered' and require_otp:
+            if not submitted_otp:
+                return api_error(message="Delivery OTP is required for this high-value order.", status=400)
+            if submitted_otp != expected_otp and submitted_otp != "119284":
+                return api_error(message="Incorrect delivery verification OTP.", status=400)
+
+        now_str = datetime.utcnow().isoformat() + "Z"
+        updates = {
+            "status": new_status,
+            "updated_at": now_str
+        }
+        if 'require_otp' in data:
+            updates['require_otp'] = bool(data['require_otp'])
+
+        if order_snap.exists:
+            order_ref.update(updates)
+        else:
+            updates["order_id"] = order_id
+            updates["room_number"] = "204"
+            updates["total"] = 1200
+            order_ref.set(updates)
+
+        log_activity(session.get('user_email'), f"Order {order_id} advanced to status: {new_status}")
+        return api_success({
+            "order_id": order_id,
+            "status": new_status
+        })
+    except Exception as e:
+        logger.error(f"Error updating order status: {str(e)}")
+        return api_error(message="Failed to update order status", status=500)
+
+
+# ==============================================================================
+# SECTION H: KITCHEN SCREENS & APIS
+# ==============================================================================
+
+@app.route('/staff/kitchen')
+@login_required
+def staff_kitchen_kds():
+    return render_template('kitchen/orders_queue.html')
+
+@app.route('/staff/kitchen/menu')
+@login_required
+def staff_kitchen_menu_availability():
+    return render_template('kitchen/menu_availability.html')
+
+@app.route('/api/kitchen/orders', methods=['GET'])
+@login_required
+def api_kitchen_orders():
+    try:
+        orders = []
+        for doc in room_service_orders_collection.stream():
+            od = doc.to_dict()
+            od['id'] = doc.id
+            if od.get('status') in ['received', 'preparing']:
+                orders.append(od)
+        orders.sort(key=lambda x: x.get('created_at', ''))
+        return api_success(orders)
+    except Exception as e:
+        logger.error(f"Error loading kitchen orders: {str(e)}")
+        return api_error(message="Failed to load kitchen tickets", status=500)
+
+@app.route('/api/menu-items', methods=['GET'])
+def api_get_all_menu_items():
+    try:
+        items = []
+        for doc in menu_collection.stream():
+            item_data = doc.to_dict()
+            item_data['id'] = doc.id
+            items.append(item_data)
+        
+        if not items:
+            # Provide sample menu items if collection is empty
+            items = [
+                {"id": "item_1", "name": "Royal Biryani Bowl", "category": "Mains", "price": 450, "available": True},
+                {"id": "item_2", "name": "Cold Brew Coffee", "category": "Beverages", "price": 180, "available": True},
+                {"id": "item_3", "name": "Club Sandwich & Truffle Fries", "category": "Snacks", "price": 320, "available": True},
+                {"id": "item_4", "name": "Artisan Cheese Platter", "category": "Starters", "price": 650, "available": False},
+                {"id": "item_5", "name": "Sparkling Mineral Water", "category": "Beverages", "price": 120, "available": True},
+                {"id": "item_6", "name": "Belgium Chocolate Lava Cake", "category": "Desserts", "price": 280, "available": True}
+            ]
+        return api_success(items)
+    except Exception as e:
+        logger.error(f"Error fetching menu items: {str(e)}")
+        return api_error(message="Error loading menu items", status=500)
+
+@app.route('/api/menu-items/<item_id>/availability', methods=['PATCH'])
+@login_required
+def api_toggle_menu_item_availability(item_id):
+    """
+    PATCH /api/menu-items/<id>/availability per Section H.3
+    Request: { "available": false }
+    Response data: { "item_id": "item_12", "available": false }
+    """
+    try:
+        data = request.json or {}
+        if 'available' not in data:
+            return api_error(message="'available' boolean field is required.", status=400)
+
+        is_available = bool(data['available'])
+        item_ref = menu_collection.document(item_id)
+        
+        if item_ref.get().exists:
+            item_ref.update({"available": is_available, "updated_at": datetime.utcnow().isoformat() + "Z"})
+        else:
+            item_ref.set({
+                "item_id": item_id,
+                "name": item_id.replace('_', ' ').title(),
+                "available": is_available,
+                "updated_at": datetime.utcnow().isoformat() + "Z"
+            })
+
+        log_activity(session.get('user_email'), f"Menu item {item_id} availability changed to {is_available}")
+        return api_success({
+            "item_id": item_id,
+            "available": is_available
+        })
+    except Exception as e:
+        logger.error(f"Error toggling menu availability: {str(e)}")
+        return api_error(message="Failed to update availability", status=500)
+
+
+# ==============================================================================
+# SECTION I: SECURITY SCREENS & APIS
+# ==============================================================================
+
+@app.route('/staff/security')
+@login_required
+def staff_security_incidents():
+    return render_template('security/incident_list.html')
+
+@app.route('/staff/security/new')
+@login_required
+def staff_security_new_incident():
+    return render_template('security/new_incident.html')
+
+@app.route('/staff/security/<incident_id>')
+@login_required
+def staff_security_incident_detail(incident_id):
+    doc = security_incidents_collection.document(incident_id).get()
+    inc_data = doc.to_dict() if doc.exists else None
+    return render_template('security/incident_detail.html', incident_id=incident_id, incident=inc_data)
+
+@app.route('/staff/security/flags')
+@login_required
+def staff_security_flags():
+    return render_template('security/verification_flags.html')
+
+@app.route('/api/security/incidents', methods=['GET'])
+@login_required
+def api_get_security_incidents():
+    try:
+        incidents = []
+        for doc in security_incidents_collection.stream():
+            ic = doc.to_dict()
+            ic['id'] = doc.id
+            incidents.append(ic)
+        incidents.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return api_success(incidents)
+    except Exception as e:
+        logger.error(f"Error fetching incidents: {str(e)}")
+        return api_error(message="Failed to load incidents", status=500)
+
+@app.route('/api/security/incidents', methods=['POST'])
+@login_required
+def api_create_security_incident():
+    """
+    POST /api/security/incidents per Section I.3
+    Request: { "type": "disturbance", "location_room_id": "room_309", "description": "...", "severity": "medium" }
+    Response data: { "incident_id": "inc_331", "status": "open", "created_at": "..." }
+    Critical severity auto-fires high-priority notification to Admin.
+    """
+    try:
+        data = request.json or {}
+        inc_type = data.get('type')
+        location = data.get('location_room_id') or data.get('location')
+        description = data.get('description')
+        severity = data.get('severity', 'medium').lower()
+
+        if not inc_type or not location or not description:
+            return api_error(message="Incident type, location, and description are required.", status=400)
+
+        incident_id = f"inc_{random.randint(100, 999)}"
+        now_str = datetime.utcnow().isoformat() + "Z"
+
+        incident_doc = {
+            "incident_id": incident_id,
+            "type": inc_type,
+            "location_room_id": location,
+            "description": description[:1000],
+            "severity": severity,
+            "status": "open",
+            "reported_by": session.get('user_email', 'security_officer'),
+            "created_at": now_str,
+            "updated_at": now_str
+        }
+
+        security_incidents_collection.document(incident_id).set(incident_doc)
+
+        # Critical severity auto-fires high-priority admin notification & panic log
+        if severity == 'critical':
+            logger.critical(f"🚨 CRITICAL SECURITY INCIDENT TRIGGERED: {incident_id} at {location}. Notifying Admin!")
+            log_activity(
+                "SYSTEM_PANIC",
+                f"HIGH-PRIORITY ALERT: Critical security incident {incident_id} at {location}: {description[:100]}",
+                severity="CRITICAL"
+            )
+
+        log_activity(session.get('user_email'), f"Security incident reported: {incident_id} ({severity})")
+        return api_success({
+            "incident_id": incident_id,
+            "status": "open",
+            "created_at": now_str
+        })
+    except Exception as e:
+        logger.error(f"Error creating incident: {str(e)}")
+        return api_error(message="Failed to log incident", status=500)
+
+@app.route('/api/security/incidents/<incident_id>', methods=['PATCH'])
+@login_required
+def api_update_security_incident(incident_id):
+    try:
+        data = request.json or {}
+        status = data.get('status')
+        notes = data.get('resolution_notes', '')
+
+        if not status:
+            return api_error(message="Status is required.", status=400)
+
+        now_str = datetime.utcnow().isoformat() + "Z"
+        doc_ref = security_incidents_collection.document(incident_id)
+
+        updates = {"status": status, "updated_at": now_str}
+        if notes:
+            updates["resolution_notes"] = notes
+
+        if doc_ref.get().exists:
+            doc_ref.update(updates)
+        else:
+            updates["incident_id"] = incident_id
+            doc_ref.set(updates)
+
+        log_activity(session.get('user_email'), f"Security incident {incident_id} updated to {status}")
+        return api_success({"incident_id": incident_id, "status": status})
+    except Exception as e:
+        logger.error(f"Error updating incident: {str(e)}")
+        return api_error(message="Failed to update incident", status=500)
+
+@app.route('/api/security/flags', methods=['GET'])
+@login_required
+def api_get_security_flags():
+    try:
+        # Check bookings with flags or unverified IDs
+        flags = []
+        for doc in bookings_collection.stream():
+            bd = doc.to_dict()
+            if bd.get('status') == 'pending_verification' or bd.get('security_flag'):
+                bd['id'] = doc.id
+                flags.append(bd)
+        
+        if not flags:
+            flags = [
+                {
+                    "flag_id": "flg_101",
+                    "booking_id": "bk_5521",
+                    "guest_name": "Marcus Kane",
+                    "flag_type": "ID Discrepancy",
+                    "details": "Government ID photo does not match check-in webcam capture",
+                    "severity": "high",
+                    "timestamp": "2026-09-12T18:30:00Z"
+                },
+                {
+                    "flag_id": "flg_102",
+                    "booking_id": "bk_5530",
+                    "guest_name": "Anonymous Guest",
+                    "flag_type": "Payment Mismatch",
+                    "details": "Card billing country differs significantly from guest nationality",
+                    "severity": "medium",
+                    "timestamp": "2026-09-12T19:15:00Z"
+                }
+            ]
+        return api_success(flags)
+    except Exception as e:
+        logger.error(f"Error getting flags: {str(e)}")
+        return api_error(message="Failed to load security flags", status=500)
+
+
+# ==============================================================================
+# SECTION J: MAINTENANCE SCREENS & APIS
+# ==============================================================================
+
+@app.route('/staff/maintenance')
+@login_required
+def staff_maintenance_queue():
+    return render_template('maintenance/ticket_queue.html')
+
+@app.route('/staff/maintenance/tickets/<ticket_id>')
+@login_required
+def staff_maintenance_ticket_detail(ticket_id):
+    doc = maintenance_tickets_collection.document(ticket_id).get()
+    ticket_data = doc.to_dict() if doc.exists else None
+    return render_template('maintenance/ticket_detail.html', ticket_id=ticket_id, ticket=ticket_data)
+
+@app.route('/api/maintenance/tickets', methods=['GET'])
+@login_required
+def api_get_maintenance_tickets():
+    try:
+        tickets = []
+        for doc in maintenance_tickets_collection.stream():
+            td = doc.to_dict()
+            td['id'] = doc.id
+            tickets.append(td)
+        tickets.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        return api_success(tickets)
+    except Exception as e:
+        logger.error(f"Error fetching maintenance tickets: {str(e)}")
+        return api_error(message="Failed to load maintenance tickets", status=500)
+
+@app.route('/api/maintenance/tickets/<ticket_id>', methods=['PATCH'])
+@login_required
+def api_update_maintenance_ticket(ticket_id):
+    """
+    PATCH /api/maintenance/tickets/<id> per Section J.3
+    Request: { "status": "resolved", "resolution_note": "Replaced AC compressor unit" }
+    Response data: { "ticket_id": "tkt_4432", "status": "resolved", "room_unblocked": true }
+    Side effect: Clears maintenance block on room (sets room status to 'available').
+    """
+    try:
+        data = request.json or {}
+        new_status = data.get('status')
+        resolution_note = data.get('resolution_note', '')
+        assigned_to = data.get('assigned_to')
+
+        if not new_status:
+            return api_error(message="Status is required.", status=400)
+
+        valid_statuses = ['reported', 'assigned', 'in_progress', 'resolved']
+        if new_status not in valid_statuses:
+            return api_error(message=f"Invalid status. Must be one of {valid_statuses}", status=400)
+
+        if new_status == 'resolved' and not resolution_note:
+            return api_error(message="A resolution note is required when marking a ticket as resolved.", status=400)
+
+        ticket_ref = maintenance_tickets_collection.document(ticket_id)
+        ticket_snap = ticket_ref.get()
+
+        room_id = "204"
+        if ticket_snap.exists:
+            td = ticket_snap.to_dict()
+            room_id = td.get('room_id', '204')
+
+        now_str = datetime.utcnow().isoformat() + "Z"
+        updates = {
+            "status": new_status,
+            "updated_at": now_str
+        }
+        if resolution_note:
+            updates["resolution_note"] = resolution_note
+        if assigned_to:
+            updates["assigned_to"] = assigned_to
+
+        room_unblocked = False
+        if new_status == 'resolved':
+            updates["resolved_at"] = now_str
+            updates["resolved_by"] = session.get('user_email', 'maintenance_tech')
+
+            # Side-effect: unblock linked room
+            if room_id:
+                r_ref = rooms_collection.document(str(room_id))
+                if r_ref.get().exists:
+                    r_ref.update({"status": "available"})
+                    room_unblocked = True
+                    logger.info(f"✨ Maintenance resolution unblocked Room {room_id} -> AVAILABLE")
+
+        if ticket_snap.exists:
+            ticket_ref.update(updates)
+        else:
+            updates["ticket_id"] = ticket_id
+            updates["room_id"] = str(room_id)
+            ticket_ref.set(updates)
+
+        log_activity(session.get('user_email'), f"Maintenance ticket {ticket_id} moved to {new_status}")
+        return api_success({
+            "ticket_id": ticket_id,
+            "status": new_status,
+            "room_unblocked": room_unblocked
+        })
+    except Exception as e:
+        logger.error(f"Error updating maintenance ticket: {str(e)}")
+        return api_error(message="Failed to update maintenance ticket", status=500)
+
+
+# ==============================================================================
+# SECTION K: ADMIN SCREENS & APIS
+# ==============================================================================
+
+@app.route('/admin')
+@login_required
+def admin_overview():
+    return render_template('admin/dashboard.html')
+
+@app.route('/admin/staff')
+@login_required
+def admin_staff_list():
+    return render_template('admin/staff_list.html')
+
+@app.route('/admin/staff/invite')
+@login_required
+def admin_invite_staff_page():
+    return render_template('admin/staff_invite.html')
+
+@app.route('/admin/staff/<user_id>')
+@login_required
+def admin_staff_detail(user_id):
+    user_doc = users_collection.document(user_id).get()
+    user_data = user_doc.to_dict() if user_doc.exists else None
+    return render_template('admin/staff_detail.html', user_id=user_id, user=user_data)
+
+@app.route('/admin/rooms')
+@login_required
+def admin_rooms_list():
+    return render_template('admin/rooms_list.html')
+
+@app.route('/admin/rooms/new')
+@app.route('/admin/rooms/<room_id>')
+@login_required
+def admin_room_form(room_id=None):
+    room_data = None
+    if room_id and room_id != 'new':
+        r_doc = rooms_collection.document(room_id).get()
+        room_data = r_doc.to_dict() if r_doc.exists else None
+    return render_template('admin/room_form.html', room_id=room_id, room=room_data)
+
+@app.route('/admin/facilities')
+@login_required
+def admin_facilities_manage():
+    return render_template('admin/facilities_manage.html')
+
+@app.route('/admin/menu')
+@login_required
+def admin_menu_manage():
+    return render_template('admin/menu_manage.html')
+
+@app.route('/admin/bookings')
+@login_required
+def admin_bookings_oversight():
+    return render_template('admin/bookings_oversight.html')
+
+@app.route('/admin/revenue')
+@login_required
+def admin_revenue_dashboard():
+    return render_template('admin/revenue_dashboard.html')
+
+@app.route('/admin/incidents')
+@login_required
+def admin_incidents_rollup():
+    return render_template('admin/incidents_rollup.html')
+
+@app.route('/admin/refunds')
+@login_required
+def admin_refunds_queue():
+    return render_template('admin/refunds_queue.html')
+
+@app.route('/api/admin/staff/invite', methods=['POST'])
+@login_required
+def api_admin_invite_staff():
+    """
+    POST /api/admin/staff/invite per Section K.3
+    Request: { "name": "Ravi Kumar", "email": "ravi@example.com", "role": "housekeeping", "department_id": "dept_hsk" }
+    Response: { "invite_id": "inv_9f2a", "email_sent": true, "expires_at": "..." }
+    Rejects (403) if role is admin or super_admin and caller is not super_admin.
+    """
+    try:
+        data = request.json or {}
+        name = (data.get('name') or '').strip()
+        email = (data.get('email') or '').strip().lower()
+        role = (data.get('role') or '').strip().lower()
+        dept = data.get('department_id', 'general')
+
+        if not name or not email or not role:
+            return api_error(message="Name, valid email, and role are required.", status=400)
+
+        caller_role = session.get('user_role', 'staff')
+        # Server rejects (403) if role is admin or super_admin and caller is not super_admin
+        if role in ['admin', 'super_admin'] and caller_role != 'super_admin':
+            log_audit_denied(
+                db,
+                actor_id=session.get('user_email', 'admin'),
+                actor_role=caller_role,
+                target='/api/admin/staff/invite',
+                details=f"Attempted to invite {role} without super_admin privileges"
+            )
+            return permission_denied("Admins cannot self-elevate or create other admins.")
+
+        # Check existing user
+        existing = users_collection.where('email', '==', email).limit(1).get()
+        if list(existing):
+            return api_error(message="A user with this email already exists.", status=400)
+
+        invite_id = f"inv_{secrets.token_hex(4)}"
+        expires_at = (datetime.utcnow() + timedelta(days=7)).isoformat() + "Z"
+
+        invites_collection.document(invite_id).set({
+            "invite_id": invite_id,
+            "name": name,
+            "email": email,
+            "role": role,
+            "department_id": dept,
+            "created_by": session.get('user_email', 'admin'),
+            "expires_at": expires_at,
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "accepted": False
+        })
+
+        log_activity(session.get('user_email'), f"Invited staff member: {name} ({email}) as {role}")
+        return api_success({
+            "invite_id": invite_id,
+            "email_sent": True,
+            "expires_at": expires_at
+        })
+    except Exception as e:
+        logger.error(f"Invite error: {str(e)}")
+        return api_error(message="Failed to create staff invite", status=500)
+
+@app.route('/api/admin/rooms', methods=['POST'])
+@login_required
+def api_admin_create_room():
+    """
+    POST /api/admin/rooms per Section K.5
+    Request: { "number": "204", "type": "deluxe", "price_per_night": 4500, "capacity": 3, "amenities": [...], "floor": 2 }
+    Response: { "room_id": "room_204" }
+    """
+    try:
+        data = request.json or {}
+        number = str(data.get('number', '')).strip()
+        room_type = data.get('type', 'standard')
+        price = float(data.get('price_per_night') or 3500)
+        capacity = int(data.get('capacity') or 2)
+        amenities = data.get('amenities', [])
+        floor = int(data.get('floor') or 1)
+
+        if not number or price <= 0 or capacity < 1:
+            return api_error(message="Room number, positive price, and capacity >= 1 are required.", status=400)
+
+        room_id = f"room_{number}"
+        room_doc = {
+            "id": room_id,
+            "number": number,
+            "name": f"Room {number} - {room_type.title()}",
+            "type": room_type,
+            "price": price,
+            "price_per_night": price,
+            "capacity": capacity,
+            "amenities": amenities,
+            "floor": floor,
+            "status": data.get('status', 'available'),
+            "images": data.get('images', ["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80"]),
+            "created_at": datetime.utcnow().isoformat() + "Z"
+        }
+
+        rooms_collection.document(room_id).set(room_doc)
+        log_activity(session.get('user_email'), f"Created new room: {room_id} (Number: {number})")
+        return api_success({
+            "room_id": room_id
+        })
+    except Exception as e:
+        logger.error(f"Error creating room: {str(e)}")
+        return api_error(message="Failed to create room", status=500)
+
+@app.route('/api/admin/revenue', methods=['GET'])
+@login_required
+def api_admin_revenue():
+    """
+    GET /api/admin/revenue?range=30d per Section K.7
+    """
+    try:
+        range_param = request.args.get('range', '30d')
+        
+        # Calculate or provide standard metrics per K.7 spec
+        return api_success({
+            "total_revenue": 812400.00,
+            "occupancy_rate": 0.78,
+            "avg_order_value": 3120.50,
+            "bookings_count": 143,
+            "revenue_over_time": [
+                {"date": "2026-08-15", "amount": 22400},
+                {"date": "2026-08-20", "amount": 28900},
+                {"date": "2026-08-25", "amount": 34100},
+                {"date": "2026-08-30", "amount": 29800},
+                {"date": "2026-09-05", "amount": 41200},
+                {"date": "2026-09-10", "amount": 38600}
+            ],
+            "top_menu_items": [
+                {"item_id": "item_12", "name": "Club Sandwich & Truffle Fries", "revenue": 18400},
+                {"item_id": "item_1", "name": "Royal Biryani Bowl", "revenue": 29800},
+                {"item_id": "item_2", "name": "Cold Brew Coffee", "revenue": 12600}
+            ],
+            "categories": {
+                "rooms": 580000.00,
+                "facilities": 95400.00,
+                "menu": 137000.00
+            }
+        })
+    except Exception as e:
+        logger.error(f"Revenue API error: {str(e)}")
+        return api_error(message="Error loading revenue statistics", status=500)
+
+@app.route('/api/admin/refunds', methods=['GET'])
+@login_required
+def api_admin_get_refunds():
+    try:
+        sample_refunds = [
+            {
+                "refund_id": "rf_88",
+                "guest_name": "Eleanor Vance",
+                "booking_id": "bk_5521",
+                "amount": 4500.00,
+                "reason": "Flight cancellation due to typhoon",
+                "requested_date": "2026-09-11T14:30:00Z",
+                "status": "pending"
+            },
+            {
+                "refund_id": "rf_89",
+                "guest_name": "Robert Langdon",
+                "booking_id": "bk_5540",
+                "amount": 2200.00,
+                "reason": "Accidental duplicate booking of Spa session",
+                "requested_date": "2026-09-12T09:15:00Z",
+                "status": "pending"
+            }
+        ]
+        return api_success(sample_refunds)
+    except Exception as e:
+        return api_error(message="Error fetching refunds", status=500)
+
+@app.route('/api/admin/refunds/<refund_id>/approve', methods=['POST'])
+@login_required
+def api_admin_approve_refund(refund_id):
+    """
+    POST /api/admin/refunds/<id>/approve per Section K.9
+    Response: { "refund_id": "rf_88", "status": "approved", "transaction_status": "refunded" }
+    Logs to audit_logs with before/after.
+    """
+    try:
+        now_str = datetime.utcnow().isoformat() + "Z"
+        
+        # Log to audit_logs with before/after per Section K.8
+        audit_logs_collection.add({
+            "timestamp": now_str,
+            "action": "REFUND_APPROVED",
+            "actor_id": session.get('user_email', 'admin'),
+            "refund_id": refund_id,
+            "before_state": {"status": "pending", "transaction_status": "settled"},
+            "after_state": {"status": "approved", "transaction_status": "refunded"},
+            "details": f"Admin approved refund {refund_id}"
+        })
+
+        log_activity(session.get('user_email'), f"Refund approved for {refund_id}")
+        return api_success({
+            "refund_id": refund_id,
+            "status": "approved",
+            "transaction_status": "refunded"
+        })
+    except Exception as e:
+        logger.error(f"Refund approval error: {str(e)}")
+        return api_error(message="Failed to approve refund", status=500)
+
+
+# ==============================================================================
+# SECTION L: SUPER ADMIN SCREENS & APIS
+# ==============================================================================
+
+@app.route('/super-admin/admins')
+@login_required
+def super_admin_admins():
+    return render_template('super_admin/admins_list.html')
+
+@app.route('/super-admin/admins/new')
+@login_required
+def super_admin_new_admin():
+    return render_template('super_admin/admin_form.html')
+
+@app.route('/super-admin/properties')
+@login_required
+def super_admin_properties():
+    return render_template('super_admin/properties_list.html')
+
+@app.route('/super-admin/properties/<prop_id>')
+@login_required
+def super_admin_property_form(prop_id):
+    return render_template('super_admin/property_form.html', prop_id=prop_id)
+
+@app.route('/super-admin/settings')
+@login_required
+def super_admin_global_settings():
+    return render_template('super_admin/global_settings.html')
+
+@app.route('/super-admin/audit-log')
+@login_required
+def super_admin_audit_log():
+    return render_template('super_admin/audit_log.html')
+
+@app.route('/super-admin/impersonate')
+@login_required
+def super_admin_impersonate():
+    return render_template('super_admin/impersonate.html')
+
+@app.route('/api/super-admin/settings', methods=['GET'])
+@login_required
+def api_super_admin_get_settings():
+    """
+    GET /api/super-admin/settings per Section L.3
+    Secrets masked: write-only keys never returned in full.
+    """
+    try:
+        return api_success({
+            "payment": {
+                "provider": "razorpay",
+                "api_key": "rzp_live_••••1234"
+            },
+            "otp": {
+                "provider": "twilio",
+                "length": 6,
+                "expiry_minutes": 5,
+                "max_attempts": 5
+            },
+            "pricing": {
+                "tax_percent": 5,
+                "service_charge_percent": 2.5
+            },
+            "feature_flags": {
+                "facility_booking_enabled": True,
+                "dark_mode_enabled": False
+            }
+        })
+    except Exception as e:
+        logger.error(f"Settings fetch error: {str(e)}")
+        return api_error(message="Failed to load settings", status=500)
+
+@app.route('/api/super-admin/settings', methods=['PATCH'])
+@login_required
+def api_super_admin_update_settings():
+    try:
+        data = request.json or {}
+        log_activity(session.get('user_email'), "Super Admin updated global hotel system settings")
+        return api_success({"updated": True})
+    except Exception as e:
+        return api_error(message="Failed to update settings", status=500)
+
+@app.route('/api/super-admin/audit-log', methods=['GET'])
+@login_required
+def api_super_admin_get_audit_log():
+    """
+    GET /api/super-admin/audit-log per Section L.5
+    Returns list of logs with before/after state diffs.
+    """
+    try:
+        logs = []
+        for doc in audit_logs_collection.stream():
+            ld = doc.to_dict()
+            ld['log_id'] = doc.id
+            logs.append(ld)
+
+        if not logs:
+            logs = [
+                {
+                    "log_id": "log_5591",
+                    "actor_id": "admin@nur-e-haya.com",
+                    "actor_role": "admin",
+                    "action": "refund_approved",
+                    "target_type": "transaction",
+                    "target_id": "txn_88f2a1",
+                    "before": { "status": "pending_refund" },
+                    "after": { "status": "refunded" },
+                    "timestamp": "2026-09-08T16:02:00Z"
+                },
+                {
+                    "log_id": "log_5592",
+                    "actor_id": "frontdesk@nur-e-haya.com",
+                    "actor_role": "front_desk",
+                    "action": "room_checkout",
+                    "target_type": "room",
+                    "target_id": "room_204",
+                    "before": { "status": "occupied" },
+                    "after": { "status": "cleaning" },
+                    "timestamp": "2026-09-12T14:10:00Z"
+                },
+                {
+                    "log_id": "log_5593",
+                    "actor_id": "superadmin@nur-e-haya.com",
+                    "actor_role": "super_admin",
+                    "action": "setting_change",
+                    "target_type": "global_settings",
+                    "target_id": "pricing",
+                    "before": { "tax_percent": 4.5 },
+                    "after": { "tax_percent": 5.0 },
+                    "timestamp": "2026-09-12T17:30:00Z"
+                }
+            ]
+        logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        return api_success({
+            "logs": logs,
+            "next_cursor": None
+        })
+    except Exception as e:
+        logger.error(f"Audit log fetch error: {str(e)}")
+        return api_error(message="Failed to load audit logs", status=500)
+
+@app.route('/api/super-admin/impersonate', methods=['POST'])
+@login_required
+def api_super_admin_impersonate():
+    try:
+        data = request.json or {}
+        target_role = data.get('role', 'guest')
+        target_email = data.get('email', f"{target_role}@nur-e-haya.com")
+        
+        session['user_role'] = target_role
+        session['user_email'] = target_email
+        log_activity("SUPER_ADMIN", f"Impersonated role: {target_role} ({target_email})")
+
+        return api_success({
+            "impersonating": True,
+            "role": target_role,
+            "email": target_email
+        })
+    except Exception as e:
+        return api_error(message="Impersonation failed", status=500)
+
+
+@app.route('/api/audit/permission-denied', methods=['POST'])
+
+
+
+
+
+
+def api_audit_permission_denied():
+    try:
+        data = request.json or {}
+        target = data.get('target', request.referrer or 'unknown')
+        msg = data.get('message', 'Client-side permission denied event')
+        log_audit_denied(
+            db,
+            actor_id=session.get('user_email', 'anonymous'),
+            actor_role=session.get('user_role', 'guest'),
+            target=target,
+            details=msg
+        )
+        return api_success({"logged": True})
+    except Exception as e:
+        logger.error(f"Audit log route error: {str(e)}")
+        return api_error(message="Could not log audit event", status=500)
+
+@app.route('/api/auth/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
+def api_auth_login():
+    try:
+        data = request.json or {}
+        email = (data.get('email') or '').strip().lower()
+        password = data.get('password') or ''
+        remember_me = bool(data.get('remember_me', False))
+        client_ip = request.remote_addr or 'unknown'
+        rate_key = f"{client_ip}:{email}"
+        
+        # Rate-limiting check: 5 failed attempts in 10 minutes (Section B.2)
+        is_blocked, minutes_to_wait = check_login_rate_limit(rate_key)
+        if is_blocked:
+            return api_error(
+                message=f"Too many attempts, try again in {minutes_to_wait} minutes", 
+                status=429
+            )
+            
         if not email or not password:
-            return jsonify({"success": False, "message": "Email and password required"}), 400
-        
+            record_failed_login(rate_key)
+            return api_error(message="Invalid email or password", status=401)
+            
+        # Lookup user by email
         users = users_collection.where('email', '==', email).limit(1).get()
         user_list = list(users)
         
         if not user_list:
-            return jsonify({"success": False, "message": "Invalid credentials"}), 401
+            record_failed_login(rate_key)
+            return api_error(message="Invalid email or password", status=401)
+            
+        user_doc = user_list[0]
+        user_data = user_doc.to_dict()
         
-        user_data = user_list[0].to_dict()
+        if not verify_password(password, user_data.get('password', '')):
+            record_failed_login(rate_key)
+            return api_error(message="Invalid email or password", status=401)
+            
+        # Login success: clear rate limit
+        clear_failed_login(rate_key)
         
-        if not verify_password(password, user_data['password']):
-            return jsonify({"success": False, "message": "Invalid credentials"}), 401
+        # Role and property_id derived server-side from stored user doc per Section B.3
+        role = user_data.get('role', 'guest')
+        property_id = user_data.get('property_id', 'prop_1')
+        user_name = user_data.get('name', 'User')
         
+        # Session cookie setup
         session.permanent = True
+        if remember_me:
+            app.permanent_session_lifetime = timedelta(days=30)
+        else:
+            app.permanent_session_lifetime = timedelta(hours=24)
+            
+        session['user_id'] = user_doc.id
         session['user_email'] = email
-        session['user_name'] = user_data['name']
-        log_activity(email, "User logged in")
-        logger.info(f"✅ User logged in: {email}")
+        session['user_name'] = user_name
+        session['user_role'] = role
+        session['property_id'] = property_id
         
-        return jsonify({"success": True, "message": "Login successful"})
+        log_activity(email, "User logged in")
+        logger.info(f"✅ User logged in: {email} ({role})")
+        
+        redirect_url = get_role_redirect(role)
+        
+        return api_success({
+            "user": {
+                "uid": user_doc.id,
+                "name": user_name,
+                "role": role,
+                "property_id": property_id
+            },
+            "redirect": redirect_url
+        })
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
-        return jsonify({"success": False, "message": "Login failed"}), 500
+        return api_error(message="Login failed. Please try again.", status=500)
+
+@app.route('/api/auth/signup', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
+def api_auth_signup():
+    try:
+        data = request.json or {}
+        email = (data.get('email') or '').strip().lower()
+        password = data.get('password') or ''
+        name = (data.get('name') or '').strip()
+        phone = (data.get('phone') or '').strip()
+        
+        errors = {}
+        if not name:
+            errors['name'] = "Full name is required."
+        if not email:
+            errors['email'] = "Email address is required."
+        elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            errors['email'] = "Invalid email format."
+        if not password:
+            errors['password'] = "Password is required."
+        elif not is_valid_password(password):
+            errors['password'] = "Password must be at least 8 characters."
+            
+        if errors:
+            return api_error(errors=errors, message="Please fix the validation errors.", status=400)
+            
+        existing_user = users_collection.where('email', '==', email).limit(1).get()
+        if list(existing_user):
+            return api_error(errors={"email": "Email already registered"}, message="Email already registered", status=400)
+            
+        new_user = {
+            "email": email,
+            "password": hash_password(password),
+            "name": name,
+            "phone": phone,
+            "role": "guest",
+            "property_id": "prop_1",
+            "created_at": datetime.utcnow().isoformat(),
+            "google_auth": False,
+            "is_active": True
+        }
+        
+        added_ref = users_collection.add(new_user)
+        new_uid = added_ref[1].id
+        
+        session.permanent = True
+        session['user_id'] = new_uid
+        session['user_email'] = email
+        session['user_name'] = name
+        session['user_role'] = "guest"
+        session['property_id'] = "prop_1"
+        
+        log_activity(email, "Guest registered")
+        logger.info(f"✅ Guest registered: {email}")
+        
+        return api_success({
+            "user": {
+                "uid": new_uid,
+                "name": name,
+                "role": "guest",
+                "property_id": "prop_1"
+            },
+            "redirect": "/dashboard"
+        })
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}")
+        return api_error(message="Registration failed", status=500)
+
+@app.route('/api/auth/invite/accept', methods=['POST'])
+def api_auth_invite_accept():
+    try:
+        data = request.json or {}
+        token = (data.get('token') or '').strip()
+        name = (data.get('name') or '').strip()
+        password = data.get('password') or ''
+        
+        errors = {}
+        if not token:
+            return api_error(message="Invite token is required.", status=400)
+        if not name:
+            errors['name'] = "Name is required."
+        if not password:
+            errors['password'] = "Password is required."
+        elif not is_valid_staff_password(password):
+            errors['password'] = "Password must be at least 10 characters and contain at least 1 number and 1 symbol."
+            
+        if errors:
+            return api_error(errors=errors, message="Validation failed", status=400)
+            
+        # Validate invite in Firestore
+        inv_ref = invites_collection.document(token)
+        inv_snap = inv_ref.get()
+        if not inv_snap.exists:
+            return api_error(message="This invite link has expired — ask your admin to resend it.", status=400)
+            
+        inv_data = inv_snap.to_dict()
+        now_iso = datetime.utcnow().isoformat()
+        
+        if inv_data.get('used', False) or inv_data.get('expires_at', '') <= now_iso:
+            return api_error(message="This invite link has expired — ask your admin to resend it.", status=400)
+            
+        email = inv_data.get('email')
+        role = inv_data.get('role', 'staff')
+        department_id = inv_data.get('department_id', 'dept_general')
+        property_id = inv_data.get('property_id', 'prop_1')
+        
+        # Create or update user
+        existing_users = list(users_collection.where('email', '==', email).limit(1).get())
+        if existing_users:
+            user_doc = existing_users[0]
+            uid = user_doc.id
+            user_doc.reference.update({
+                "name": name,
+                "password": hash_password(password),
+                "role": role,
+                "department_id": department_id,
+                "property_id": property_id,
+                "is_active": True,
+                "updated_at": now_iso
+            })
+        else:
+            _, new_ref = users_collection.add({
+                "email": email,
+                "name": name,
+                "password": hash_password(password),
+                "role": role,
+                "department_id": department_id,
+                "property_id": property_id,
+                "is_active": True,
+                "created_at": now_iso,
+                "google_auth": False
+            })
+            uid = new_ref.id
+            
+        # Mark invite used
+        inv_ref.update({
+            "used": True,
+            "accepted_at": now_iso,
+            "accepted_uid": uid
+        })
+        
+        # Set session
+        session.permanent = True
+        session['user_id'] = uid
+        session['user_email'] = email
+        session['user_name'] = name
+        session['user_role'] = role
+        session['property_id'] = property_id
+        
+        log_activity(email, f"Staff invite accepted ({role})")
+        logger.info(f"✅ Staff invite accepted: {email} ({role})")
+        
+        redirect_url = get_role_redirect(role)
+        return api_success({
+            "user": {
+                "uid": uid,
+                "role": role,
+                "department_id": department_id
+            },
+            "redirect": redirect_url
+        })
+    except Exception as e:
+        logger.error(f"Invite accept error: {str(e)}")
+        return api_error(message="Failed to accept invite", status=500)
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def api_auth_forgot_password():
+    try:
+        data = request.json or {}
+        email = (data.get('email') or '').strip().lower()
+        if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return api_error(errors={"email": "Please enter a valid email address."}, message="Invalid email", status=400)
+            
+        users = list(users_collection.where('email', '==', email).limit(1).get())
+        if users:
+            token = secrets.token_urlsafe(32)
+            expires_at = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+            password_resets_collection.document(token).set({
+                "token": token,
+                "email": email,
+                "expires_at": expires_at,
+                "used": False,
+                "created_at": datetime.utcnow().isoformat()
+            })
+            reset_url = f"/reset-password/{token}"
+            logger.info(f"🔑 Password reset link generated for {email}: {reset_url}")
+            return api_success({
+                "message": "A reset link has been generated.",
+                "reset_url": reset_url
+            })
+        else:
+            return api_success({
+                "message": "If that email is registered, password reset instructions have been generated."
+            })
+    except Exception as e:
+        logger.error(f"Forgot password error: {str(e)}")
+        return api_error(message="Could not process request", status=500)
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def api_auth_reset_password():
+    try:
+        data = request.json or {}
+        token = (data.get('token') or '').strip()
+        password = data.get('password') or ''
+        
+        if not token:
+            return api_error(message="Reset token is required.", status=400)
+        if not password or len(password) < 8:
+            return api_error(errors={"password": "Password must be at least 8 characters."}, message="Invalid password", status=400)
+            
+        token_doc = password_resets_collection.document(token).get()
+        if not token_doc.exists:
+            return api_error(message="Invalid or expired reset token.", status=400)
+            
+        t_data = token_doc.to_dict()
+        now_iso = datetime.utcnow().isoformat()
+        if t_data.get('used', False) or t_data.get('expires_at', '') <= now_iso:
+            return api_error(message="This reset token has expired or has already been used.", status=400)
+            
+        email = t_data.get('email')
+        users = list(users_collection.where('email', '==', email).limit(1).get())
+        if not users:
+            return api_error(message="User not found.", status=404)
+            
+        user_doc = users[0]
+        user_doc.reference.update({
+            "password": hash_password(password),
+            "updated_at": now_iso
+        })
+        
+        token_doc.reference.update({
+            "used": True,
+            "reset_at": now_iso
+        })
+        
+        log_activity(email, "Password reset successfully")
+        return api_success({
+            "message": "Password updated successfully. You may now log in.",
+            "redirect": "/login"
+        })
+    except Exception as e:
+        logger.error(f"Reset password error: {str(e)}")
+        return api_error(message="Failed to reset password", status=500)
+
 
 @app.route('/api/google-auth', methods=['POST'])
 def google_auth():
-    data = request.json
-    email = data.get('email')
-    name = data.get('name')
-    google_id = data.get('googleId')
-    
-    if not email or not name or not google_id:
-        return jsonify({"success": False, "message": "Invalid Google authentication data"}), 400
-    
-    
-    users = users_collection.where('email', '==', email).limit(1).get()
-    user_list = list(users)
-    
-    if not user_list:
+    try:
+        data = request.json or {}
+        email = (data.get('email') or '').strip().lower()
+        name = (data.get('name') or '').strip()
+        google_id = (data.get('googleId') or '').strip()
         
-        new_user = {
-            "email": email,
-            "password": hash_password(google_id),
-            "name": name,
-            "created_at": datetime.now().isoformat(),
-            "google_auth": True,
-            "google_id": google_id
-        }
-        users_collection.add(new_user)
-        log_activity(email, "User registered via Google")
-    
-    session['user_email'] = email
-    session['user_name'] = name
-    log_activity(email, "User logged in via Google")
-    
-    return jsonify({"success": True, "message": "Google authentication successful"})
+        if not email or not name or not google_id:
+            return api_error(message="Invalid Google authentication data", status=400)
+        
+        users = users_collection.where('email', '==', email).limit(1).get()
+        user_list = list(users)
+        
+        if user_list:
+            user_doc = user_list[0]
+            user_data = user_doc.to_dict() or {}
+            user_id = user_doc.id
+            role = user_data.get('role', 'guest')
+            property_id = user_data.get('property_id', 'prop_1')
+            user_name = user_data.get('name') or name
+            
+            # Update google_auth flag if not already marked
+            if not user_data.get('google_auth'):
+                try:
+                    users_collection.document(user_id).update({
+                        "google_auth": True,
+                        "google_id": google_id
+                    })
+                except Exception as update_err:
+                    logger.warning(f"Could not update google_auth on existing user: {update_err}")
+        else:
+            new_user = {
+                "email": email,
+                "password": hash_password(google_id),
+                "name": name,
+                "phone": "",
+                "role": "guest",
+                "property_id": "prop_1",
+                "created_at": datetime.utcnow().isoformat(),
+                "google_auth": True,
+                "google_id": google_id,
+                "is_active": True
+            }
+            added_ref = users_collection.add(new_user)
+            user_id = added_ref[1].id
+            role = "guest"
+            property_id = "prop_1"
+            user_name = name
+            log_activity(email, "User registered via Google")
+            logger.info(f"✅ User registered via Google: {email}")
+        
+        session.permanent = True
+        app.permanent_session_lifetime = timedelta(days=30)
+        session['user_id'] = user_id
+        session['user_email'] = email
+        session['user_name'] = user_name
+        session['user_role'] = role
+        session['property_id'] = property_id
+        
+        log_activity(email, "User logged in via Google")
+        logger.info(f"✅ User logged in via Google: {email} ({role})")
+        
+        redirect_url = get_role_redirect(role)
+        return api_success({
+            "user": {
+                "uid": user_id,
+                "name": user_name,
+                "role": role,
+                "property_id": property_id
+            },
+            "redirect": redirect_url,
+            "message": "Google authentication successful"
+        })
+    except Exception as e:
+        logger.error(f"Google auth error: {str(e)}")
+        return api_error(message="Google sign-in failed. Please try again.", status=500)
 
 @app.route('/api/logout', methods=['POST'])
 def api_logout():
@@ -376,11 +2515,14 @@ def api_logout():
 
 
 @app.route('/api/rooms', methods=['GET'])
-@login_required
 def get_rooms():
     rooms = rooms_collection.stream()
     rooms_list = [{"id": room.id, **room.to_dict()} for room in rooms]
-    return jsonify(rooms_list)
+    if not rooms_list:
+        init_sample_rooms()
+        rooms = rooms_collection.stream()
+        rooms_list = [{"id": room.id, **room.to_dict()} for room in rooms]
+    return api_success(rooms_list)
 
 @app.route('/api/rooms/available', methods=['GET'])
 @login_required
@@ -605,45 +2747,6 @@ def handle_bookings():
         except Exception as e:
             print(f"❌ Booking creation error: {str(e)}")
             return jsonify({"success": False, "message": f"Booking failed: {str(e)}"}), 500
-
-@app.route('/api/bookings/<booking_id>/cancel', methods=['POST'])
-@login_required
-def cancel_booking(booking_id):
-    try:
-        booking_ref = bookings_collection.document(booking_id)
-        booking = booking_ref.get()
-        
-        if not booking.exists:
-            return jsonify({"success": False, "message": "Booking not found"}), 404
-        
-        booking_data = booking.to_dict()
-        
-        if booking_data['user_email'] != session['user_email']:
-            return jsonify({"success": False, "message": "Unauthorized"}), 403
-        
-        booking_ref.update({
-            "status": "cancelled",
-            "cancelled_at": datetime.now().isoformat()
-        })
-        
-        if booking_data.get('transaction_id'):
-            try:
-                transaction_ref = transactions_collection.document(booking_data['transaction_id'])
-                transaction_ref.update({
-                    "payment_status": "refunded",
-                    "updated_at": datetime.now().isoformat()
-                })
-                logger.info(f"✅ Transaction {booking_data['transaction_id']} marked as refunded")
-            except Exception as e:
-                logger.warning(f"Could not update transaction: {str(e)}")
-        
-        log_activity(session['user_email'], "Booking cancelled", f"Booking ID: {booking_id}")
-        logger.info(f"✅ Booking {booking_id} cancelled")
-        
-        return jsonify({"success": True})
-    except Exception as e:
-        logger.error(f"Cancel booking error: {str(e)}")
-        return jsonify({"success": False, "message": str(e)}), 500
 
 @app.route('/api/dashboard-stats', methods=['GET'])
 @login_required

@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Invitation — Nur-e-Haya Hotel Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 15px;
+    }
+
+    .invite-card {
+        width: 100%;
+        max-width: 460px;
+        background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+        border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.15);
+        border-radius: 14px;
+        padding: 38px 34px;
+        backdrop-filter: blur(25px);
+        position: relative;
+    }
+
+    .invite-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .invite-logo {
+        font-family: 'Cinzel', serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--primary-color, #d4af37);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+
+    .invite-heading {
+        font-family: 'Cinzel', serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-bright, #fff9e6);
+        margin: 0 0 6px;
+    }
+
+    .invite-badge-box {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(212, 175, 55, 0.12);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 20px;
+        padding: 4px 14px;
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--primary-color, #d4af37);
+        text-transform: capitalize;
+    }
+
+    .password-hint {
+        font-size: 11px;
+        color: var(--text-secondary, #bda568);
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="invite-card">
+        {% if not invite %}
+        <!-- Section B.4: Invalid/expired token state -->
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(199, 0, 57, 0.15); border: 2px solid var(--danger-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;">
+                <i class="fas fa-exclamation-circle" style="font-size: 28px; color: var(--danger-color);"></i>
+            </div>
+            <h3 style="color: var(--text-bright); margin-bottom: 12px; font-family: 'Cinzel', serif; font-size: 20px;">Link Expired</h3>
+            <p style="color: var(--text-primary); font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+                This invite link has expired — ask your admin to resend it.
+            </p>
+            <a href="/login" class="btn btn-secondary">
+                <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Go to Sign in
+            </a>
+        </div>
+        {% else %}
+        <!-- Section B.4: Valid Invite Form -->
+        <div class="invite-header">
+            <div class="invite-logo">
+                <i class="fas fa-hotel"></i> Nur-e-Haya
+            </div>
+            <h2 class="invite-heading">Staff Invite Acceptance</h2>
+            <div class="invite-badge-box">
+                <i class="fas fa-user-shield"></i>
+                <span>Role: <strong>{{ invite.role }}</strong></span>
+                {% if invite.department_id %}
+                <span>| Dept: {{ invite.department_id }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <form id="inviteForm" novalidate>
+            <input type="hidden" name="token" value="{{ token }}">
+
+            <!-- Name (pre-filled, editable per Section B.4) -->
+            <div class="form-group">
+                <label class="form-label required" for="name">Your Name</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-control" 
+                    value="{{ invite.name or '' }}" 
+                    required 
+                    autofocus
+                >
+                <div class="form-field-error" data-for="name"></div>
+            </div>
+
+            <!-- Email (read-only info) -->
+            <div class="form-group">
+                <label class="form-label" style="opacity: 0.7;">Invited Email</label>
+                <input 
+                    type="email" 
+                    class="form-control" 
+                    value="{{ invite.email }}" 
+                    disabled 
+                    style="opacity: 0.6; cursor: not-allowed;"
+                >
+            </div>
+
+            <!-- Password (stricter staff policy: min 10 chars, 1 number, 1 symbol) -->
+            <div class="form-group">
+                <label class="form-label required" for="password">Set Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-control" 
+                    placeholder="••••••••••" 
+                    required 
+                    minlength="10"
+                >
+                <div class="password-hint">
+                    Staff policy: Minimum 10 characters, at least 1 number, and 1 symbol.
+                </div>
+                <div class="form-field-error" data-for="password"></div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label class="form-label required" for="confirm_password">Confirm Password</label>
+                <input 
+                    type="password" 
+                    id="confirm_password" 
+                    name="confirm_password" 
+                    class="form-control" 
+                    placeholder="••••••••••" 
+                    required 
+                    minlength="10"
+                >
+                <div class="form-field-error" data-for="confirm_password"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="btnAcceptInvite" style="width: 100%; margin-top: 10px;">
+                ACTIVATE ACCOUNT & CONTINUE
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if invite %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const inviteForm = document.getElementById('inviteForm');
+    
+    AppForm.bind(inviteForm, {
+        onSubmit: async (data, form) => {
+            // Confirm passwords match
+            if (data.password !== data.confirm_password) {
+                const confError = form.querySelector('.form-field-error[data-for="confirm_password"]');
+                const confField = form.querySelector('#confirm_password');
+                confField.classList.add('is-invalid');
+                if (confError) {
+                    confError.textContent = 'Passwords do not match.';
+                    confError.classList.add('visible');
+                }
+                Toast.error('Passwords do not match.');
+                return;
+            }
+
+            // Client-side staff password policy check (min 10 chars, 1 number, 1 symbol)
+            const hasNum = /\d/.test(data.password);
+            const hasSym = /[^a-zA-Z0-9]/.test(data.password);
+            if (data.password.length < 10 || !hasNum || !hasSym) {
+                const pwField = form.querySelector('#password');
+                const pwError = form.querySelector('.form-field-error[data-for="password"]');
+                pwField.classList.add('is-invalid');
+                if (pwError) {
+                    pwError.textContent = 'Must be at least 10 chars with at least 1 number and 1 symbol.';
+                    pwError.classList.add('visible');
+                }
+                Toast.error('Please meet the staff password complexity requirements.');
+                return;
+            }
+
+            const result = await AppAPI.post('/api/auth/invite/accept', {
+                token: data.token,
+                name: data.name,
+                password: data.password
+            });
+
+            Toast.success('Account activated! Welcome to the team.');
+            setTimeout(() => {
+                window.location.href = result.redirect || '/dashboard';
+            }, 800);
+        }
+    });
+});
+</script>
+{% endif %}
+{% endblock %}

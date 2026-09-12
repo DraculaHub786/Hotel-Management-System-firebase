@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Property Settings - Super Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 750px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/super-admin/properties" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Properties
+        </a>
+        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">Property ID: {{ prop_id }}</span>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h4 class="fw-bold mb-1">Hotel Property Configuration</h4>
+        <p class="text-muted small mb-4">Set address, timezone, currency, and property operational parameters</p>
+
+        <form onsubmit="alert('Property settings saved!'); window.location.href='/super-admin/properties'; return false;">
+            <div class="mb-3">
+                <label class="form-label small fw-semibold required">Property Legal Name</label>
+                <input type="text" class="form-control rounded-3" value="Nur-E-Haya Luxury Resort & Spa" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold required">Address</label>
+                <input type="text" class="form-control rounded-3" value="Coastal Highway, North Goa 403515" required>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold required">Default Currency</label>
+                    <select class="form-select rounded-3">
+                        <option value="INR" selected>INR (₹) - Indian Rupee</option>
+                        <option value="USD">USD ($) - US Dollar</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold required">Timezone</label>
+                    <select class="form-select rounded-3">
+                        <option value="Asia/Kolkata" selected>Asia/Kolkata (IST +5:30)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <a href="/super-admin/properties" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4">Save Property Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

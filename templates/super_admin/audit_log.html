@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Trail & Compliance - Super Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-dark text-white fw-medium px-2 py-1 rounded-pill">System Integrity</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="auditLogCount">0 Entries</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Platform Audit Log Viewer</h2>
+            <p class="text-muted small mb-0">Immutable records of administrative decisions, permission events, and database mutations</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadAuditLogs()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <a href="/super-admin/settings" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-sliders-h me-1"></i> Global Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Bar (Section L.4 Spec) -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Filter by Actor Role</label>
+                <select class="form-select bg-light border-0" id="filterActor" onchange="filterLogs()">
+                    <option value="all">All Roles</option>
+                    <option value="super_admin">Super Admin</option>
+                    <option value="admin">Admin</option>
+                    <option value="front_desk">Front Desk</option>
+                    <option value="guest">Guest</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Filter by Action Type</label>
+                <select class="form-select bg-light border-0" id="filterAction" onchange="filterLogs()">
+                    <option value="all">All Actions</option>
+                    <option value="refund_approved">Refund Approvals</option>
+                    <option value="room_checkout">Room Turnover</option>
+                    <option value="setting_change">Setting Changes</option>
+                    <option value="permission_denied">Permission Denied Events</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold text-muted mb-1">Keyword Search</label>
+                <input type="text" class="form-control bg-light border-0" id="filterSearch" placeholder="Search target ID, email..." oninput="filterLogs()">
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Timestamp</th>
+                        <th>Actor (User / Role)</th>
+                        <th>Action</th>
+                        <th>Target Type & ID</th>
+                        <th class="text-end pe-4">State Inspection</th>
+                    </tr>
+                </thead>
+                <tbody id="auditTableBody">
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <div class="ui-shimmer rounded-3 p-4"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Before / After Diff Viewer (Section L.4 Spec) -->
+<div class="modal fade" id="diffModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-code-compare me-2 text-primary"></i>State Mutation Inspection
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="fw-semibold text-danger small mb-1">
+                            <i class="fas fa-minus-circle me-1"></i> Before State (Previous)
+                        </div>
+                        <pre class="bg-light p-3 rounded-3 border text-danger small mb-0" id="beforeStateJson" style="max-height: 280px; overflow-y: auto; font-family: monospace;"></pre>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="fw-semibold text-success small mb-1">
+                            <i class="fas fa-plus-circle me-1"></i> After State (Mutated)
+                        </div>
+                        <pre class="bg-light p-3 rounded-3 border text-success small mb-0" id="afterStateJson" style="max-height: 280px; overflow-y: auto; font-family: monospace;"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top px-4 py-3">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allLogs = [];
+
+async function loadAuditLogs() {
+    try {
+        const res = await fetch('/api/super-admin/audit-log');
+        const json = await res.json();
+        if (json.ok && json.data && json.data.logs) {
+            allLogs = json.data.logs;
+            filterLogs();
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function filterLogs() {
+    const actor = document.getElementById('filterActor').value;
+    const action = document.getElementById('filterAction').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+
+    const filtered = allLogs.filter(l => {
+        const matchActor = (actor === 'all' || l.actor_role === actor);
+        const matchAction = (action === 'all' || l.action === action);
+        const matchSearch = (!search || JSON.stringify(l).toLowerCase().includes(search));
+        return matchActor && matchAction && matchSearch;
+    });
+
+    const tbody = document.getElementById('auditTableBody');
+    tbody.innerHTML = '';
+    document.getElementById('auditLogCount').textContent = `${filtered.length} Entries`;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">No audit logs matching search criteria.</td></tr>`;
+        return;
+    }
+
+    filtered.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="ps-4 small text-muted font-monospace">
+                ${(log.timestamp || '').replace('T', ' ').slice(0, 19)}
+            </td>
+            <td>
+                <div class="fw-bold text-dark">${log.actor_id || 'system'}</div>
+                <span class="badge bg-secondary-subtle text-secondary rounded-pill">${log.actor_role || 'system'}</span>
+            </td>
+            <td>
+                <span class="badge ${log.action.includes('denied') ? 'bg-danger-subtle text-danger' : log.action.includes('refund') ? 'bg-warning-subtle text-warning-emphasis' : 'bg-primary-subtle text-primary'} px-2 py-1 rounded">
+                    ${log.action}
+                </span>
+            </td>
+            <td>
+                <span class="badge bg-light text-dark border me-1">${log.target_type || 'record'}</span>
+                <span class="font-monospace small text-muted">${log.target_id || ''}</span>
+            </td>
+            <td class="text-end pe-4">
+                <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" onclick="openDiffModal('${log.log_id}')">
+                    <i class="fas fa-code-compare me-1"></i> View Diff
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function openDiffModal(logId) {
+    const log = allLogs.find(l => l.log_id === logId);
+    if (!log) return;
+
+    document.getElementById('beforeStateJson').textContent = JSON.stringify(log.before || { status: "None" }, null, 2);
+    document.getElementById('afterStateJson').textContent = JSON.stringify(log.after || { status: "Mutated" }, null, 2);
+
+    new bootstrap.Modal(document.getElementById('diffModal')).show();
+}
+
+document.addEventListener('DOMContentLoaded', loadAuditLogs);
+</script>
+{% endblock %}

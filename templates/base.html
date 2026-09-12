@@ -10,6 +10,7 @@
     
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     
     <style>
@@ -472,6 +473,7 @@
             display: inline-block;
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/conventions.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -485,10 +487,254 @@
     <div class="corner-ornament corner-bottom-left"></div>
     <div class="corner-ornament corner-bottom-right"></div>
     
-    {% block content %}{% endblock %}
+    <!-- Shared Toast Container for Section A transient notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    {% if session.get('user_email') %}
+    <!-- Section M: Shared Shell Layout (Authenticated) -->
+    <div class="app-shell d-flex">
+        <!-- Sidebar: 240px, collapsible -->
+        <aside class="app-sidebar d-flex flex-column flex-shrink-0 bg-dark-surface p-3" id="appSidebar">
+            <!-- Brand Logo -->
+            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none text-white brand-header">
+                <i class="fas fa-hotel text-warning fs-4 me-2"></i>
+                <span class="fs-5 fw-bold brand-text" style="font-family: 'Cinzel', serif; letter-spacing: 1px;">Nur-E-Haya</span>
+            </a>
+            <hr class="border-secondary my-3">
+
+            <!-- Role-Filtered Navigation (Server-Side Filtered) -->
+            <ul class="nav nav-pills flex-column mb-auto gap-1" id="shellNav">
+                {% set role = session.get('user_role', 'guest') %}
+                
+                {% if role == 'super_admin' %}
+                    <li class="nav-item"><a href="/super-admin/settings" class="nav-link text-white"><i class="fas fa-sliders-h me-2"></i><span class="nav-label">Global Settings</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/audit-log" class="nav-link text-white"><i class="fas fa-history me-2"></i><span class="nav-label">Audit Log</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/admins" class="nav-link text-white"><i class="fas fa-user-shield me-2"></i><span class="nav-label">Admins</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/properties" class="nav-link text-white"><i class="fas fa-city me-2"></i><span class="nav-label">Properties</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/impersonate" class="nav-link text-white"><i class="fas fa-user-secret me-2"></i><span class="nav-label">Impersonate</span></a></li>
+                    <li class="nav-item"><a href="/admin" class="nav-link text-white"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-label">Admin Overview</span></a></li>
+                {% endif %}
+
+                {% if role in ['admin', 'super_admin'] %}
+                    <li class="nav-item"><a href="/admin/staff" class="nav-link text-white"><i class="fas fa-users me-2"></i><span class="nav-label">Staff Roster</span></a></li>
+                    <li class="nav-item"><a href="/admin/rooms" class="nav-link text-white"><i class="fas fa-door-open me-2"></i><span class="nav-label">Rooms Inventory</span></a></li>
+                    <li class="nav-item"><a href="/admin/revenue" class="nav-link text-white"><i class="fas fa-chart-line me-2"></i><span class="nav-label">Revenue & BI</span></a></li>
+                    <li class="nav-item"><a href="/admin/refunds" class="nav-link text-white"><i class="fas fa-undo-alt me-2"></i><span class="nav-label">Refunds Queue</span></a></li>
+                    <li class="nav-item"><a href="/admin/bookings" class="nav-link text-white"><i class="fas fa-calendar-alt me-2"></i><span class="nav-label">Master Bookings</span></a></li>
+                    <li class="nav-item"><a href="/admin/incidents" class="nav-link text-white"><i class="fas fa-shield-alt me-2"></i><span class="nav-label">Incident Rollup</span></a></li>
+                {% endif %}
+
+                {% if role in ['front_desk', 'admin', 'super_admin'] %}
+                    <li class="nav-item"><a href="/staff/front-desk" class="nav-link text-white"><i class="fas fa-concierge-bell me-2"></i><span class="nav-label">Front Desk</span></a></li>
+                    <li class="nav-item"><a href="/staff/front-desk/rooms" class="nav-link text-white"><i class="fas fa-th-large me-2"></i><span class="nav-label">Room Board</span></a></li>
+                {% endif %}
+
+                {% if role in ['housekeeping', 'admin', 'super_admin'] %}
+                    <li class="nav-item"><a href="/staff/housekeeping" class="nav-link text-white"><i class="fas fa-broom me-2"></i><span class="nav-label">Housekeeping</span></a></li>
+                {% endif %}
+
+                {% if role in ['laundry', 'admin', 'super_admin'] %}
+                    <li class="nav-item"><a href="/staff/laundry" class="nav-link text-white"><i class="fas fa-tshirt me-2"></i><span class="nav-label">Laundry Board</span></a></li>
+                {% endif %}
+
+                {% if role in ['room_service', 'kitchen', 'admin', 'super_admin'] %}
+                    <li class="nav-item"><a href="/staff/room-service" class="nav-link text-white"><i class="fas fa-utensils me-2"></i><span class="nav-label">Room Service</span></a></li>
+                    <li class="nav-item"><a href="/staff/kitchen" class="nav-link text-white"><i class="fas fa-fire me-2"></i><span class="nav-label">Kitchen KDS</span></a></li>
+                    <li class="nav-item"><a href="/staff/kitchen/menu" class="nav-link text-white"><i class="fas fa-toggle-on me-2"></i><span class="nav-label">86 Menu List</span></a></li>
+                {% endif %}
+
+                {% if role in ['maintenance', 'admin', 'super_admin'] %}
+                    <li class="nav-item"><a href="/staff/maintenance" class="nav-link text-white"><i class="fas fa-tools me-2"></i><span class="nav-label">Maintenance</span></a></li>
+                {% endif %}
+
+                {% if role in ['security', 'admin', 'super_admin'] %}
+                    <li class="nav-item"><a href="/staff/security" class="nav-link text-white"><i class="fas fa-shield-alt me-2"></i><span class="nav-label">Security Log</span></a></li>
+                    <li class="nav-item"><a href="/staff/security/flags" class="nav-link text-white"><i class="fas fa-id-card me-2"></i><span class="nav-label">ID Flags</span></a></li>
+                {% endif %}
+
+                {% if role == 'guest' %}
+                    <li class="nav-item"><a href="/rooms" class="nav-link text-white"><i class="fas fa-bed me-2"></i><span class="nav-label">Explore Rooms</span></a></li>
+                    <li class="nav-item"><a href="/facilities" class="nav-link text-white"><i class="fas fa-spa me-2"></i><span class="nav-label">Spa & Facilities</span></a></li>
+                    <li class="nav-item"><a href="/menu" class="nav-link text-white"><i class="fas fa-utensils me-2"></i><span class="nav-label">Dining Menu</span></a></li>
+                    <li class="nav-item"><a href="/my-bookings" class="nav-link text-white"><i class="fas fa-suitcase me-2"></i><span class="nav-label">My Bookings</span></a></li>
+                    <li class="nav-item"><a href="/support" class="nav-link text-white"><i class="fas fa-headset me-2"></i><span class="nav-label">Concierge AI</span></a></li>
+                    <li class="nav-item"><a href="/account" class="nav-link text-white"><i class="fas fa-user me-2"></i><span class="nav-label">My Account</span></a></li>
+                {% endif %}
+            </ul>
+
+            <hr class="border-secondary my-3">
+
+            <!-- Bottom: User avatar + name + role badge, logout (Section M spec) -->
+            <div class="user-profile-widget d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                    <div class="rounded-circle bg-warning text-dark fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; font-size: 13px;">
+                        {{ session.get('user_email', 'U')[0]|upper }}
+                    </div>
+                    <div class="user-meta text-truncate">
+                        <div class="text-white small fw-bold text-truncate">{{ session.get('user_email', 'Staff User') }}</div>
+                        <span class="badge bg-warning text-dark py-0 px-2 rounded-pill" style="font-size: 0.68rem; letter-spacing: 0.5px;">{{ role|upper }}</span>
+                    </div>
+                </div>
+                <a href="/logout" class="btn btn-sm btn-outline-danger p-1 rounded-circle" title="Sign Out">
+                    <i class="fas fa-sign-out-alt" style="font-size: 11px;"></i>
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Wrapper with Topbar & Content Area -->
+        <div class="app-main d-flex flex-column flex-grow-1 overflow-auto">
+            <!-- Topbar (Section M spec) -->
+            <header class="app-topbar bg-white border-bottom px-4 py-2 d-flex align-items-center justify-content-between sticky-top">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-sm btn-light border d-md-none" onclick="toggleMobileSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <!-- Context-aware search -->
+                    <div class="input-group input-group-sm" style="max-width: 320px;">
+                        <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" class="form-control bg-light border-0" placeholder="Search rooms, guests, tasks..." id="topbarSearch">
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Shift Clock-In/Out Widget (Staff roles only, per Section M spec) -->
+                    {% if role not in ['guest'] %}
+                    <div class="shift-widget d-flex align-items-center gap-2 bg-light px-3 py-1 rounded-pill border">
+                        <span class="badge rounded-circle bg-success p-1 d-inline-block" style="width: 8px; height: 8px;"></span>
+                        <span class="small fw-semibold text-dark" id="shiftStatusLabel">On Duty</span>
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill" style="font-size: 0.75rem;" onclick="toggleShift()">
+                            Clock Out
+                        </button>
+                    </div>
+                    {% endif %}
+
+                    <!-- Notification Bell with Dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-light rounded-circle p-2 position-relative border" data-bs-toggle="dropdown">
+                            <i class="fas fa-bell text-secondary"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                                <span class="visually-hidden">New alerts</span>
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 p-2" style="width: 280px;">
+                            <li class="dropdown-header fw-bold text-dark">Notifications (Recent)</li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="px-2 py-1 small text-muted"><i class="fas fa-check-circle text-success me-1"></i> System online & operational</li>
+                            <li class="px-2 py-1 small text-muted"><i class="fas fa-door-open text-primary me-1"></i> Room turnover sync active</li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Role-Specific Screen Content Area -->
+            <main class="app-content-area flex-grow-1 p-3">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <style>
+    .app-shell {
+        min-height: 100vh;
+    }
+    .app-sidebar {
+        width: 240px;
+        min-height: 100vh;
+        background: #0f1a2a;
+        transition: width 0.25s ease;
+    }
+    .app-sidebar .nav-link {
+        font-size: 0.88rem;
+        border-radius: 8px;
+        padding: 8px 12px;
+        transition: all 0.2s;
+    }
+    .app-sidebar .nav-link:hover {
+        background: rgba(212, 175, 55, 0.15);
+        color: #d4af37 !important;
+    }
+    /* Responsive rules per Section M & 8 */
+    @media (max-width: 1024px) and (min-width: 769px) {
+        .app-sidebar {
+            width: 72px;
+            padding: 12px 8px !important;
+        }
+        .app-sidebar .brand-text,
+        .app-sidebar .nav-label,
+        .app-sidebar .user-meta {
+            display: none !important;
+        }
+        .app-sidebar .nav-link {
+            text-align: center;
+            padding: 10px 0;
+        }
+        .app-sidebar .nav-link i {
+            margin: 0 !important;
+            font-size: 1.1rem;
+        }
+    }
+    @media (max-width: 768px) {
+        .app-sidebar {
+            position: fixed;
+            left: -260px;
+            top: 0;
+            bottom: 0;
+            z-index: 1050;
+            transition: left 0.3s ease;
+        }
+        .app-sidebar.show-mobile {
+            left: 0;
+        }
+    }
+    </style>
+
+    <script>
+    function toggleMobileSidebar() {
+        document.getElementById('appSidebar').classList.toggle('show-mobile');
+    }
+
+    let onDuty = true;
+    function toggleShift() {
+        onDuty = !onDuty;
+        const lbl = document.getElementById('shiftStatusLabel');
+        const btn = event.target;
+        if (onDuty) {
+            lbl.textContent = 'On Duty';
+            btn.textContent = 'Clock Out';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.success('Clocked in to active shift');
+        } else {
+            lbl.textContent = 'Off Duty';
+            btn.textContent = 'Clock In';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.info('Shift ended & logged');
+        }
+    }
+    </script>
+    {% else %}
+    <!-- Unauthenticated Navigation & Public Layout -->
+    <nav class="navbar navbar-expand-lg border-bottom" style="background: rgba(15, 26, 42, 0.95); backdrop-filter: blur(10px); padding: 12px 24px; position: sticky; top: 0; z-index: 1000; border-color: rgba(212, 175, 55, 0.2) !important;">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="d-flex align-items-center text-decoration-none text-white gap-2">
+                <i class="fas fa-hotel text-warning fs-4"></i>
+                <span class="fs-5 fw-bold" style="font-family: 'Cinzel', serif; letter-spacing: 1px; color: #d4af37;">Nur-E-Haya</span>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/rooms" class="btn btn-sm btn-outline-warning rounded-pill px-3"><i class="fas fa-bed me-1"></i> Rooms</a>
+                <a href="/facilities" class="btn btn-sm btn-outline-warning rounded-pill px-3"><i class="fas fa-spa me-1"></i> Facilities</a>
+                <a href="/menu" class="btn btn-sm btn-outline-warning rounded-pill px-3"><i class="fas fa-utensils me-1"></i> Dining</a>
+                <a href="/login" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-3 ms-2"><i class="fas fa-sign-in-alt me-1"></i> Sign In</a>
+            </div>
+        </div>
+    </nav>
+    <main class="public-main-content py-4">
+        {{ self.content() }}
+    </main>
+    {% endif %}
+
     
-    <!-- Google Sign-In API -->
+    <!-- Google Sign-In & Bootstrap Bundle -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/conventions.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

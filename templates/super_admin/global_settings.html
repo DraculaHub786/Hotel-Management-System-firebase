@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Global System Settings - Super Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger text-white fw-medium px-2 py-1 rounded-pill">Root Config</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">Super Admin</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Global Hotel Platform Settings</h2>
+            <p class="text-muted small mb-0">Environment configurations, payment gateway tokens, OTP policies, and feature flags</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/super-admin/audit-log" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                <i class="fas fa-history me-1"></i> Audit Trail
+            </a>
+            <a href="/super-admin/admins" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-users-cog me-1"></i> Admin Directory
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabbed Settings Sections (Section L.2 Spec) -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="card-header bg-white border-bottom p-0">
+            <ul class="nav nav-tabs border-0 px-3 pt-3" id="settingsTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active fw-semibold" id="payment-tab" data-bs-toggle="tab" data-bs-target="#tab-payment">
+                        <i class="fas fa-credit-card me-1 text-primary"></i> Payment Gateway
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="otp-tab" data-bs-toggle="tab" data-bs-target="#tab-otp">
+                        <i class="fas fa-key me-1 text-warning"></i> OTP & Security
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#tab-pricing">
+                        <i class="fas fa-percent me-1 text-success"></i> Pricing & Tax
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link fw-semibold" id="flags-tab" data-bs-toggle="tab" data-bs-target="#tab-flags">
+                        <i class="fas fa-flag me-1 text-info"></i> Feature Flags
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content" id="settingsTabContent">
+                <!-- 1. Payment Tab -->
+                <div class="tab-pane fade show active" id="tab-payment">
+                    <h5 class="fw-bold mb-3">Payment Gateway Provider</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Active Gateway Provider</label>
+                            <select class="form-select rounded-3" id="payProvider">
+                                <option value="razorpay" selected>Razorpay (India UPI / Cards)</option>
+                                <option value="stripe">Stripe Global</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Publishable / Live API Key</label>
+                            <input type="text" class="form-control rounded-3" id="payApiKey" placeholder="rzp_live_••••1234" value="rzp_live_••••1234">
+                            <div class="form-text small text-muted"><i class="fas fa-lock me-1"></i>Masked input write-only. Full secret never sent over GET.</div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label small fw-semibold">Webhook Secret Key</label>
+                            <input type="password" class="form-control rounded-3" id="payWebhookSecret" placeholder="••••••••••••••••">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. OTP Tab -->
+                <div class="tab-pane fade" id="tab-otp">
+                    <h5 class="fw-bold mb-3">Guest OTP Verification Policies</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">SMS / OTP Provider</label>
+                            <select class="form-select rounded-3" id="otpProvider">
+                                <option value="twilio" selected>Twilio SMS Service</option>
+                                <option value="sendgrid">SendGrid Email OTP</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">OTP Length (Digits)</label>
+                            <input type="number" class="form-control rounded-3" id="otpLength" min="4" max="8" value="6">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Expiry Duration (Minutes)</label>
+                            <input type="number" class="form-control rounded-3" id="otpExpiry" min="1" max="15" value="5">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Max Failed Attempts (Lockout)</label>
+                            <input type="number" class="form-control rounded-3" id="otpMaxAttempts" min="3" max="10" value="5">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Pricing Defaults Tab -->
+                <div class="tab-pane fade" id="tab-pricing">
+                    <h5 class="fw-bold mb-3">System-Wide Pricing & Surcharges</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Goods & Services Tax (GST %)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control rounded-start-3" id="taxPercent" step="0.1" value="5.0">
+                                <span class="input-group-text rounded-end-3">%</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Service Charge (%)</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control rounded-start-3" id="serviceChargePercent" step="0.1" value="2.5">
+                                <span class="input-group-text rounded-end-3">%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Feature Flags Tab -->
+                <div class="tab-pane fade" id="tab-flags">
+                    <h5 class="fw-bold mb-3">Dynamic Feature Toggles</h5>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                            <div>
+                                <div class="fw-bold text-dark">Facility Booking Module</div>
+                                <div class="text-muted small">Enable spa, pool cabana, and gym reservations for registered guests.</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" role="switch" id="flagFacility" checked>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
+                            <div>
+                                <div class="fw-bold text-dark">Dark Mode Theme Toggle</div>
+                                <div class="text-muted small">Allow guests and staff to toggle OLED dark mode palette.</div>
+                            </div>
+                            <div class="form-check form-switch fs-5">
+                                <input class="form-check-input" type="checkbox" role="switch" id="flagDarkMode">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end pt-4 mt-4 border-top">
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="saveGlobalSettings()">
+                    <i class="fas fa-save me-1"></i> Save Global Configurations
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function saveGlobalSettings() {
+    try {
+        const res = await fetch('/api/super-admin/settings', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tax_percent: parseFloat(document.getElementById('taxPercent').value),
+                service_charge_percent: parseFloat(document.getElementById('serviceChargePercent').value),
+                facility_booking_enabled: document.getElementById('flagFacility').checked,
+                dark_mode_enabled: document.getElementById('flagDarkMode').checked
+            })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success('Global settings updated and synced across all properties!');
+            } else {
+                alert('Settings saved successfully!');
+            }
+        } else {
+            alert('Failed to save settings');
+        }
+    } catch (e) {
+        alert('Network error saving settings');
+    }
+}
+</script>
+{% endblock %}

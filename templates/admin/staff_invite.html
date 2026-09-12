@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Invite Staff Member - Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 750px;">
+    <!-- Top Breadcrumb -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/admin/staff" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Staff Roster
+        </a>
+        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill">
+            <i class="fas fa-envelope-open-text me-1"></i> Secure Token Invitation
+        </span>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="bg-primary-subtle text-primary p-3 rounded-circle fs-4">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div>
+                <h3 class="h4 fw-bold mb-0">Invite Staff Member</h3>
+                <p class="text-muted small mb-0">Generate a time-limited onboarding link with departmental role credentials</p>
+            </div>
+        </div>
+
+        <form id="inviteStaffForm" onsubmit="submitStaffInvite(event)">
+            <div class="row g-3">
+                <!-- Full Name -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small required">Full Name</label>
+                    <input type="text" class="form-control rounded-3" id="staffName" placeholder="e.g. Ravi Kumar" required>
+                </div>
+
+                <!-- Email Address -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small required">Corporate / Contact Email</label>
+                    <input type="email" class="form-control rounded-3" id="staffEmail" placeholder="ravi@example.com" required>
+                </div>
+
+                <!-- Role dropdown -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small required">Assigned Staff Role</label>
+                    <select class="form-select rounded-3" id="staffRole" onchange="syncDepartment()" required>
+                        <option value="" disabled selected>Select operational role...</option>
+                        <option value="front_desk">Front Desk Agent</option>
+                        <option value="housekeeping">Housekeeping Specialist</option>
+                        <option value="laundry">Laundry Operations</option>
+                        <option value="room_service">Room Service Attendant</option>
+                        <option value="kitchen">Kitchen Staff / Chef</option>
+                        <option value="maintenance">Maintenance Engineer</option>
+                        <option value="security">Security Officer</option>
+                    </select>
+                </div>
+
+                <!-- Department dropdown -->
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold small required">Department</label>
+                    <select class="form-select rounded-3" id="staffDepartment" required>
+                        <option value="front_desk">Front Office (dept_fo)</option>
+                        <option value="housekeeping">Housekeeping (dept_hsk)</option>
+                        <option value="laundry">Laundry Services (dept_lnd)</option>
+                        <option value="food_beverage">Food & Beverage (dept_fb)</option>
+                        <option value="engineering">Engineering & Facilities (dept_eng)</option>
+                        <option value="security">Security & Surveillance (dept_sec)</option>
+                    </select>
+                </div>
+
+                <!-- Employee ID -->
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold small">Employee ID (Optional)</label>
+                    <input type="text" class="form-control rounded-3" id="staffEmployeeId" placeholder="Leave blank to auto-generate (e.g. HSK-104)">
+                </div>
+
+                <!-- Shift Details Accordion / Optional -->
+                <div class="col-md-12">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="fw-semibold small text-dark mb-2">
+                            <i class="fas fa-clock me-1"></i> Shift Hours (Optional at invite time)
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small text-muted">Shift Start</label>
+                                <input type="time" class="form-control form-control-sm rounded-3" id="shiftStart" value="08:00">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-muted">Shift End</label>
+                                <input type="time" class="form-control form-control-sm rounded-3" id="shiftEnd" value="16:00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-4 mt-3 border-top">
+                <a href="/admin/staff" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn btn-primary rounded-pill px-4" id="sendInviteBtn">
+                    <i class="fas fa-paper-plane me-1"></i> Send Staff Invitation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function syncDepartment() {
+    const role = document.getElementById('staffRole').value;
+    const dept = document.getElementById('staffDepartment');
+    const mapping = {
+        'front_desk': 'front_desk',
+        'housekeeping': 'housekeeping',
+        'laundry': 'laundry',
+        'room_service': 'food_beverage',
+        'kitchen': 'food_beverage',
+        'maintenance': 'engineering',
+        'security': 'security'
+    };
+    if (mapping[role]) dept.value = mapping[role];
+}
+
+async function submitStaffInvite(e) {
+    e.preventDefault();
+    const btn = document.getElementById('sendInviteBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Sending Invitation...';
+
+    const payload = {
+        name: document.getElementById('staffName').value.trim(),
+        email: document.getElementById('staffEmail').value.trim(),
+        role: document.getElementById('staffRole').value,
+        department_id: document.getElementById('staffDepartment').value,
+        employee_id: document.getElementById('staffEmployeeId').value.trim()
+    };
+
+    try {
+        const res = await fetch('/api/admin/staff/invite', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Invitation dispatched to ${payload.email}`);
+            } else {
+                alert(`Invitation sent: ${json.data.invite_id}`);
+            }
+            setTimeout(() => {
+                window.location.href = '/admin/staff';
+            }, 1000);
+        } else {
+            alert(json.error?.message || 'Failed to dispatch invite');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Staff Invitation';
+        }
+    } catch (err) {
+        alert('Network error sending invite');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Staff Invitation';
+    }
+}
+</script>
+{% endblock %}

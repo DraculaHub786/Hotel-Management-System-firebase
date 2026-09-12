@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}{{ facility.name if facility else "Facility Detail" }} — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a href="/facilities" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> All Facilities
+        </a>
+        <a href="/cart" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+            <i class="fas fa-shopping-cart"></i> Cart
+        </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <div>
+            <img src="{{ facility.image or 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80' }}" 
+                 style="width: 100%; height: 360px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.25);"
+                 alt="{{ facility.name }}">
+            <div class="card" style="margin-top: 20px;">
+                <h3 style="color: var(--text-bright); margin-bottom: 8px;">Experience Overview</h3>
+                <p style="color: var(--text-primary); font-size: 14px; line-height: 1.6;">
+                    {{ facility.description or "Immerse yourself in world-class amenities designed for ultimate relaxation, rejuvenation, and comfort during your stay at Nur-e-Haya." }}
+                </p>
+            </div>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <span style="font-size: 12px; text-transform: uppercase; color: var(--primary-color);">Wellness & Recreation</span>
+                <h1 style="font-size: 24px; color: var(--text-bright); margin: 6px 0 10px;">{{ facility.name or "Luxury Facility" }}</h1>
+                <div style="font-size: 22px; font-weight: bold; color: var(--primary-color); font-family: 'Cinzel', serif; margin-bottom: 20px;">
+                    ₹{{ facility.price or 1500 }} <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Raleway', sans-serif;">/ slot</span>
+                </div>
+
+                <!-- Date Picker -->
+                <div class="form-group">
+                    <label class="form-label required" for="slotDate">Select Date</label>
+                    <input type="date" id="slotDate" class="form-control" required>
+                </div>
+
+                <!-- Slot Picker pills -->
+                <div class="form-group">
+                    <label class="form-label required">Select Time Slot</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;" id="slotPillsContainer">
+                        {% for s in (facility.slots or ["10:00 AM", "12:00 PM", "02:30 PM", "04:30 PM", "07:00 PM"]) %}
+                        <button type="button" class="filter-pill slot-choice" data-slot="{{ s }}">{{ s }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" id="btnBookSlot" style="width: 100%; margin-top: 20px;" disabled>
+                <i class="fas fa-calendar-check" style="margin-right: 6px;"></i> Add Slot to Cart
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const slotDateInput = document.getElementById('slotDate');
+    const slotPills = document.querySelectorAll('.slot-choice');
+    const btnBook = document.getElementById('btnBookSlot');
+    let selectedSlot = null;
+
+    slotDateInput.min = new Date().toISOString().split('T')[0];
+    slotDateInput.value = slotDateInput.min;
+
+    slotPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            slotPills.forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            selectedSlot = pill.dataset.slot;
+            checkReady();
+        });
+    });
+
+    slotDateInput.addEventListener('change', checkReady);
+
+    function checkReady() {
+        btnBook.disabled = !(slotDateInput.value && selectedSlot);
+    }
+
+    btnBook.addEventListener('click', () => {
+        const item = {
+            type: 'facility',
+            ref_id: '{{ facility.id or facility_id }}',
+            name: '{{ facility.name or "Facility Slot" }}',
+            date: slotDateInput.value,
+            slot: selectedSlot,
+            unit_price: {{ facility.price or 1500 }},
+            qty: 1
+        };
+
+        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+        cart.push(item);
+        localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+        Toast.success('Facility slot added to cart!');
+        setTimeout(() => {
+            window.location.href = '/cart';
+        }, 500);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Check-in Verification Flags - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark fw-medium px-2 py-1 rounded-pill">Security / Front Desk Flags</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="flagsCount">0 Flagged</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Check-in Verification Flags</h2>
+            <p class="text-muted small mb-0">Discrepancies flagged between booking identities, payment cards, and front desk ID verification</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadFlags()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <a href="/staff/security" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                <i class="fas fa-shield-alt me-1"></i> Security Log
+            </a>
+            <a href="/staff/front-desk" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-concierge-bell me-1"></i> Front Desk
+            </a>
+        </div>
+    </div>
+
+    <!-- Flags List -->
+    <div class="row g-3" id="flagsContainer">
+        <div class="col-12 text-center py-5">
+            <div class="ui-shimmer rounded-3 p-5"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadFlags() {
+    try {
+        const res = await fetch('/api/security/flags');
+        const json = await res.json();
+        const container = document.getElementById('flagsContainer');
+        container.innerHTML = '';
+
+        if (json.ok && json.data && json.data.length > 0) {
+            document.getElementById('flagsCount').textContent = `${json.data.length} Flagged`;
+            json.data.forEach(flag => {
+                const col = document.createElement('div');
+                col.className = 'col-12 col-md-6';
+
+                col.innerHTML = `
+                    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-start border-4 ${flag.severity === 'high' ? 'border-danger' : 'border-warning'}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge ${flag.severity === 'high' ? 'bg-danger text-white' : 'bg-warning text-dark'} px-2 py-1 rounded-pill text-uppercase small">
+                                    ${flag.flag_type || 'Discrepancy'}
+                                </span>
+                                <h5 class="fw-bold mt-2 mb-1">${flag.guest_name || 'Guest'}</h5>
+                            </div>
+                            <span class="badge bg-light text-secondary border">Booking: ${flag.booking_id || 'N/A'}</span>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle text-danger me-1"></i> ${flag.details || 'ID mismatch at check-in station'}
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <span class="text-muted small" style="font-size: 0.75rem;">
+                                <i class="fas fa-clock me-1"></i>${(flag.timestamp || '').replace('T', ' ').slice(0, 16)}
+                            </span>
+                            <a href="/staff/front-desk/bookings/${flag.booking_id || 'bk_5521'}" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                Review Booking <i class="fas fa-arrow-right ms-1 small"></i>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+        } else {
+            container.innerHTML = `
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="fas fa-user-check fa-4x text-success mb-3 opacity-75"></i>
+                    <h5>No Verification Flags</h5>
+                    <p class="small">All arrivals and in-house guests have verified identity credentials.</p>
+                </div>
+            `;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadFlags);
+</script>
+{% endblock %}

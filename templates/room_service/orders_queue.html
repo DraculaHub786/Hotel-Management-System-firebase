@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Room Service Orders - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark fw-medium px-2 py-1 rounded-pill">Room Service</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalActiveOrders">0 Active</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Incoming Orders Queue</h2>
+            <p class="text-muted small mb-0">Live kitchen preparation and in-room meal delivery workflow</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="fetchOrders()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <a href="/staff/kitchen" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-utensils me-1"></i> Kitchen KDS
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+        <button class="btn btn-sm rounded-pill btn-dark px-3 filter-btn active" data-filter="all" onclick="setFilter('all', this)">All Orders</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" data-filter="received" onclick="setFilter('received', this)">Received</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" data-filter="preparing" onclick="setFilter('preparing', this)">Preparing</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" data-filter="ready" onclick="setFilter('ready', this)">Ready for Delivery</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" data-filter="delivering" onclick="setFilter('delivering', this)">Delivering</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" data-filter="delivered" onclick="setFilter('delivered', this)">Delivered</button>
+    </div>
+
+    <!-- Orders Grid -->
+    <div class="row g-3" id="ordersGrid">
+        <div class="col-12 text-center py-5">
+            <div class="ui-shimmer rounded-3 p-5"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allOrders = [];
+let activeFilter = 'all';
+
+async function fetchOrders() {
+    try {
+        const res = await fetch('/api/orders');
+        const json = await res.json();
+        if (json.ok && json.data && json.data.length > 0) {
+            allOrders = json.data;
+        } else {
+            // Seed sample orders
+            allOrders = [
+                {
+                    order_id: 'ord_771',
+                    room_number: '204',
+                    guest_name: 'Eleanor Vance',
+                    items: [
+                        { name: 'Royal Biryani Bowl', qty: 2, price: 450 },
+                        { name: 'Cold Brew Coffee', qty: 2, price: 180 }
+                    ],
+                    total: 1260,
+                    status: 'delivering',
+                    require_otp: true,
+                    otp: '119284',
+                    delivery_notes: 'Leave on entryway table, do not knock loud.',
+                    created_at: '2026-09-12T19:40:00Z'
+                },
+                {
+                    order_id: 'ord_772',
+                    room_number: '305',
+                    guest_name: 'James Bond',
+                    items: [
+                        { name: 'Club Sandwich & Truffle Fries', qty: 1, price: 320 }
+                    ],
+                    total: 320,
+                    status: 'received',
+                    require_otp: false,
+                    delivery_notes: 'Extra ketchup please.',
+                    created_at: '2026-09-12T20:05:00Z'
+                },
+                {
+                    order_id: 'ord_773',
+                    room_number: '101',
+                    guest_name: 'Sophia Loren',
+                    items: [
+                        { name: 'Artisan Cheese Platter', qty: 1, price: 650 },
+                        { name: 'Sparkling Mineral Water', qty: 2, price: 120 }
+                    ],
+                    total: 890,
+                    status: 'preparing',
+                    require_otp: false,
+                    delivery_notes: '',
+                    created_at: '2026-09-12T19:50:00Z'
+                }
+            ];
+        }
+        renderOrders();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function setFilter(filter, btn) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('btn-dark');
+        b.classList.add('btn-outline-secondary');
+    });
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-dark');
+    renderOrders();
+}
+
+function renderOrders() {
+    const grid = document.getElementById('ordersGrid');
+    grid.innerHTML = '';
+
+    const filtered = allOrders.filter(o => activeFilter === 'all' || o.status === activeFilter);
+    const activeCount = allOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled').length;
+    document.getElementById('totalActiveOrders').textContent = `${activeCount} Active`;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fas fa-concierge-bell fa-3x mb-3 text-secondary opacity-50"></i>
+                <h5>No orders in this status</h5>
+                <p class="small">Incoming orders will appear here automatically.</p>
+            </div>
+        `;
+        return;
+    }
+
+    filtered.forEach(o => {
+        const col = document.createElement('div');
+        col.className = 'col-12 col-md-6 col-lg-4';
+
+        const statusBadges = {
+            'received': 'bg-secondary text-white',
+            'preparing': 'bg-warning text-dark',
+            'ready': 'bg-info text-dark',
+            'delivering': 'bg-primary text-white',
+            'delivered': 'bg-success text-white'
+        };
+
+        const itemsList = (o.items || []).map(i => `${i.qty}x ${i.name}`).join(', ');
+
+        col.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-3 bg-white d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="badge bg-dark text-white fw-bold px-2 py-1 rounded">Room ${o.room_number || 'N/A'}</span>
+                            <span class="badge ${statusBadges[o.status] || 'bg-light text-dark'} ms-1 text-uppercase">${o.status}</span>
+                        </div>
+                        <span class="text-muted small fw-semibold">#${o.order_id}</span>
+                    </div>
+                    <h6 class="fw-bold mb-1">${o.guest_name || 'Guest'}</h6>
+                    <p class="text-muted small mb-2 text-truncate" title="${itemsList}">
+                        <i class="fas fa-utensils me-1"></i> ${itemsList}
+                    </p>
+                    ${o.delivery_notes ? `<div class="bg-light p-2 rounded-3 small text-muted mb-2 fst-italic"><i class="fas fa-sticky-note me-1"></i>"${o.delivery_notes}"</div>` : ''}
+                </div>
+
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="fw-bold text-success fs-6">₹${o.total || 0}</div>
+                        ${o.require_otp ? `<span class="badge bg-danger-subtle text-danger small"><i class="fas fa-shield-alt me-1"></i>OTP Required</span>` : ''}
+                    </div>
+                    <a href="/staff/room-service/orders/${o.order_id}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        Manage <i class="fas fa-chevron-right ms-1 small"></i>
+                    </a>
+                </div>
+            </div>
+        `;
+        grid.appendChild(col);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', fetchOrders);
+</script>
+{% endblock %}

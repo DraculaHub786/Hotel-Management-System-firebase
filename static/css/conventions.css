@@ -1,0 +1,551 @@
+/* conventions.css - Standard UI states, List/Table layout, and Form conventions
+   Implements todo.md Section A (A.1, A.2, A.3) */
+
+/* ==========================================================================
+   A.1 Standard UI States
+   ========================================================================== */
+
+/* 1. Skeletons (Loading State > 300ms) */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.04) 25%, 
+        rgba(255, 255, 255, 0.12) 37%, 
+        rgba(255, 255, 255, 0.04) 63%);
+    background-size: 400% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 6px;
+}
+
+.skeleton-text {
+    height: 14px;
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.skeleton-text.short {
+    width: 40%;
+}
+
+.skeleton-text.medium {
+    width: 70%;
+}
+
+.skeleton-title {
+    height: 22px;
+    margin-bottom: 14px;
+    width: 60%;
+}
+
+.skeleton-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.skeleton-card {
+    background: var(--glass-bg, rgba(22, 34, 54, 0.7));
+    border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.2));
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.skeleton-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 2. Empty State */
+.ui-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    background: rgba(22, 34, 54, 0.4);
+    border: 1px dashed rgba(212, 175, 55, 0.25);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.ui-empty-icon {
+    font-size: 48px;
+    color: var(--text-secondary, #bda568);
+    margin-bottom: 16px;
+    opacity: 0.85;
+}
+
+.ui-empty-title {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-bright, #fff9e6);
+    margin-bottom: 8px;
+}
+
+.ui-empty-message {
+    color: var(--text-primary, #e8dfc1);
+    font-size: 14px;
+    max-width: 420px;
+    margin-bottom: 20px;
+}
+
+/* 3. Error State */
+.ui-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    background: rgba(199, 0, 57, 0.08);
+    border: 1px solid rgba(199, 0, 57, 0.35);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.ui-error-icon {
+    font-size: 44px;
+    color: var(--danger-color, #c70039);
+    margin-bottom: 14px;
+}
+
+.ui-error-message {
+    color: #ffb3ba;
+    font-size: 15px;
+    margin-bottom: 18px;
+    max-width: 450px;
+}
+
+.ui-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 4. Transient Toast Notifications (Top-Right, 3-4s auto-dismiss) */
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 380px;
+    width: calc(100vw - 48px);
+    pointer-events: none;
+}
+
+.app-toast {
+    pointer-events: auto;
+    background: #162236;
+    border-left: 4px solid var(--primary-color, #d4af37);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 10px rgba(212, 175, 55, 0.2);
+    border-radius: 6px;
+    padding: 14px 18px;
+    color: #fff9e6;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(12px);
+}
+
+.app-toast.toast-success {
+    border-left-color: var(--success-color, #008670);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 12px rgba(0, 134, 112, 0.4);
+}
+
+.app-toast.toast-error {
+    border-left-color: var(--danger-color, #c70039);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 12px rgba(199, 0, 57, 0.4);
+}
+
+.app-toast.toast-info {
+    border-left-color: var(--secondary-color, #104e8b);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 12px rgba(16, 78, 139, 0.4);
+}
+
+.app-toast .toast-icon {
+    font-size: 18px;
+    margin-top: 1px;
+}
+
+.app-toast.toast-success .toast-icon {
+    color: #2ee59d;
+}
+
+.app-toast.toast-error .toast-icon {
+    color: #ff6b6b;
+}
+
+.app-toast.toast-info .toast-icon {
+    color: #4da3ff;
+}
+
+.app-toast .toast-content {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.app-toast .toast-close {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.app-toast .toast-close:hover {
+    color: #ffffff;
+}
+
+.app-toast .toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.4);
+    width: 100%;
+    animation: toastProgress 3.5s linear forwards;
+}
+
+@keyframes toastSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(60px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes toastSlideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(60px) scale(0.95);
+    }
+}
+
+@keyframes toastProgress {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+/* 5. Permission Denied State */
+.ui-denied-state {
+    text-align: center;
+    padding: 40px 24px;
+}
+
+/* ==========================================================================
+   A.2 Standard List / Table Screen Shape
+   ========================================================================== */
+.screen-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.screen-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--glass-bg, rgba(22, 34, 54, 0.7));
+    border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.2));
+    border-radius: 10px;
+}
+
+.screen-topbar .topbar-title {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-bright, #fff9e6);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.screen-topbar .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.screen-search-box {
+    position: relative;
+    min-width: 240px;
+}
+
+.screen-search-box input {
+    width: 100%;
+    padding: 8px 14px 8px 36px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 20px;
+    color: var(--text-bright, #fff9e6);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.screen-search-box input:focus {
+    border-color: var(--primary-color, #d4af37);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.screen-search-box i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(212, 175, 55, 0.6);
+    font-size: 13px;
+}
+
+.screen-filterbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 18px;
+    background: rgba(22, 34, 54, 0.5);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 8px;
+}
+
+.filter-pills {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-pill {
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: var(--text-secondary, #bda568);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-pill:hover, .filter-pill.active {
+    background: rgba(212, 175, 55, 0.18);
+    color: var(--primary-color, #d4af37);
+    border-color: var(--primary-color, #d4af37);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.3);
+}
+
+.screen-content {
+    background: var(--glass-bg, rgba(22, 34, 54, 0.7));
+    border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.2));
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Table format desktop */
+.app-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.app-table th {
+    background: rgba(15, 26, 42, 0.85);
+    color: var(--primary-color, #d4af37);
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+}
+
+.app-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-primary, #e8dfc1);
+}
+
+.app-table tr:hover td {
+    background: rgba(212, 175, 55, 0.04);
+}
+
+/* Tablet & Mobile responsive fallback (stacked cards <= 1024px) */
+.stacked-cards-view {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+}
+
+@media (max-width: 1024px) {
+    .app-table-container {
+        display: none;
+    }
+    .stacked-cards-view {
+        display: flex;
+    }
+    .stacked-card {
+        background: rgba(15, 26, 42, 0.6);
+        border: 1px solid rgba(212, 175, 55, 0.15);
+        border-radius: 8px;
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .stacked-card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 13px;
+    }
+    .stacked-card-label {
+        color: var(--text-secondary, #bda568);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+}
+
+.screen-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: rgba(15, 26, 42, 0.5);
+    border-top: 1px solid rgba(212, 175, 55, 0.15);
+    font-size: 13px;
+    color: var(--text-secondary, #bda568);
+}
+
+/* ==========================================================================
+   A.3 Standard Form Conventions
+   ========================================================================== */
+
+/* Required Field Indicator */
+label.required::after,
+.form-label.required::after {
+    content: " *";
+    color: var(--danger-color, #c70039);
+    font-weight: bold;
+}
+
+/* Field-Level Error */
+.form-control.is-invalid {
+    border-color: var(--danger-color, #c70039) !important;
+    box-shadow: 0 0 0 2px rgba(199, 0, 57, 0.3) !important;
+    background: rgba(199, 0, 57, 0.05);
+}
+
+.form-field-error {
+    color: #ff7b92;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+    align-items: center;
+    gap: 5px;
+}
+
+.form-field-error.visible {
+    display: flex;
+}
+
+/* Submit button with inline spinner */
+.btn:disabled,
+.btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: btnSpin 0.7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes btnSpin {
+    to { transform: rotate(360deg); }
+}
+
+/* Dirty Form Modal */
+.app-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 15, 25, 0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.app-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.app-modal-card {
+    background: #162236;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 12px;
+    padding: 28px;
+    max-width: 440px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 20px rgba(212, 175, 55, 0.2);
+    transform: scale(0.95);
+    transition: transform 0.25s ease;
+}
+
+.app-modal-overlay.active .app-modal-card {
+    transform: scale(1);
+}

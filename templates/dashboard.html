@@ -3134,6 +3134,98 @@ textarea.form-control {
 }
 
 /* ============================================
+   SKELETON LOADERS
+   ============================================ */
+.skeleton {
+    background: linear-gradient(90deg, var(--glass-bg) 25%, rgba(212, 175, 55, 0.1) 50%, var(--glass-bg) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+    border-radius: 6px;
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-text { height: 16px; margin-bottom: 8px; }
+.skeleton-title { height: 24px; width: 60%; margin-bottom: 12px; }
+.skeleton-avatar { width: 48px; height: 48px; border-radius: 50%; }
+.skeleton-image { aspect-ratio: 16/10; border-radius: 8px; }
+
+.skeleton-card { padding: 20px; background: var(--glass-bg); border-radius: 10px; box-shadow: var(--glass-shadow); border: var(--glass-border); backdrop-filter: blur(10px); }
+.skeleton-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 16px; }
+.skeleton-cell { height: 40px; }
+.skeleton-cell.large { height: 60px; }
+
+/* Booking card skeleton */
+.skeleton-booking-card { padding: 20px; background: var(--glass-bg); border-radius: 10px; box-shadow: var(--glass-shadow); border: var(--glass-border); backdrop-filter: blur(10px); }
+.skeleton-booking-header { display: flex; justify-content: space-between; margin-bottom: 16px; }
+.skeleton-booking-info { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-booking-image { aspect-ratio: 16/10; border-radius: 8px; margin-bottom: 16px; }
+.skeleton-booking-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+.skeleton-detail-item { height: 36px; }
+
+/* Stat card skeleton */
+.skeleton-stat-card { padding: 24px; background: var(--glass-bg); border-radius: 10px; box-shadow: var(--glass-shadow); border: var(--glass-border); backdrop-filter: blur(10px); }
+.skeleton-stat-value { height: 36px; width: 80px; margin: 12px 0; border-radius: 6px; }
+.skeleton-stat-label { height: 14px; width: 120px; border-radius: 4px; }
+
+/* Support card skeleton */
+.skeleton-support-card { padding: 30px; background: var(--glass-bg); border-radius: 10px; box-shadow: var(--glass-shadow); border: var(--glass-border); backdrop-filter: blur(10px); }
+.skeleton-support-icon { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 20px; }
+.skeleton-support-title { height: 22px; width: 80px; margin: 0 auto 10px; }
+.skeleton-support-text { height: 16px; width: 70%; margin: 0 auto 20px; }
+.skeleton-support-btn { height: 44px; width: 60%; margin: 0 auto; border-radius: 6px; }
+
+/* Room card skeleton */
+.skeleton-room-card { background: var(--glass-bg); border-radius: 10px; overflow: hidden; box-shadow: var(--glass-shadow); border: var(--glass-border); backdrop-filter: blur(10px); }
+.skeleton-room-image { aspect-ratio: 16/10; }
+.skeleton-room-content { padding: 20px; }
+.skeleton-room-title { height: 24px; width: 70%; margin-bottom: 12px; }
+.skeleton-room-meta { display: flex; gap: 16px; margin-bottom: 16px; }
+.skeleton-room-meta-item { height: 20px; width: 80px; border-radius: 4px; }
+.skeleton-room-price { height: 28px; width: 100px; margin-bottom: 20px; }
+.skeleton-room-btn { height: 48px; width: 100%; border-radius: 8px; }
+
+/* ============================================
+   INLINE ERROR STATE
+   ============================================ */
+.inline-error {
+    text-align: center;
+    padding: 60px 20px;
+    background: rgba(199, 0, 57, 0.1);
+    border: 1px solid rgba(199, 0, 57, 0.3);
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.inline-error i { font-size: 50px; color: var(--danger-color, #c70039); margin-bottom: 20px; }
+.inline-error h3 { font-size: 20px; font-weight: 700; color: var(--text-bright); margin-bottom: 10px; font-family: 'Cinzel', serif; }
+.inline-error p { color: var(--text-secondary); margin-bottom: 25px; }
+.inline-error .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; }
+
+/* ============================================
+   PERMISSION DENIED STATE
+   ============================================ */
+.permission-denied {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--glass-bg);
+    border-radius: 10px;
+    box-shadow: var(--glass-shadow);
+    border: var(--glass-border);
+    backdrop-filter: blur(10px);
+    max-width: 500px;
+    margin: 40px auto;
+}
+
+.permission-denied i { font-size: 70px; margin-bottom: 25px; color: var(--warning-color, #ff9800); }
+.permission-denied h3 { font-size: 24px; font-weight: 700; color: var(--text-bright); margin-bottom: 12px; font-family: 'Cinzel', serif; }
+.permission-denied p { color: var(--text-secondary); margin-bottom: 25px; line-height: 1.6; }
+.permission-denied .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 28px; }
+
+/* ============================================
    MODAL - FIXED Z-INDEX & POSITIONING
    ============================================ */
 .modal {

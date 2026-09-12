@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Sign up — Nur-e-Haya Hotel Management System{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrapper {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 30px 15px;
+    }
+
+    .signup-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+        border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.15);
+        border-radius: 14px;
+        padding: 36px 32px;
+        backdrop-filter: blur(25px);
+        position: relative;
+    }
+
+    .signup-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .signup-logo {
+        font-family: 'Cinzel', serif;
+        font-size: 26px;
+        font-weight: 800;
+        color: var(--primary-color, #d4af37);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+
+    .signup-heading {
+        font-family: 'Cinzel', serif;
+        font-size: 19px;
+        font-weight: 700;
+        color: var(--text-bright, #fff9e6);
+        margin: 0;
+    }
+
+    .signup-sub {
+        font-size: 13px;
+        color: var(--text-secondary, #bda568);
+        margin-top: 4px;
+    }
+
+    .signin-prompt {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 13px;
+        color: var(--text-secondary, #bda568);
+    }
+
+    .signin-prompt a {
+        color: var(--primary-color, #d4af37);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .signin-prompt a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="signup-card">
+        <div class="signup-header">
+            <div class="signup-logo">
+                <i class="fas fa-hotel"></i> Nur-e-Haya
+            </div>
+            <h2 class="signup-heading">Create Guest Account</h2>
+            <p class="signup-sub">Experience luxury hospitality and personalized services</p>
+        </div>
+
+        <form id="signupForm" novalidate>
+            <!-- Name -->
+            <div class="form-group">
+                <label class="form-label required" for="name">Full Name</label>
+                <input 
+                    type="text" 
+                    id="name" 
+                    name="name" 
+                    class="form-control" 
+                    placeholder="Jane Doe" 
+                    required 
+                    autofocus
+                >
+                <div class="form-field-error" data-for="name"></div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label class="form-label required" for="email">Email address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-control" 
+                    placeholder="jane@example.com" 
+                    required 
+                    autocomplete="email"
+                >
+                <div class="form-field-error" data-for="email"></div>
+            </div>
+
+            <!-- Phone -->
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone number</label>
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    name="phone" 
+                    class="form-control" 
+                    placeholder="+1 (555) 000-0000"
+                >
+                <div class="form-field-error" data-for="phone"></div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-group">
+                <label class="form-label required" for="password">Password (min 8 chars)</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-control" 
+                    placeholder="••••••••" 
+                    required 
+                    minlength="8"
+                    autocomplete="new-password"
+                >
+                <div class="form-field-error" data-for="password"></div>
+            </div>
+
+            <!-- Confirm Password -->
+            <div class="form-group">
+                <label class="form-label required" for="confirm_password">Confirm Password</label>
+                <input 
+                    type="password" 
+                    id="confirm_password" 
+                    name="confirm_password" 
+                    class="form-control" 
+                    placeholder="••••••••" 
+                    required 
+                    minlength="8"
+                >
+                <div class="form-field-error" data-for="confirm_password"></div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-primary" id="btnSignUp" style="width: 100%; margin-top: 10px;">
+                CREATE ACCOUNT
+            </button>
+        </form>
+
+        <div class="signin-prompt">
+            Already have an account? <a href="/login">Sign in</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const signupForm = document.getElementById('signupForm');
+    
+    AppForm.bind(signupForm, {
+        onSubmit: async (data, form) => {
+            if (data.password !== data.confirm_password) {
+                const confError = form.querySelector('.form-field-error[data-for="confirm_password"]');
+                const confField = form.querySelector('#confirm_password');
+                confField.classList.add('is-invalid');
+                if (confError) {
+                    confError.textContent = 'Passwords do not match.';
+                    confError.classList.add('visible');
+                }
+                Toast.error('Passwords do not match.');
+                return;
+            }
+
+            const result = await AppAPI.post('/api/auth/signup', {
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                password: data.password
+            });
+
+            Toast.success('Account created successfully! Redirecting...');
+            setTimeout(() => {
+                window.location.href = result.redirect || '/dashboard';
+            }, 600);
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Your Cart — Nur-e-Haya Hotel Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-shopping-cart"></i> Your Reservation Cart
+        </div>
+        <div class="topbar-actions">
+            <a href="/rooms" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
+                <i class="fas fa-plus"></i> Add Rooms
+            </a>
+            <a href="/menu" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
+                <i class="fas fa-utensils"></i> Add Dining
+            </a>
+        </div>
+    </div>
+
+    <!-- Cart Container (Table or Empty state per Section C.3) -->
+    <div id="cartContentArea" style="margin-top: 25px;">
+        <!-- Injected via JS -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const area = document.getElementById('cartContentArea');
+
+    function renderCart() {
+        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+
+        if (!cart || cart.length === 0) {
+            // Section C.3 Empty state: "Your cart is empty" + "Browse rooms" button
+            AppStates.renderEmpty(area, {
+                icon: 'fa-shopping-cart',
+                title: 'Your cart is empty',
+                message: 'You have not added any rooms, facility slots, or dining items yet.',
+                actionText: 'Browse rooms',
+                onAction: () => { window.location.href = '/rooms'; }
+            });
+            return;
+        }
+
+        let subtotal = 0;
+        const rowsHtml = cart.map((item, idx) => {
+            const qty = item.qty || 1;
+            const lineTotal = (item.unit_price || 0) * qty;
+            subtotal += lineTotal;
+
+            let details = '';
+            let typeBadge = '';
+            if (item.type === 'room') {
+                typeBadge = '<span style="background: rgba(212,175,55,0.15); color: var(--primary-color); padding: 2px 8px; border-radius: 4px; font-size: 11px;">Room</span>';
+                details = `Dates: ${item.check_in || 'N/A'} to ${item.check_out || 'N/A'}`;
+            } else if (item.type === 'facility') {
+                typeBadge = '<span style="background: rgba(16,78,139,0.25); color: #4da3ff; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Facility</span>';
+                details = `Date: ${item.date || 'Today'} | Slot: ${item.slot || 'Standard'}`;
+            } else if (item.type === 'menu') {
+                typeBadge = '<span style="background: rgba(0,134,112,0.2); color: #2ee59d; padding: 2px 8px; border-radius: 4px; font-size: 11px;">Dining</span>';
+                details = `Qty: ${qty}`;
+            }
+
+            return `
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <strong style="color: var(--text-bright); font-size: 14px;">${item.name}</strong>
+                                    ${typeBadge}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${details}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="color: var(--text-secondary); font-size: 13px;">
+                        ${item.type === 'menu' ? `
+                            <div style="display: inline-flex; align-items: center; gap: 6px;">
+                                <button type="button" class="filter-pill" onclick="adjustCartQty(${idx}, -1)" style="padding: 2px 8px;">-</button>
+                                <strong>${qty}</strong>
+                                <button type="button" class="filter-pill" onclick="adjustCartQty(${idx}, 1)" style="padding: 2px 8px;">+</button>
+                            </div>
+                        ` : `<span>1</span>`}
+                    </td>
+                    <td style="color: var(--primary-color); font-weight: bold;">₹${item.unit_price}</td>
+                    <td style="color: var(--text-bright); font-weight: bold;">₹${lineTotal}</td>
+                    <td style="text-align: right;">
+                        <button type="button" onclick="removeFromCart(${idx})" style="background: none; border: none; color: var(--danger-color); cursor: pointer; font-size: 16px; padding: 6px;" title="Remove">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        const estTax = Math.round(subtotal * 0.05);
+        const estService = Math.round(subtotal * 0.025);
+        const estTotal = subtotal + estTax + estService;
+
+        area.innerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr 340px; gap: 25px;">
+                <div class="screen-content">
+                    <table class="app-table">
+                        <thead>
+                            <tr>
+                                <th>Item & Details</th>
+                                <th>Qty / Duration</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Order Summary Card -->
+                <div class="card" style="height: fit-content;">
+                    <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 16px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 10px;">
+                        Estimated Summary
+                    </h3>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-primary); margin-bottom: 8px;">
+                        <span>Subtotal:</span>
+                        <strong>₹${subtotal}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); margin-bottom: 8px;">
+                        <span>GST (5%):</span>
+                        <span>₹${estTax}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                        <span>Service Charge (2.5%):</span>
+                        <span>₹${estService}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 18px; color: var(--primary-color); font-weight: bold; font-family: 'Cinzel', serif; border-top: 1px solid rgba(212,175,55,0.2); padding-top: 14px; margin-bottom: 22px;">
+                        <span>Estimated Total:</span>
+                        <span>₹${estTotal}</span>
+                    </div>
+
+                    <a href="/checkout" class="btn btn-primary" style="width: 100%; text-align: center; font-size: 14px; padding: 14px;">
+                        PROCEED TO CHECKOUT
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    window.adjustCartQty = (idx, delta) => {
+        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+        if (cart[idx]) {
+            cart[idx].qty = Math.max(1, (cart[idx].qty || 1) + delta);
+            localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+            renderCart();
+        }
+    };
+
+    window.removeFromCart = (idx) => {
+        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+        cart.splice(idx, 1);
+        localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+        Toast.info('Item removed from cart');
+        renderCart();
+    };
+
+    renderCart();
+});
+</script>
+{% endblock %}

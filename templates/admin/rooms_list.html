@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Room Inventory - Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success fw-medium px-2 py-1 rounded-pill">Inventory</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="roomCount">Loading...</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Property Rooms & Suites</h2>
+            <p class="text-muted small mb-0">Configure room rates, occupancy capacities, amenities, and floor allocations</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/staff/front-desk/rooms" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="fas fa-th-large me-1"></i> Front Desk Board
+            </a>
+            <a href="/admin/rooms/new" class="btn btn-success btn-sm rounded-pill px-3">
+                <i class="fas fa-plus me-1"></i> Create New Room
+            </a>
+        </div>
+    </div>
+
+    <!-- Rooms Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Room #</th>
+                        <th>Type</th>
+                        <th>Capacity</th>
+                        <th>Rate / Night</th>
+                        <th>Floor</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="roomsTableBody">
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <div class="ui-shimmer rounded-3 p-4"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+async function loadRooms() {
+    try {
+        const res = await fetch('/api/front-desk/room-board');
+        const json = await res.json();
+        const tbody = document.getElementById('roomsTableBody');
+        tbody.innerHTML = '';
+
+        if (json.ok && json.data && json.data.length > 0) {
+            document.getElementById('roomCount').textContent = `${json.data.length} Rooms`;
+            json.data.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark fs-6">Room ${r.number || r.id}</div>
+                    </td>
+                    <td>
+                        <span class="badge bg-light text-dark border px-2 py-1 text-capitalize">${r.type || 'Standard'}</span>
+                    </td>
+                    <td>${r.capacity || 2} Guests</td>
+                    <td class="fw-bold text-success">₹${r.price || r.price_per_night || 3500}</td>
+                    <td>Floor ${r.floor || 1}</td>
+                    <td>
+                        <span class="badge rounded-pill ${r.status === 'available' ? 'bg-success' : r.status === 'occupied' ? 'bg-primary' : r.status === 'cleaning' ? 'bg-warning text-dark' : 'bg-danger'} px-2 py-1 text-uppercase">
+                            ${r.status || 'Available'}
+                        </span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <a href="/admin/rooms/${r.id || r.number}" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Edit</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No rooms configured. Click Create New Room above.</td></tr>`;
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadRooms);
+</script>
+{% endblock %}

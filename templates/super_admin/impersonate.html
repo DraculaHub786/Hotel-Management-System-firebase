@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Role Impersonation Launcher - Super Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 750px;">
+    <!-- Top Breadcrumb -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/super-admin/admins" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Admins
+        </a>
+        <span class="badge bg-danger text-white px-3 py-2 rounded-pill">
+            <i class="fas fa-user-secret me-1"></i> Super Admin Impersonation
+        </span>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h4 class="fw-bold mb-1">Role Impersonation Launcher</h4>
+        <p class="text-muted small mb-4">Switch into any staff or guest role instantaneously to audit experience, permissions, and views.</p>
+
+        <div class="row g-3">
+            <!-- Role buttons -->
+            <div class="col-md-6">
+                <div class="card border p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-primary mb-2">Front Desk</span>
+                        <h6 class="fw-bold">Front Desk Staff</h6>
+                        <p class="text-muted small">Access arrival queues, check-ins, check-outs, room status board.</p>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill w-100 mt-2" onclick="launchImpersonate('front_desk', '/staff/front-desk')">
+                        Impersonate Front Desk &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-warning text-dark mb-2">Housekeeping</span>
+                        <h6 class="fw-bold">Housekeeping Staff</h6>
+                        <p class="text-muted small">Access housekeeping Kanban board, turnover tasks, fault reporting.</p>
+                    </div>
+                    <button class="btn btn-outline-warning text-dark btn-sm rounded-pill w-100 mt-2" onclick="launchImpersonate('housekeeping', '/staff/housekeeping')">
+                        Impersonate Housekeeping &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-info text-dark mb-2">Laundry</span>
+                        <h6 class="fw-bold">Laundry Specialist</h6>
+                        <p class="text-muted small">Access garment wash queue, status transitions, room delivery.</p>
+                    </div>
+                    <button class="btn btn-outline-info text-dark btn-sm rounded-pill w-100 mt-2" onclick="launchImpersonate('laundry', '/staff/laundry')">
+                        Impersonate Laundry &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-danger mb-2">Security</span>
+                        <h6 class="fw-bold">Security Officer</h6>
+                        <p class="text-muted small">Access incident logs, filing forms, check-in discrepancy flags.</p>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill w-100 mt-2" onclick="launchImpersonate('security', '/staff/security')">
+                        Impersonate Security &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-success mb-2">Maintenance</span>
+                        <h6 class="fw-bold">Maintenance Engineer</h6>
+                        <p class="text-muted small">Access engineering ticket queue, HVAC repairs, room unblocking.</p>
+                    </div>
+                    <button class="btn btn-outline-success btn-sm rounded-pill w-100 mt-2" onclick="launchImpersonate('maintenance', '/staff/maintenance')">
+                        Impersonate Maintenance &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border p-3 rounded-3 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <span class="badge bg-secondary mb-2">Guest</span>
+                        <h6 class="fw-bold">Standard Guest</h6>
+                        <p class="text-muted small">Access guest portal, room booking, cart, dining, my bookings.</p>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill w-100 mt-2" onclick="launchImpersonate('guest', '/rooms')">
+                        Impersonate Guest &rarr;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function launchImpersonate(role, destination) {
+    try {
+        const res = await fetch('/api/super-admin/impersonate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: role })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Now impersonating role: ${role}`);
+            }
+            setTimeout(() => {
+                window.location.href = destination;
+            }, 600);
+        } else {
+            alert('Failed to launch impersonation session');
+        }
+    } catch (e) {
+        alert('Network error launching impersonation');
+    }
+}
+</script>
+{% endblock %}

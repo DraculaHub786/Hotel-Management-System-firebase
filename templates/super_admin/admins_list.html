@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Management - Super Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger text-white fw-medium px-2 py-1 rounded-pill">Privileged Access</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">Property Admins</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Property Administrators</h2>
+            <p class="text-muted small mb-0">Create and oversee property-level hotel administrators and managers</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/super-admin/impersonate" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                <i class="fas fa-user-secret me-1"></i> Impersonation
+            </a>
+            <a href="/super-admin/admins/new" class="btn btn-danger btn-sm rounded-pill px-3">
+                <i class="fas fa-plus me-1"></i> Add Property Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Admins Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Admin Name</th>
+                        <th>Email</th>
+                        <th>Assigned Property</th>
+                        <th>Role Level</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">Afjal Khan</div>
+                            <div class="text-muted small">ID: adm_master_01</div>
+                        </td>
+                        <td>test1@gmail.com</td>
+                        <td><span class="badge bg-light text-dark border">Nur-E-Haya Resort (Flagship)</span></td>
+                        <td><span class="badge bg-danger">Super Admin</span></td>
+                        <td><span class="badge bg-success">Active</span></td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3">Edit</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-bold">General Manager (Ops)</div>
+                            <div class="text-muted small">ID: adm_prop_02</div>
+                        </td>
+                        <td>admin@nur-e-haya.com</td>
+                        <td><span class="badge bg-light text-dark border">Nur-E-Haya Resort (Flagship)</span></td>
+                        <td><span class="badge bg-primary">Hotel Admin</span></td>
+                        <td><span class="badge bg-success">Active</span></td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3">Edit</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

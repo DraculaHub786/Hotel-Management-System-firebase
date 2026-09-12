@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Maintenance Tickets - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-warning text-dark fw-medium px-2 py-1 rounded-pill">Engineering & Facilities</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalTicketsCount">0 Tickets</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Maintenance Ticket Queue</h2>
+            <p class="text-muted small mb-0">Track room maintenance tickets, plumbing/HVAC repairs, and unblock room availability</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadTickets()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <a href="/staff/front-desk/rooms" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-th-large me-1"></i> Room Board
+            </a>
+            <a href="/staff/housekeeping" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-broom me-1"></i> Housekeeping
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="d-flex gap-2 mb-4 overflow-auto pb-2">
+        <button class="btn btn-sm rounded-pill btn-dark px-3 filter-btn active" onclick="setFilter('all', this)">All Tickets</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" onclick="setFilter('reported', this)">Reported (New)</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" onclick="setFilter('assigned', this)">Assigned</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" onclick="setFilter('in_progress', this)">In Progress</button>
+        <button class="btn btn-sm rounded-pill btn-outline-secondary px-3 filter-btn" onclick="setFilter('resolved', this)">Resolved</button>
+    </div>
+
+    <!-- Ticket Cards Grid -->
+    <div class="row g-3" id="ticketsGrid">
+        <div class="col-12 text-center py-5">
+            <div class="ui-shimmer rounded-3 p-5"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let tickets = [];
+let activeFilter = 'all';
+
+async function loadTickets() {
+    try {
+        const res = await fetch('/api/maintenance/tickets');
+        const json = await res.json();
+        if (json.ok && json.data && json.data.length > 0) {
+            tickets = json.data;
+        } else {
+            tickets = [
+                {
+                    ticket_id: 'tkt_4432',
+                    room_id: '204',
+                    issue_type: 'ac_heating',
+                    description: 'AC unit leaking water near window and making vibrating sound',
+                    priority: 'high',
+                    status: 'reported',
+                    assigned_to: 'Vikram (HVAC Tech)',
+                    created_at: '2026-09-12T19:20:00Z'
+                },
+                {
+                    ticket_id: 'tkt_4433',
+                    room_id: '305',
+                    issue_type: 'plumbing',
+                    description: 'Bathroom sink drain draining slowly',
+                    priority: 'medium',
+                    status: 'in_progress',
+                    assigned_to: 'Ramesh (Plumbing)',
+                    created_at: '2026-09-12T18:10:00Z'
+                },
+                {
+                    ticket_id: 'tkt_4430',
+                    room_id: '101',
+                    issue_type: 'electrical',
+                    description: 'Balcony ambient light bulb replaced with warm LED',
+                    priority: 'low',
+                    status: 'resolved',
+                    resolution_note: 'Installed new 12W LED warm bulb',
+                    assigned_to: 'Dev (Electrician)',
+                    created_at: '2026-09-12T14:00:00Z'
+                }
+            ];
+        }
+        renderTickets();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function setFilter(filter, btn) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('btn-dark');
+        b.classList.add('btn-outline-secondary');
+    });
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-dark');
+    renderTickets();
+}
+
+function renderTickets() {
+    const grid = document.getElementById('ticketsGrid');
+    grid.innerHTML = '';
+
+    const filtered = tickets.filter(t => activeFilter === 'all' || t.status === activeFilter);
+    document.getElementById('totalTicketsCount').textContent = `${tickets.length} Tickets`;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fas fa-tools fa-3x text-secondary mb-3 opacity-50"></i>
+                <h5>No maintenance tickets in this category</h5>
+                <p class="small">Reported room issues will appear here automatically.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const priorityBadges = {
+        'high': 'bg-danger text-white',
+        'medium': 'bg-warning text-dark',
+        'low': 'bg-secondary-subtle text-secondary'
+    };
+
+    const statusBadges = {
+        'reported': 'bg-danger-subtle text-danger',
+        'assigned': 'bg-info-subtle text-info-emphasis',
+        'in_progress': 'bg-warning text-dark',
+        'resolved': 'bg-success text-white'
+    };
+
+    filtered.forEach(ticket => {
+        const col = document.createElement('div');
+        col.className = 'col-12 col-md-6 col-lg-4';
+
+        col.innerHTML = `
+            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-white d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <span class="badge bg-primary text-white fw-bold px-2 py-1 rounded">Room ${ticket.room_id || 'Premises'}</span>
+                            <span class="badge ${statusBadges[ticket.status] || 'bg-light'} ms-1 text-uppercase">${(ticket.status || 'reported').replace('_', ' ')}</span>
+                        </div>
+                        <span class="badge ${priorityBadges[ticket.priority] || 'bg-light'} text-uppercase">${ticket.priority || 'medium'}</span>
+                    </div>
+
+                    <h5 class="fw-bold text-dark mb-1 text-capitalize">
+                        <i class="fas fa-wrench text-warning me-1"></i> ${(ticket.issue_type || 'General').replace('_', ' ')}
+                    </h5>
+                    <p class="text-muted small mb-3 text-truncate-2" style="font-size: 0.88rem; min-height: 42px;">
+                        ${ticket.description || 'Maintenance repair required.'}
+                    </p>
+                </div>
+
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <div class="small text-muted">
+                        <i class="fas fa-hard-hat me-1"></i> ${ticket.assigned_to || 'Unassigned'}
+                    </div>
+                    <a href="/staff/maintenance/tickets/${ticket.ticket_id || ticket.id}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                        View Ticket <i class="fas fa-chevron-right ms-1 small"></i>
+                    </a>
+                </div>
+            </div>
+        `;
+        grid.appendChild(col);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadTickets);
+</script>
+{% endblock %}

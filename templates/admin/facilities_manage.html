@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Facilities - Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info-subtle text-info-emphasis fw-medium px-2 py-1 rounded-pill">Property Amenities</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">Spa, Pool, Fitness</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Hotel Facilities Management</h2>
+            <p class="text-muted small mb-0">Manage operating hours, capacity slots, hourly booking rates, and facility status</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/facilities" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                <i class="fas fa-eye me-1"></i> Guest View
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold"><i class="fas fa-spa text-info me-2"></i>Ayurvedic Luxury Spa</h5>
+                <p class="text-muted small">Herbal massages, aromatherapy, and private sauna suites.</p>
+                <div class="d-flex justify-content-between text-muted small border-top pt-3 mt-auto">
+                    <span>Hourly Rate: <strong>₹2,500</strong></span>
+                    <span class="badge bg-success">Operational</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold"><i class="fas fa-swimming-pool text-primary me-2"></i>Rooftop Infinity Pool</h5>
+                <p class="text-muted small">Heated panoramic pool with skyline views and daybed cabanas.</p>
+                <div class="d-flex justify-content-between text-muted small border-top pt-3 mt-auto">
+                    <span>Pass: <strong>Complimentary</strong></span>
+                    <span class="badge bg-success">Operational</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold"><i class="fas fa-dumbbell text-warning me-2"></i>24/7 TechnoGym Center</h5>
+                <p class="text-muted small">Equipped with cardio machines, free weights, and yoga studio.</p>
+                <div class="d-flex justify-content-between text-muted small border-top pt-3 mt-auto">
+                    <span>Pass: <strong>Complimentary</strong></span>
+                    <span class="badge bg-success">Operational</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

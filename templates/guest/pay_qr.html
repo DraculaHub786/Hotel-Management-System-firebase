@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Scan to Pay — Nur-e-Haya{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qr-wrapper {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
+
+    .qr-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+        border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.15);
+        border-radius: 14px;
+        padding: 38px 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .qr-image-frame {
+        width: 230px;
+        height: 230px;
+        margin: 20px auto;
+        background: #ffffff;
+        padding: 12px;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .qr-image-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qr-wrapper">
+    <!-- Section C.6 Payment QR screen centered card -->
+    <div class="qr-card">
+        <span style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px;">Unified Payment QR</span>
+        <h2 style="font-size: 32px; font-weight: 800; color: var(--primary-color); font-family: 'Cinzel', serif; margin: 8px 0 14px;">
+            ₹{{ transaction.order_summary.total if transaction else 8815 }}
+        </h2>
+
+        <!-- QR code image -->
+        <div class="qr-image-frame">
+            <img id="qrImageElement" src="" alt="Payment QR Code">
+        </div>
+
+        <p style="font-size: 14px; color: var(--text-bright); margin-bottom: 8px; font-weight: 600;">
+            Scan with your phone to confirm payment
+        </p>
+
+        <!-- Countdown timer (10 min) -->
+        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+            <i class="fas fa-stopwatch" style="color: var(--primary-color); margin-right: 4px;"></i> 
+            QR code expires in: <strong id="countdownTimer" style="color: var(--primary-color);">10:00</strong>
+        </div>
+
+        <!-- Small text link: Trouble scanning? Use this link instead -->
+        <div style="margin-bottom: 24px;">
+            <a href="#" id="troubleScanningLink" style="font-size: 12px; color: var(--text-secondary); text-decoration: underline;">
+                Trouble scanning? Use this link instead
+            </a>
+        </div>
+
+        <!-- Live status poll / listener: "Waiting for payment confirmation..." spinner -->
+        <div style="padding: 14px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(212,175,55,0.15); display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <span class="btn-spinner"></span>
+            <span style="font-size: 13px; color: var(--text-primary);" id="pollStatusLabel">
+                Waiting for payment confirmation...
+            </span>
+        </div>
+
+        <!-- Dev Simulator Quick Action -->
+        <button type="button" class="btn btn-secondary" id="btnSimulatePhonePay" style="width: 100%; margin-top: 15px; font-size: 12px; padding: 8px;">
+            <i class="fas fa-mobile-alt" style="margin-right: 6px;"></i> Simulate Phone Scan & Pay
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    const txnId = '{{ txn_id }}';
+    const qrImg = document.getElementById('qrImageElement');
+    const timerLabel = document.getElementById('countdownTimer');
+    const troubleLink = document.getElementById('troubleScanningLink');
+    const simulateBtn = document.getElementById('btnSimulatePhonePay');
+
+    // 1. Fetch QR code per Section C.7
+    async function fetchQR() {
+        try {
+            const data = await AppAPI.post('/api/payment/create-qr', { txn_id: txnId });
+            qrImg.src = `data:image/png;base64,${data.qr_image_base64}`;
+            troubleLink.href = data.qr_payload;
+        } catch (err) {
+            Toast.error('Could not generate QR code. Retrying...');
+        }
+    }
+    await fetchQR();
+
+    // 2. Countdown timer (10 mins)
+    let secondsLeft = 600;
+    const timerInterval = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft <= 0) {
+            clearInterval(timerInterval);
+            secondsLeft = 600;
+            fetchQR(); // auto-refreshes payload
+        }
+        const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+        const s = String(secondsLeft % 60).padStart(2, '0');
+        timerLabel.textContent = `${m}:${s}`;
+    }, 1000);
+
+    // 3. Live status polling listener per Section C.6
+    // Auto-navigates to OTP screen the instant transactions.status flips to "paid"
+    const pollInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`/api/transactions/${txnId}/status`);
+            if (res.ok) {
+                const data = await res.json();
+                const txn = data.data || data;
+                if (txn.status === 'paid' || txn.status === 'completed') {
+                    clearInterval(pollInterval);
+                    clearInterval(timerInterval);
+                    Toast.success('Payment received! Verifying security code...');
+                    setTimeout(() => {
+                        window.location.href = `/pay/${txnId}/otp`;
+                    }, 500);
+                }
+            }
+        } catch (e) {}
+    }, 2500);
+
+    // 4. Simulate phone payment
+    simulateBtn.addEventListener('click', async () => {
+        simulateBtn.disabled = true;
+        simulateBtn.innerHTML = `<span class="btn-spinner"></span> Simulating...`;
+        await fetch(`/api/transactions/${txnId}/simulate-pay`, { method: 'POST' });
+        Toast.success('Payment simulated on phone! Redirecting...');
+        setTimeout(() => {
+            window.location.href = `/pay/${txnId}/otp`;
+        }, 600);
+    });
+});
+</script>
+{% endblock %}

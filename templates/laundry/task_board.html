@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+
+{% block title %}Laundry Task Board - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-info-subtle text-info-emphasis fw-medium px-2 py-1 rounded-pill">Laundry Operations</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalLaundryCount">0 Orders</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Laundry Management</h2>
+            <p class="text-muted small mb-0">Track guest garment collection, wash cycles, and prompt room deliveries</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadLaundryTasks()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#newLaundryModal">
+                <i class="fas fa-plus me-1"></i> New Laundry Order
+            </button>
+        </div>
+    </div>
+
+    <!-- Kanban Board (4 Columns: Collected -> Washing -> Ready -> Delivered) -->
+    <div class="row g-3" id="laundryKanban">
+        <!-- 1. Collected -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-secondary text-white px-2 py-1">Collected</span>
+                        <span class="text-muted small fw-semibold" id="countCollected">0</span>
+                    </div>
+                    <i class="fas fa-tshirt text-secondary"></i>
+                </div>
+                <div class="card-body p-3 kanban-col" id="colCollected" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'collected')">
+                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Washing -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-primary text-white px-2 py-1">Washing</span>
+                        <span class="text-muted small fw-semibold" id="countWashing">0</span>
+                    </div>
+                    <i class="fas fa-soap text-primary"></i>
+                </div>
+                <div class="card-body p-3 kanban-col" id="colWashing" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'washing')">
+                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Ready -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-warning text-dark px-2 py-1">Ready</span>
+                        <span class="text-muted small fw-semibold" id="countReady">0</span>
+                    </div>
+                    <i class="fas fa-check text-warning"></i>
+                </div>
+                <div class="card-body p-3 kanban-col" id="colReady" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'ready')">
+                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Delivered -->
+        <div class="col-12 col-md-3">
+            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill bg-success text-white px-2 py-1">Delivered</span>
+                        <span class="text-muted small fw-semibold" id="countDelivered">0</span>
+                    </div>
+                    <i class="fas fa-box-open text-success"></i>
+                </div>
+                <div class="card-body p-3 kanban-col" id="colDelivered" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'delivered')">
+                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Create New Laundry Order (Section F.2 Spec) -->
+<div class="modal fade" id="newLaundryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-tshirt text-primary me-2"></i>New Laundry Ticket
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="newLaundryForm" onsubmit="createLaundryOrder(event)">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small required">Room / Guest</label>
+                        <input type="text" class="form-control rounded-3" id="laundryRoomGuest" placeholder="e.g. Room 204 - Eleanor Vance" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small required">Items (Dynamic List)</label>
+                        <div id="itemsContainer" class="d-flex flex-column gap-2 mb-2">
+                            <div class="input-group item-row">
+                                <input type="text" class="form-control rounded-start-3 item-name" placeholder="Item (e.g. Shirts)" required>
+                                <input type="number" class="form-control item-qty" placeholder="Qty" min="1" value="2" style="max-width: 90px;" required>
+                                <button type="button" class="btn btn-outline-danger rounded-end-3" onclick="removeItemRow(this)"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" onclick="addItemRow()">
+                            <i class="fas fa-plus me-1"></i> Add Another Item
+                        </button>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small required">Pickup Time</label>
+                            <input type="datetime-local" class="form-control rounded-3" id="laundryPickupTime" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small">Est. Delivery Time</label>
+                            <input type="datetime-local" class="form-control rounded-3" id="laundryDeliveryTime">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" id="submitLaundryBtn">Create Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.kanban-col {
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.laundry-card {
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: grab;
+}
+.laundry-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+</style>
+
+<script>
+let laundryTasks = [];
+
+function addItemRow() {
+    const container = document.getElementById('itemsContainer');
+    const div = document.createElement('div');
+    div.className = 'input-group item-row';
+    div.innerHTML = `
+        <input type="text" class="form-control rounded-start-3 item-name" placeholder="Item (e.g. Trousers, Dress)" required>
+        <input type="number" class="form-control item-qty" placeholder="Qty" min="1" value="1" style="max-width: 90px;" required>
+        <button type="button" class="btn btn-outline-danger rounded-end-3" onclick="removeItemRow(this)"><i class="fas fa-times"></i></button>
+    `;
+    container.appendChild(div);
+}
+
+function removeItemRow(btn) {
+    const rows = document.querySelectorAll('.item-row');
+    if (rows.length > 1) {
+        btn.closest('.item-row').remove();
+    }
+}
+
+async function loadLaundryTasks() {
+    try {
+        const res = await fetch('/api/laundry/tasks');
+        const json = await res.json();
+        if (json.ok && json.data && json.data.length > 0) {
+            laundryTasks = json.data;
+        } else {
+            // Seed sample tasks
+            laundryTasks = [
+                { task_id: 'lt_101', room_guest: 'Room 204 - Eleanor V.', items: [{name: 'Blazer', qty: 1}, {name: 'Dress shirts', qty: 3}], status: 'collected', pickup_time: '2026-09-12T10:00', delivery_time: '2026-09-12T18:00' },
+                { task_id: 'lt_102', room_guest: 'Room 305 - James B.', items: [{name: 'Suits dry clean', qty: 2}], status: 'washing', pickup_time: '2026-09-12T09:30', delivery_time: '2026-09-12T19:00' },
+                { task_id: 'lt_103', room_guest: 'Room 101 - Sophia L.', items: [{name: 'Silk scarf', qty: 1}, {name: 'Evening gown', qty: 1}], status: 'ready', pickup_time: '2026-09-12T08:00', delivery_time: '2026-09-12T16:00' }
+            ];
+        }
+        renderKanban();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function renderKanban() {
+    const colCollected = document.getElementById('colCollected');
+    const colWashing = document.getElementById('colWashing');
+    const colReady = document.getElementById('colReady');
+    const colDelivered = document.getElementById('colDelivered');
+
+    colCollected.innerHTML = '';
+    colWashing.innerHTML = '';
+    colReady.innerHTML = '';
+    colDelivered.innerHTML = '';
+
+    let cCollected = 0, cWashing = 0, cReady = 0, cDelivered = 0;
+
+    laundryTasks.forEach(task => {
+        const card = createCard(task);
+        if (task.status === 'washing') {
+            colWashing.appendChild(card);
+            cWashing++;
+        } else if (task.status === 'ready') {
+            colReady.appendChild(card);
+            cReady++;
+        } else if (task.status === 'delivered') {
+            colDelivered.appendChild(card);
+            cDelivered++;
+        } else {
+            colCollected.appendChild(card);
+            cCollected++;
+        }
+    });
+
+    document.getElementById('countCollected').textContent = cCollected;
+    document.getElementById('countWashing').textContent = cWashing;
+    document.getElementById('countReady').textContent = cReady;
+    document.getElementById('countDelivered').textContent = cDelivered;
+    document.getElementById('totalLaundryCount').textContent = `${laundryTasks.length} Orders`;
+}
+
+function createCard(task) {
+    const div = document.createElement('div');
+    div.className = 'laundry-card';
+    div.draggable = true;
+    div.id = `laundry_${task.task_id}`;
+    div.ondragstart = (e) => e.dataTransfer.setData("taskId", task.task_id);
+
+    const totalItems = (task.items || []).reduce((acc, curr) => acc + (parseInt(curr.qty) || 1), 0);
+    const itemListPreview = (task.items || []).map(i => `${i.qty}x ${i.name}`).join(', ');
+
+    div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-1 rounded">${task.room_guest || 'Guest'}</span>
+            <span class="badge bg-light text-secondary border rounded-pill small">${task.task_id}</span>
+        </div>
+        <p class="text-dark small fw-medium mb-1 text-truncate" title="${itemListPreview}">
+            <i class="fas fa-tshirt me-1 text-muted"></i> ${itemListPreview || 'Garments'}
+        </p>
+        <div class="text-muted small mb-2" style="font-size: 0.78rem;">
+            <span><i class="fas fa-boxes me-1"></i>${totalItems} pieces</span>
+            ${task.delivery_time ? `<span class="ms-2"><i class="fas fa-clock me-1"></i>Est: ${task.delivery_time.replace('T', ' ').slice(5, 16)}</span>` : ''}
+        </div>
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <select class="form-select form-select-sm py-0 px-2 rounded-pill small" style="width: auto; font-size: 0.75rem;" onchange="patchLaundryStatus('${task.task_id}', this.value)">
+                <option value="collected" ${task.status === 'collected' ? 'selected' : ''}>Collected</option>
+                <option value="washing" ${task.status === 'washing' ? 'selected' : ''}>Washing</option>
+                <option value="ready" ${task.status === 'ready' ? 'selected' : ''}>Ready</option>
+                <option value="delivered" ${task.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+            </select>
+            <a href="/staff/laundry/tasks/${task.task_id}" class="btn btn-sm btn-light border p-1 rounded-circle text-primary" title="View details">
+                <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+            </a>
+        </div>
+    `;
+    return div;
+}
+
+function allowDrop(e) { e.preventDefault(); }
+
+async function handleDrop(e, status) {
+    e.preventDefault();
+    const taskId = e.dataTransfer.getData("taskId");
+    if (taskId) {
+        await patchLaundryStatus(taskId, status);
+    }
+}
+
+async function patchLaundryStatus(taskId, status) {
+    try {
+        const res = await fetch(`/api/laundry/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: status })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Laundry task moved to ${status}`);
+            }
+            const t = laundryTasks.find(x => x.task_id === taskId);
+            if (t) t.status = status;
+            renderKanban();
+        } else {
+            alert(json.error?.message || 'Status update failed');
+        }
+    } catch (e) {
+        alert('Network error');
+    }
+}
+
+async function createLaundryOrder(e) {
+    e.preventDefault();
+    const roomGuest = document.getElementById('laundryRoomGuest').value;
+    const pickupTime = document.getElementById('laundryPickupTime').value;
+    const deliveryTime = document.getElementById('laundryDeliveryTime').value;
+
+    const items = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+        const name = row.querySelector('.item-name').value.trim();
+        const qty = parseInt(row.querySelector('.item-qty').value) || 1;
+        if (name) items.push({ name, qty });
+    });
+
+    if (items.length === 0) {
+        alert('Please add at least one item');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/laundry/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                room_guest: roomGuest,
+                items: items,
+                pickup_time: pickupTime,
+                delivery_time: deliveryTime
+            })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            const modalEl = document.getElementById('newLaundryModal');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Laundry order created: ${json.data.task_id}`);
+            }
+            loadLaundryTasks();
+        } else {
+            alert(json.error?.message || 'Error creating laundry order');
+        }
+    } catch (e) {
+        alert('Network error creating laundry order');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Set default pickup time to now
+    const now = new Date();
+    const isoString = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    document.getElementById('laundryPickupTime').value = isoString;
+    loadLaundryTasks();
+});
+</script>
+{% endblock %}

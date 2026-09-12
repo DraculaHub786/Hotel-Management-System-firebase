@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Access Denied — Hotel Management System{% endblock %}
+
+{% block content %}
+<div class="container" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+    <div class="card ui-denied-state" style="max-width: 520px; width: 100%; text-align: center; padding: 40px 30px;">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(199, 0, 57, 0.15); border: 2px solid var(--danger-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-shield-alt" style="font-size: 32px; color: var(--danger-color);"></i>
+        </div>
+        <h2 style="color: var(--text-bright); margin-bottom: 12px; font-size: 24px;">Access Denied</h2>
+        <p style="color: var(--text-primary); margin-bottom: 25px; line-height: 1.6; font-size: 15px;">
+            {{ message or "You do not have permission to perform this action or view this screen." }}
+        </p>
+        <div style="display: flex; justify-content: center; gap: 15px;">
+            <a href="{{ return_url or '/dashboard' }}" class="btn btn-primary" id="btn-return-dashboard">
+                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Laundry Task #{{ task_id }} - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    <!-- Navigation Breadcrumb -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/staff/laundry" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Laundry Board
+        </a>
+        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
+            Task ID: <strong>{{ task_id }}</strong>
+        </span>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+        <div class="card-header bg-white border-bottom p-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                    <span class="badge bg-info-subtle text-info-emphasis fs-6 px-3 py-1 rounded-pill mb-2">
+                        <i class="fas fa-tshirt me-1"></i> Laundry Order
+                    </span>
+                    <h2 class="h4 fw-bold mb-1">{{ task.room_guest if task and task.room_guest else 'Room 204 - Eleanor Vance' }}</h2>
+                    <p class="text-muted small mb-0">Created: <strong>{{ task.created_at if task and task.created_at else 'Recent' }}</strong></p>
+                </div>
+                <div class="text-end">
+                    <span id="currentStatusBadge" class="badge rounded-pill fs-6 px-3 py-2
+                        {% if task and task.status == 'delivered' %}bg-success text-white
+                        {% elif task and task.status == 'ready' %}bg-warning text-dark
+                        {% elif task and task.status == 'washing' %}bg-primary text-white
+                        {% else %}bg-secondary text-white{% endif %}">
+                        {{ (task.status or 'collected')|title }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <!-- Items spec -->
+            <h5 class="fw-bold mb-3">Garment Items List</h5>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Item Description</th>
+                            <th style="width: 120px;" class="text-center">Quantity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        {% if task and task.items %}
+                            {% for item in task.items %}
+                            <tr>
+                                <td><i class="fas fa-check-circle text-primary me-2"></i>{{ item.name }}</td>
+                                <td class="text-center fw-bold">{{ item.qty }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td><i class="fas fa-check-circle text-primary me-2"></i>Evening Dress / Suit</td>
+                                <td class="text-center fw-bold">2</td>
+                            </tr>
+                            <tr>
+                                <td><i class="fas fa-check-circle text-primary me-2"></i>Cotton Shirts</td>
+                                <td class="text-center fw-bold">3</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Times spec -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <label class="form-label text-muted small fw-semibold mb-1">Pickup Time</label>
+                        <div class="fw-bold fs-6" id="displayPickup">
+                            {{ (task.pickup_time or '2026-09-12T10:00')|replace('T', ' ') }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-light rounded-3 border">
+                        <label class="form-label text-muted small fw-semibold mb-1">Est. Delivery Time</label>
+                        <input type="datetime-local" class="form-control form-control-sm rounded-3 mt-1" id="editDeliveryTime" value="{{ task.delivery_time if task and task.delivery_time else '2026-09-12T18:00' }}">
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3">Update Stage</h5>
+            <div class="btn-group w-100 mb-4" role="group">
+                <button type="button" class="btn btn-outline-secondary py-2" onclick="setLaundryStatus('collected')">
+                    <i class="fas fa-inbox me-1"></i> Collected
+                </button>
+                <button type="button" class="btn btn-outline-primary py-2" onclick="setLaundryStatus('washing')">
+                    <i class="fas fa-soap me-1"></i> Washing
+                </button>
+                <button type="button" class="btn btn-outline-warning py-2" onclick="setLaundryStatus('ready')">
+                    <i class="fas fa-check me-1"></i> Ready
+                </button>
+                <button type="button" class="btn btn-outline-success py-2" onclick="setLaundryStatus('delivered')">
+                    <i class="fas fa-box-open me-1"></i> Delivered
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const taskId = "{{ task_id }}";
+
+async function setLaundryStatus(status) {
+    const deliveryTime = document.getElementById('editDeliveryTime').value;
+    try {
+        const res = await fetch(`/api/laundry/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                status: status,
+                delivery_time: deliveryTime
+            })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Laundry task updated to ${status}`);
+            }
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            alert(json.error?.message || 'Update failed');
+        }
+    } catch (e) {
+        alert('Network error updating laundry status');
+    }
+}
+</script>
+{% endblock %}

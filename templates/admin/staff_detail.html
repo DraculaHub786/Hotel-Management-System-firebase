@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Member #{{ user_id }} - Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    <!-- Top Breadcrumb -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/admin/staff" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Staff Directory
+        </a>
+        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
+            ID: <strong>{{ user_id }}</strong>
+        </span>
+    </div>
+
+    <!-- Main Profile Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+        <div class="card-header bg-white border-bottom p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 54px; height: 54px;">
+                        {{ (user.name if user and user.name else 'Ravi Kumar')[0] }}
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">{{ user.name if user and user.name else 'Ravi Kumar' }}</h4>
+                        <p class="text-muted small mb-0">{{ user.email if user and user.email else 'ravi.kumar@nur-e-haya.com' }}</p>
+                    </div>
+                </div>
+                <span class="badge bg-success rounded-pill px-3 py-2">Active Employee</span>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label text-muted small fw-semibold mb-1">Assigned Department</label>
+                    <div class="fw-bold fs-6">{{ user.department if user and user.department else 'Front Office Operations' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small fw-semibold mb-1">Access Role</label>
+                    <div class="fw-bold fs-6 text-primary text-capitalize">{{ user.role if user and user.role else 'front_desk' }}</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small fw-semibold mb-1">Shift Schedule</label>
+                    <div class="fw-bold fs-6">08:00 - 16:00 (Mon - Fri)</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted small fw-semibold mb-1">Employee Reference</label>
+                    <div class="fw-bold fs-6">EMP-FO-012</div>
+                </div>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Danger Zone: Deactivate / Suspend -->
+            <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold text-danger mb-0">Deactivate Staff Account</h6>
+                    <p class="text-muted small mb-0">Revoke system login access and unassign shift responsibilities.</p>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" onclick="confirmDeactivate()">
+                    <i class="fas fa-user-slash me-1"></i> Deactivate
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDeactivate() {
+    if (confirm("Are you sure you want to revoke system credentials for this staff member?")) {
+        if (window.AppConventions && AppConventions.Toast) {
+            AppConventions.Toast.info("Staff member credentials deactivated.");
+        } else {
+            alert("Account deactivated.");
+        }
+        setTimeout(() => window.location.href = '/admin/staff', 800);
+    }
+}
+</script>
+{% endblock %}

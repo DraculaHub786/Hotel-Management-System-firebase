@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Incident #{{ incident_id }} - Security - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+    <!-- Breadcrumb -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/staff/security" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Incident Log
+        </a>
+        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
+            Incident ID: <strong>{{ incident_id }}</strong>
+        </span>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
+        <div class="card-header bg-white border-bottom p-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                    <span class="badge bg-danger text-white fs-6 px-3 py-1 rounded-pill mb-2 text-uppercase">
+                        {{ incident.severity if incident and incident.severity else 'High' }} Severity
+                    </span>
+                    <h3 class="h4 fw-bold mb-1 text-capitalize">{{ ((incident.type if incident and incident.type else 'Disturbance')|replace('_', ' ')) }}</h3>
+                    <p class="text-muted small mb-0"><i class="fas fa-map-marker-alt text-danger me-1"></i> Location: <strong>{{ incident.location_room_id if incident and incident.location_room_id else 'Room 309' }}</strong></p>
+                </div>
+                <div class="text-end">
+                    <span class="badge rounded-pill fs-6 px-3 py-2
+                        {% if incident and incident.status == 'resolved' %}bg-success text-white
+                        {% elif incident and incident.status == 'investigating' %}bg-primary text-white
+                        {% else %}bg-danger text-white{% endif %}">
+                        {{ (incident.status or 'open')|title }}
+                    </span>
+                    <div class="text-muted small mt-1">Logged: {{ (incident.created_at or 'Recently')|replace('T', ' ')|truncate(16, True, '') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <h6 class="fw-bold text-secondary mb-2">Narrative & Description</h6>
+            <div class="p-3 bg-light rounded-3 border mb-4 text-dark" style="font-size: 0.95rem; line-height: 1.6;">
+                {{ incident.description if incident and incident.description else 'Loud argument reported by neighboring guest.' }}
+            </div>
+
+            <!-- Resolution Notes if any -->
+            <div id="existingResolutionSection" class="{% if not (incident and incident.resolution_notes) %}d-none{% endif %} mb-4">
+                <h6 class="fw-bold text-success mb-2"><i class="fas fa-check-circle me-1"></i> Resolution Notes</h6>
+                <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 text-dark small">
+                    {{ incident.resolution_notes if incident and incident.resolution_notes else '' }}
+                </div>
+            </div>
+
+            <!-- Workflow Stage Controls -->
+            <h6 class="fw-bold mb-3">Update Incident Status</h6>
+            <div class="btn-group w-100 mb-4" role="group">
+                <button type="button" class="btn btn-outline-danger py-2" onclick="patchIncidentStatus('open')">
+                    <i class="fas fa-bell me-1"></i> Open
+                </button>
+                <button type="button" class="btn btn-outline-primary py-2" onclick="patchIncidentStatus('investigating')">
+                    <i class="fas fa-search me-1"></i> Investigating
+                </button>
+                <button type="button" class="btn btn-outline-success py-2" onclick="openResolveModal()">
+                    <i class="fas fa-check-double me-1"></i> Resolve & Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Resolve Incident -->
+<div class="modal fade" id="resolveIncidentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-success">
+                    <i class="fas fa-check-circle me-1"></i> Resolve Security Incident
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form onsubmit="confirmResolveIncident(event)">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small required">Resolution Notes</label>
+                        <textarea class="form-control rounded-3" id="resNotes" rows="3" placeholder="Describe actions taken to remediate the incident..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-top px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success rounded-pill px-4">Save & Close Incident</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const incId = "{{ incident_id }}";
+
+async function patchIncidentStatus(status, resolutionNotes = "") {
+    try {
+        const payload = { status: status };
+        if (resolutionNotes) payload.resolution_notes = resolutionNotes;
+
+        const res = await fetch(`/api/security/incidents/${incId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Incident status updated to ${status}`);
+            }
+            setTimeout(() => window.location.reload(), 800);
+        } else {
+            alert(json.error?.message || 'Failed to update incident');
+        }
+    } catch (e) {
+        alert('Network error');
+    }
+}
+
+function openResolveModal() {
+    const modal = new bootstrap.Modal(document.getElementById('resolveIncidentModal'));
+    modal.show();
+}
+
+async function confirmResolveIncident(e) {
+    e.preventDefault();
+    const notes = document.getElementById('resNotes').value.trim();
+    const modalEl = document.getElementById('resolveIncidentModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    await patchIncidentStatus('resolved', notes);
+}
+</script>
+{% endblock %}

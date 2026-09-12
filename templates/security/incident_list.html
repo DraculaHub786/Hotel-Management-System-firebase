@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Security Incident Log - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-danger-subtle text-danger fw-medium px-2 py-1 rounded-pill">Security Operations</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalIncidentsCount">0 Incidents</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Security Incident Log</h2>
+            <p class="text-muted small mb-0">Hotel premises surveillance, emergency dispatch, and guest safety logs</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadIncidents()">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
+            <a href="/staff/security/flags" class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark">
+                <i class="fas fa-id-card me-1"></i> Check-in Flags
+            </a>
+            <a href="/staff/security/new" class="btn btn-danger btn-sm rounded-pill px-3">
+                <i class="fas fa-plus me-1"></i> Log New Incident
+            </a>
+        </div>
+    </div>
+
+    <!-- Severity Filter Cards -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-white p-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm btn-dark rounded-pill px-3 filter-btn active" onclick="setSeverityFilter('all', this)">All</button>
+                <button class="btn btn-sm btn-outline-danger rounded-pill px-3 filter-btn" onclick="setSeverityFilter('critical', this)">
+                    <i class="fas fa-exclamation-triangle me-1"></i> Critical
+                </button>
+                <button class="btn btn-sm btn-outline-warning rounded-pill px-3 filter-btn" onclick="setSeverityFilter('high', this)">High</button>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3 filter-btn" onclick="setSeverityFilter('medium', this)">Medium</button>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 filter-btn" onclick="setSeverityFilter('low', this)">Low</button>
+            </div>
+            <div class="text-muted small">
+                <i class="fas fa-shield-alt text-danger me-1"></i> Critical alerts auto-broadcast to Hotel Duty Manager
+            </div>
+        </div>
+    </div>
+
+    <!-- Incident List Table -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Incident ID & Type</th>
+                        <th>Location / Room</th>
+                        <th>Severity</th>
+                        <th>Status</th>
+                        <th>Reported At</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="incidentsTableBody">
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="ui-shimmer rounded-3 p-4"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+let incidents = [];
+let currentFilter = 'all';
+
+async function loadIncidents() {
+    try {
+        const res = await fetch('/api/security/incidents');
+        const json = await res.json();
+        if (json.ok && json.data && json.data.length > 0) {
+            incidents = json.data;
+        } else {
+            incidents = [
+                {
+                    incident_id: 'inc_331',
+                    type: 'disturbance',
+                    location_room_id: 'Room 309',
+                    description: 'Loud argument reported by neighboring guest',
+                    severity: 'medium',
+                    status: 'open',
+                    created_at: '2026-09-12T20:15:00Z'
+                },
+                {
+                    incident_id: 'inc_332',
+                    type: 'unauthorized_access',
+                    location_room_id: 'East Wing Stairwell B2',
+                    description: 'Emergency exit alarm triggered without authorized keycard swipe',
+                    severity: 'high',
+                    status: 'investigating',
+                    created_at: '2026-09-12T19:40:00Z'
+                },
+                {
+                    incident_id: 'inc_333',
+                    type: 'medical',
+                    location_room_id: 'Poolside cabana #4',
+                    description: 'Minor heat exhaustion, cold towels & first aid kit delivered',
+                    severity: 'low',
+                    status: 'resolved',
+                    created_at: '2026-09-12T16:20:00Z'
+                }
+            ];
+        }
+        renderTable();
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+function setSeverityFilter(sev, btn) {
+    currentFilter = sev;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('btn-dark');
+        if (!b.classList.contains('btn-outline-danger') && !b.classList.contains('btn-outline-warning') && !b.classList.contains('btn-outline-primary') && !b.classList.contains('btn-outline-secondary')) {
+            b.classList.add('btn-outline-secondary');
+        }
+    });
+    btn.classList.add('btn-dark');
+    renderTable();
+}
+
+function renderTable() {
+    const tbody = document.getElementById('incidentsTableBody');
+    tbody.innerHTML = '';
+
+    const filtered = incidents.filter(i => currentFilter === 'all' || (i.severity || '').toLowerCase() === currentFilter);
+    document.getElementById('totalIncidentsCount').textContent = `${incidents.length} Incidents`;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">No incidents matching the filter.</td></tr>`;
+        return;
+    }
+
+    const severityBadges = {
+        'critical': 'bg-danger text-white border-danger animate__animated animate__flash',
+        'high': 'bg-warning text-dark border-warning',
+        'medium': 'bg-info text-dark border-info',
+        'low': 'bg-secondary-subtle text-secondary border-secondary'
+    };
+
+    filtered.forEach(inc => {
+        const tr = document.createElement('tr');
+        const sevClass = severityBadges[inc.severity] || 'bg-light text-dark';
+
+        tr.innerHTML = `
+            <td class="ps-4">
+                <div class="fw-bold text-dark text-capitalize">${(inc.type || 'Incident').replace('_', ' ')}</div>
+                <div class="text-muted small">#${inc.incident_id}</div>
+            </td>
+            <td>
+                <span class="badge bg-light text-dark border px-2 py-1"><i class="fas fa-map-marker-alt text-danger me-1"></i>${inc.location_room_id || 'Premises'}</span>
+            </td>
+            <td>
+                <span class="badge ${sevClass} rounded-pill px-3 py-1 text-uppercase">${inc.severity || 'Medium'}</span>
+            </td>
+            <td>
+                <span class="badge rounded-pill ${inc.status === 'resolved' ? 'bg-success' : inc.status === 'investigating' ? 'bg-primary' : 'bg-danger'} px-2 py-1">
+                    ${(inc.status || 'open')|title}
+                </span>
+            </td>
+            <td class="small text-muted">${(inc.created_at || '').replace('T', ' ').slice(0, 16)}</td>
+            <td class="text-end pe-4">
+                <a href="/staff/security/${inc.incident_id}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                    Details <i class="fas fa-arrow-right ms-1 small"></i>
+                </a>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadIncidents);
+</script>
+{% endblock %}

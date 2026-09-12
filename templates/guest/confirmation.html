@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Confirmed — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 70px; display: flex; justify-content: center;">
+    <div class="card" style="max-width: 560px; width: 100%; text-align: center; padding: 45px 35px;">
+        <div style="width: 76px; height: 76px; border-radius: 50%; background: rgba(0, 134, 112, 0.15); border: 2px solid var(--success-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-check" style="font-size: 36px; color: #2ee59d;"></i>
+        </div>
+
+        <span style="font-size: 13px; text-transform: uppercase; color: #2ee59d; letter-spacing: 1px; font-weight: 600;">Payment & Reservation Verified</span>
+        <h1 style="font-size: 26px; color: var(--text-bright); margin: 8px 0 16px;">Booking Confirmed!</h1>
+        
+        <p style="color: var(--text-primary); font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+            Thank you for choosing Nur-e-Haya. Your luxury reservation has been locked into our system. An e-ticket receipt and entry QR have been generated.
+        </p>
+
+        <!-- Confirmation Code Box -->
+        <div style="background: rgba(0,0,0,0.35); border: 1px dashed var(--primary-color); border-radius: 10px; padding: 18px; margin-bottom: 25px;">
+            <div style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase;">Booking Reference & Confirmation Code</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--primary-color); font-family: monospace; letter-spacing: 2px; margin-top: 6px;">
+                {{ booking.confirmation_code if booking else 'HTL-5521-AX' }}
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">
+                Booking ID: {{ booking_id }}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <a href="/my-bookings" class="btn btn-primary" style="flex: 1; min-width: 160px; font-size: 13px;">
+                <i class="fas fa-calendar-alt" style="margin-right: 6px;"></i> View My Bookings
+            </a>
+            <a href="/dashboard" class="btn btn-secondary" style="flex: 1; min-width: 160px; font-size: 13px;">
+                <i class="fas fa-home" style="margin-right: 6px;"></i> Return to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

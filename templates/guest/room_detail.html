@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}{{ room.type if room else "Room Detail" }} — Nur-e-Haya{% endblock %}
+
+{% block extra_css %}
+<style>
+    .room-detail-grid {
+        display: grid;
+        grid-template-columns: 60% 40%;
+        gap: 30px;
+        margin-top: 25px;
+    }
+
+    @media (max-width: 900px) {
+        .room-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .main-gallery-img {
+        width: 100%;
+        height: 380px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid rgba(212, 175, 55, 0.25);
+    }
+
+    .thumb-strip {
+        display: flex;
+        gap: 12px;
+        margin-top: 14px;
+    }
+
+    .thumb-img {
+        width: 80px;
+        height: 60px;
+        border-radius: 6px;
+        object-fit: cover;
+        cursor: pointer;
+        opacity: 0.7;
+        border: 2px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .thumb-img:hover, .thumb-img.active {
+        opacity: 1;
+        border-color: var(--primary-color);
+    }
+
+    .stepper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .stepper-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+    <!-- Breadcrumb Topbar -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="/rooms" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Back to Rooms
+        </a>
+        <a href="/cart" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+            <i class="fas fa-shopping-cart"></i> Cart
+        </a>
+    </div>
+
+    <!-- Section C.2 Room Detail Layout -->
+    <div class="room-detail-grid">
+        <!-- Left 60%: Image gallery + thumbnail strip -->
+        <div>
+            <img id="mainGalleryImage" class="main-gallery-img" 
+                 src="{{ room.image or 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80' }}" 
+                 alt="{{ room.type }} Room">
+            <div class="thumb-strip">
+                <img class="thumb-img active" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
+                <img class="thumb-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
+                <img class="thumb-img" src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
+                <img class="thumb-img" src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
+            </div>
+        </div>
+
+        <!-- Right 40%: Room info, price, amenities, date picker, guest count, add to cart -->
+        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <span style="font-size: 12px; text-transform: uppercase; color: var(--primary-color); letter-spacing: 1px;">Luxury Collection</span>
+                <h1 style="font-size: 26px; color: var(--text-bright); margin: 6px 0 10px;">{{ room.type or 'Deluxe' }} Room {{ room.number or '101' }}</h1>
+                <div style="font-size: 24px; font-weight: bold; color: var(--primary-color); font-family: 'Cinzel', serif; margin-bottom: 16px;">
+                    ₹{{ room.price or 3500 }} <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Raleway', sans-serif;">/ night</span>
+                </div>
+
+                <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 16px;">
+                    <i class="fas fa-user-friends" style="color: var(--primary-color); margin-right: 6px;"></i> Capacity: <strong>{{ room.max_guests or 2 }} Guests</strong>
+                </div>
+
+                <!-- Amenities icons + labels -->
+                <div style="margin-bottom: 22px;">
+                    <div style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px;">Included Amenities</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        {% for a in (room.amenities or ['High-Speed WiFi', '4K Smart TV', 'Climate Control AC', '24/7 Room Service', 'Mini Bar']) %}
+                        <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text-primary);">
+                            <i class="fas fa-check" style="color: var(--primary-color); margin-right: 4px; font-size: 10px;"></i> {{ a }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Date Range Picker -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
+                    <div>
+                        <label class="form-label required" for="checkInDate" style="font-size: 11px;">Check-in</label>
+                        <input type="date" id="checkInDate" class="form-control" style="padding: 8px 12px; font-size: 13px;" required>
+                    </div>
+                    <div>
+                        <label class="form-label required" for="checkOutDate" style="font-size: 11px;">Check-out</label>
+                        <input type="date" id="checkOutDate" class="form-control" style="padding: 8px 12px; font-size: 13px;" required>
+                    </div>
+                </div>
+
+                <!-- Guest count stepper -->
+                <div style="margin-bottom: 22px;">
+                    <label class="form-label" style="font-size: 11px;">Number of Guests</label>
+                    <div class="stepper">
+                        <button type="button" class="stepper-btn" onclick="adjustGuests(-1)">-</button>
+                        <span id="guestCount" style="font-weight: bold; font-size: 16px; min-width: 24px; text-align: center;">1</span>
+                        <button type="button" class="stepper-btn" onclick="adjustGuests(1)">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add to Cart button (disabled until dates chosen) -->
+            <div>
+                <div id="availabilityNotice" style="color: #ff7b92; font-size: 12px; margin-bottom: 8px; display: none;"></div>
+                <button type="button" id="btnAddToCart" class="btn btn-primary" style="width: 100%;" disabled>
+                    <i class="fas fa-cart-plus" style="margin-right: 6px;"></i> Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Below the fold: description, policies -->
+    <div class="card" style="margin-top: 35px;">
+        <h3 style="color: var(--text-bright); margin-bottom: 12px;">About This Accommodation</h3>
+        <p style="color: var(--text-primary); font-size: 14px; line-height: 1.7; margin-bottom: 24px;">
+            The {{ room.type or 'Deluxe' }} room blends contemporary elegance with traditional royal heritage. Featuring premium Egyptian cotton linens, a lavish en-suite marble bath with rain shower, bespoke amenities, and floor-to-ceiling windows offering serene views.
+        </p>
+
+        <h4 style="color: var(--primary-color); margin-bottom: 10px; font-size: 16px;">Hotel Policies & Information</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; font-size: 13px;">
+            <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 8px;">
+                <strong><i class="fas fa-clock" style="color: var(--primary-color); margin-right: 6px;"></i> Check-in / Out:</strong><br>
+                Check-in: 02:00 PM | Check-out: 12:00 PM
+            </div>
+            <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 8px;">
+                <strong><i class="fas fa-undo" style="color: var(--primary-color); margin-right: 6px;"></i> Cancellation Policy:</strong><br>
+                Free cancellation up to 24 hours prior to scheduled check-in time.
+            </div>
+            <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 8px;">
+                <strong><i class="fas fa-id-card" style="color: var(--primary-color); margin-right: 6px;"></i> ID Requirements:</strong><br>
+                Government-issued photo ID required at physical check-in.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let guestNum = 1;
+const maxGuests = {{ room.max_guests or 4 }};
+
+function swapImg(src) {
+    document.getElementById('mainGalleryImage').src = src;
+    document.querySelectorAll('.thumb-img').forEach(img => {
+        img.classList.toggle('active', img.src === src);
+    });
+}
+
+function adjustGuests(delta) {
+    guestNum = Math.max(1, Math.min(maxGuests, guestNum + delta));
+    document.getElementById('guestCount').textContent = guestNum;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const checkInInput = document.getElementById('checkInDate');
+    const checkOutInput = document.getElementById('checkOutDate');
+    const btnAddToCart = document.getElementById('btnAddToCart');
+    const availabilityNotice = document.getElementById('availabilityNotice');
+
+    // Default dates: tomorrow to +2 days
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 86400000);
+    const dayAfter = new Date(today.getTime() + 86400000 * 3);
+
+    checkInInput.min = today.toISOString().split('T')[0];
+    checkOutInput.min = tomorrow.toISOString().split('T')[0];
+
+    function validateDates() {
+        const ci = checkInInput.value;
+        const co = checkOutInput.value;
+
+        if (ci && co) {
+            if (new Date(co) <= new Date(ci)) {
+                availabilityNotice.textContent = 'Check-out date must be after check-in date.';
+                availabilityNotice.style.display = 'block';
+                btnAddToCart.disabled = true;
+                return false;
+            } else {
+                availabilityNotice.style.display = 'none';
+                btnAddToCart.disabled = false;
+                return true;
+            }
+        } else {
+            btnAddToCart.disabled = true;
+            return false;
+        }
+    }
+
+    checkInInput.addEventListener('change', validateDates);
+    checkOutInput.addEventListener('change', validateDates);
+
+    btnAddToCart.addEventListener('click', () => {
+        if (!validateDates()) return;
+
+        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+        const item = {
+            type: 'room',
+            ref_id: '{{ room.id or room_id }}',
+            name: '{{ room.type or "Deluxe" }} Room {{ room.number or "101" }}',
+            unit_price: {{ room.price or 3500 }},
+            check_in: checkInInput.value,
+            check_out: checkOutInput.value,
+            guests: guestNum,
+            qty: 1
+        };
+
+        cart.push(item);
+        localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+        Toast.success('Room added to cart!');
+        setTimeout(() => {
+            window.location.href = '/cart';
+        }, 500);
+    });
+});
+</script>
+{% endblock %}

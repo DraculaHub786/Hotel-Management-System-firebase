@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Directory - Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-primary-subtle text-primary fw-medium px-2 py-1 rounded-pill">Personnel</span>
+                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalStaffCount">7 Team Members</span>
+            </div>
+            <h2 class="h3 fw-bold mt-1 mb-0">Hotel Staff Directory</h2>
+            <p class="text-muted small mb-0">Manage roles, shifts, credentials, and departmental assignments</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/admin/staff/invite" class="btn btn-primary btn-sm rounded-pill px-3">
+                <i class="fas fa-user-plus me-1"></i> Invite New Staff
+            </a>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Staff Member</th>
+                        <th>Role</th>
+                        <th>Department</th>
+                        <th>Shift Hours</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">R</div>
+                                <div>
+                                    <div class="fw-bold text-dark">Ravi Kumar</div>
+                                    <div class="text-muted small">ravi.kumar@nur-e-haya.com</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">Front Desk</span></td>
+                        <td>Front Office</td>
+                        <td>08:00 - 16:00</td>
+                        <td><span class="badge bg-success rounded-pill px-2 py-1">Active</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/staff/stf_101" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Manage</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-warning text-dark d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">M</div>
+                                <div>
+                                    <div class="fw-bold text-dark">Maria Santos</div>
+                                    <div class="text-muted small">maria.s@nur-e-haya.com</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-1">Housekeeping Lead</span></td>
+                        <td>Housekeeping</td>
+                        <td>07:00 - 15:30</td>
+                        <td><span class="badge bg-success rounded-pill px-2 py-1">Active</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/staff/stf_102" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Manage</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">V</div>
+                                <div>
+                                    <div class="fw-bold text-dark">Vikram Patel</div>
+                                    <div class="text-muted small">vikram.p@nur-e-haya.com</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3 py-1">HVAC Maintenance</span></td>
+                        <td>Engineering</td>
+                        <td>09:00 - 18:00</td>
+                        <td><span class="badge bg-success rounded-pill px-2 py-1">Active</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/staff/stf_103" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Manage</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px;">A</div>
+                                <div>
+                                    <div class="fw-bold text-dark">Ajay Verma</div>
+                                    <div class="text-muted small">ajay.v@nur-e-haya.com</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1">Security Officer</span></td>
+                        <td>Security</td>
+                        <td>22:00 - 06:00 (Night)</td>
+                        <td><span class="badge bg-success rounded-pill px-2 py-1">Active</span></td>
+                        <td class="text-end pe-4">
+                            <a href="/admin/staff/stf_104" class="btn btn-sm btn-outline-secondary rounded-pill px-3">Manage</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

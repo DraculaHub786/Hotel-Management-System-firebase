@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Check-in — Front Desk — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top: 90px; padding-bottom: 70px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <a href="/staff/front-desk" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
+            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Arrivals Queue
+        </a>
+        <span style="font-size: 13px; color: var(--text-secondary);">Booking Ref: <strong style="color: var(--primary-color);">{{ booking_id }}</strong></span>
+    </div>
+
+    <!-- Section D.3 Check-in Form -->
+    <div style="display: grid; grid-template-columns: 1fr 380px; gap: 30px;">
+        <div class="card">
+            <h2 style="font-size: 20px; color: var(--text-bright); margin-bottom: 18px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 10px;">
+                Front Desk Guest Check-in Form
+            </h2>
+
+            <form id="deskCheckinForm" novalidate>
+                <input type="hidden" name="booking_id" value="{{ booking_id }}">
+
+                <!-- Booking reference search/select typeahead (Section D.3) -->
+                <div class="form-group">
+                    <label class="form-label required" for="bookingRef">Booking Reference</label>
+                    <input type="text" id="bookingRef" class="form-control" value="{{ booking_id }}" readonly style="opacity: 0.8; font-family: monospace;">
+                </div>
+
+                <!-- Room assignment dropdown (Section D.3) -->
+                <div class="form-group">
+                    <label class="form-label required" for="assignRoom">Room Assignment</label>
+                    <select id="assignRoom" name="room_id" class="form-control" required>
+                        <option value="101">Room 101 — Single Room (Available)</option>
+                        <option value="104">Room 104 — Double Room (Available)</option>
+                        <option value="204" selected>Room 204 — Deluxe Room (Assigned)</option>
+                    </select>
+                    <div class="form-field-error" data-for="room_id"></div>
+                </div>
+
+                <!-- ID verification confirmed checkbox (required to enable Confirm per Section D.3) -->
+                <div class="form-group">
+                    <label style="display: flex; align-items: flex-start; gap: 10px; color: var(--text-primary); font-size: 13px; cursor: pointer;">
+                        <input type="checkbox" id="idVerifiedCheckbox" name="id_verified" required style="margin-top: 3px;">
+                        <span><strong>Government ID Verification Confirmed</strong>: Guest identification (Passport/Driver's License) has been physically inspected and recorded.</span>
+                    </label>
+                    <div class="form-field-error" data-for="id_verified"></div>
+                </div>
+
+                <!-- Notes textarea (Section D.3) -->
+                <div class="form-group">
+                    <label class="form-label" for="checkinNotes">Front Desk Notes (Optional)</label>
+                    <textarea id="checkinNotes" name="notes" class="form-control" rows="3" placeholder="Keycards issued, deposit taken, late check-out requested..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnExecuteCheckin" style="width: 100%; margin-top: 10px;" disabled>
+                    <i class="fas fa-check-circle" style="margin-right: 6px;"></i> CONFIRM CHECK-IN
+                </button>
+            </form>
+        </div>
+
+        <!-- Right Side Information -->
+        <div class="card" style="height: fit-content;">
+            <h3 style="font-size: 16px; color: var(--primary-color); margin-bottom: 14px;">Reservation Summary</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                <div style="color: var(--text-bright);"><strong>Guest:</strong> {{ booking.user_email if booking else 'Jane Doe' }}</div>
+                <div style="color: var(--text-primary);"><strong>Stay Window:</strong> {{ booking.check_in if booking else '2026-09-20' }} &rarr; {{ booking.check_out if booking else '2026-09-22' }}</div>
+                <div style="color: var(--text-primary);"><strong>Total Paid:</strong> ₹{{ booking.total_paid if booking else 8815 }}</div>
+                <div style="color: var(--text-secondary); margin-top: 10px; font-size: 12px; line-height: 1.4;">
+                    <i class="fas fa-info-circle"></i> Once confirmed, the assigned room status switches to <strong>Occupied</strong> and the electronic door lock code is activated.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const idCheckbox = document.getElementById('idVerifiedCheckbox');
+    const submitBtn = document.getElementById('btnExecuteCheckin');
+    const form = document.getElementById('deskCheckinForm');
+
+    // Enable/disable submit button based on ID verification confirmed per Section D.3
+    idCheckbox.addEventListener('change', () => {
+        submitBtn.disabled = !idCheckbox.checked;
+    });
+
+    AppForm.bind(form, {
+        onSubmit: async (data) => {
+            const res = await AppAPI.post('/api/front-desk/checkin', {
+                booking_id: data.booking_id,
+                room_id: data.room_id,
+                id_verified: idCheckbox.checked,
+                notes: data.notes || ''
+            });
+
+            Toast.success(`Check-in successful! Room ${data.room_id} occupied.`);
+            setTimeout(() => {
+                window.location.href = '/staff/front-desk/rooms';
+            }, 800);
+        }
+    });
+});
+</script>
+{% endblock %}

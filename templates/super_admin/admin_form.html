@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Create Administrator - Super Admin - Nur-E-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 700px;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/super-admin/admins" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="fas fa-arrow-left me-1"></i> Back to Admins
+        </a>
+        <span class="badge bg-danger-subtle text-danger px-3 py-2 rounded-pill">Privileged User Provisioning</span>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+        <h4 class="fw-bold mb-1">Create Hotel Administrator</h4>
+        <p class="text-muted small mb-4">Super Admins can grant management access over property inventory and operations</p>
+
+        <form onsubmit="alert('Admin provisioned successfully!'); window.location.href='/super-admin/admins'; return false;">
+            <div class="mb-3">
+                <label class="form-label small fw-semibold required">Full Name</label>
+                <input type="text" class="form-control rounded-3" required placeholder="e.g. Operations Manager">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold required">Corporate Email</label>
+                <input type="email" class="form-control rounded-3" required placeholder="manager@nur-e-haya.com">
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold required">Role Permission Tier</label>
+                <select class="form-select rounded-3" required>
+                    <option value="admin" selected>Hotel Admin (Property Management)</option>
+                    <option value="super_admin">Super Admin (Global Master Access)</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="form-label small fw-semibold required">Assigned Property</label>
+                <select class="form-select rounded-3" required>
+                    <option value="prop_flagship" selected>Nur-E-Haya Resort & Spa (Flagship)</option>
+                    <option value="prop_city">Nur-E-Haya Grand City Suites</option>
+                </select>
+            </div>
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <a href="/super-admin/admins" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                <button type="submit" class="btn btn-danger rounded-pill px-4">Create Admin Account</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
