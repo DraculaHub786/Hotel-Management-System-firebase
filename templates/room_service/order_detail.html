@@ -1,22 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Order #{{ order_id }} - Room Service{% endblock %}
+{% block title %}Order #{{ order_id }} — Room Service — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 850px;">
+<div class="container py-4" style="max-width: 900px; padding-top: 30px;">
     <!-- Top Nav -->
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <a href="/staff/room-service" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <a href="/staff/room-service" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
             <i class="fas fa-arrow-left me-1"></i> Back to Orders Queue
         </a>
-        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
-            Order ID: <strong>{{ order_id }}</strong>
+        <span class="badge rounded-pill px-3 py-2" style="background: rgba(212,175,55,0.15); color: var(--primary-color); border: 1px solid rgba(212,175,55,0.3);">
+            Order Ref: <strong>{{ order_id }}</strong>
         </span>
     </div>
 
     <!-- Stepper Card -->
-    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
-        <h5 class="fw-bold mb-4">Order Progress Stepper</h5>
+    <div class="card p-4 mb-4" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px;">
+        <h5 class="fw-bold mb-4" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+            <i class="fas fa-route text-warning me-2"></i> Order Fulfillment Stepper
+        </h5>
         
         <!-- Interactive Visual Stepper -->
         <div class="stepper-wrapper mb-4">
@@ -42,114 +44,120 @@
             </div>
         </div>
 
-        <div class="d-flex flex-wrap gap-2 justify-content-center">
-            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="advanceStatus('received')">Mark Received</button>
-            <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="advanceStatus('preparing')">Mark Preparing</button>
-            <button class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="advanceStatus('ready')">Mark Ready</button>
-            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="advanceStatus('delivering')">Mark Delivering</button>
-            <button class="btn btn-sm btn-success rounded-pill px-3" onclick="promptDelivered()">Complete & Deliver</button>
+        <div class="d-flex flex-wrap gap-2 justify-content-center pt-2">
+            <button class="btn btn-sm btn-secondary" onclick="advanceStatus('received')">Mark Received</button>
+            <button class="btn btn-sm btn-secondary" onclick="advanceStatus('preparing')">Mark Preparing</button>
+            <button class="btn btn-sm btn-secondary" onclick="advanceStatus('ready')">Mark Ready</button>
+            <button class="btn btn-sm btn-secondary" onclick="advanceStatus('delivering')">Mark Delivering</button>
+            <button class="btn btn-sm btn-primary" onclick="promptDelivered()">Fulfill & Deliver</button>
         </div>
     </div>
 
     <!-- Order Items & Details -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
-        <div class="card-header bg-light border-bottom p-4">
+    <div class="card p-0 overflow-hidden mb-4" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px;">
+        <div class="p-4 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important; background: rgba(15, 26, 42, 0.8);">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
-                    <span class="badge bg-dark text-white fs-6 px-3 py-1 rounded-pill mb-1">Room {{ order.room_number if order and order.room_number else '204' }}</span>
-                    <h4 class="fw-bold mb-0">{{ order.guest_name if order and order.guest_name else 'Eleanor Vance' }}</h4>
+                    <span class="badge bg-warning text-dark fw-bold fs-6 px-3 py-1 rounded mb-2">Room {{ order.room_number if order and order.room_number else '204' }}</span>
+                    <h4 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                        {{ order.guest_name if order and order.guest_name else 'Eleanor Vance' }}
+                    </h4>
                 </div>
-                <div class="form-check form-switch fs-6">
-                    <input class="form-check-input" type="checkbox" role="switch" id="otpToggle" {% if order and order.require_otp %}checked{% endif %} onchange="toggleOtpRequirement(this.checked)">
-                    <label class="form-check-label fw-semibold small" for="otpToggle">
-                        <i class="fas fa-shield-alt text-danger me-1"></i> Require OTP at delivery
+                <div class="d-flex align-items-center gap-2">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-primary); font-size: 13px;">
+                        <input type="checkbox" id="otpToggle" {% if order and order.require_otp %}checked{% endif %} onchange="toggleOtpRequirement(this.checked)">
+                        <span><i class="fas fa-shield-alt text-danger me-1"></i> Require OTP at delivery</span>
                     </label>
                 </div>
             </div>
         </div>
 
-        <div class="card-body p-4">
-            <h6 class="fw-bold mb-3">Order Items</h6>
-            <div class="table-responsive mb-3">
-                <table class="table align-middle">
-                    <thead class="table-light">
+        <div class="p-4">
+            <h6 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                <i class="fas fa-utensils text-warning me-2"></i> Ordered Items
+            </h6>
+            <div class="table-responsive mb-4" style="border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; overflow: hidden;">
+                <table class="app-table mb-0">
+                    <thead>
                         <tr>
                             <th>Item</th>
                             <th class="text-center" style="width: 100px;">Qty</th>
-                            <th class="text-end" style="width: 120px;">Price</th>
+                            <th class="text-end" style="width: 140px;">Line Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% if order and order.items %}
                             {% for item in order.items %}
                             <tr>
-                                <td class="fw-medium">{{ item.name }}</td>
+                                <td>{{ item.name }}</td>
                                 <td class="text-center fw-bold">{{ item.qty }}</td>
-                                <td class="text-end">₹{{ item.price }}</td>
+                                <td class="text-end fw-bold" style="color: var(--primary-color);">₹{{ item.price * item.qty }}</td>
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td class="fw-medium">Royal Biryani Bowl</td>
+                                <td>Royal Dum Biryani Bowl</td>
                                 <td class="text-center fw-bold">2</td>
-                                <td class="text-end">₹900</td>
+                                <td class="text-end fw-bold" style="color: var(--primary-color);">₹900</td>
                             </tr>
                             <tr>
-                                <td class="fw-medium">Cold Brew Coffee</td>
+                                <td>Cold Brew Specialty Coffee</td>
                                 <td class="text-center fw-bold">2</td>
-                                <td class="text-end">₹360</td>
+                                <td class="text-end fw-bold" style="color: var(--primary-color);">₹360</td>
                             </tr>
                         {% endif %}
                     </tbody>
-                    <tfoot>
-                        <tr class="fw-bold fs-6">
-                            <td colspan="2" class="text-end">Total Amount:</td>
-                            <td class="text-end text-success">₹{{ order.total if order and order.total else 1260 }}</td>
-                        </tr>
-                    </tfoot>
                 </table>
             </div>
 
-            <div class="p-3 bg-light rounded-3 border">
-                <div class="fw-semibold small text-secondary mb-1">
-                    <i class="fas fa-comment-dots me-1"></i> Delivery Notes & Instructions:
+            <div class="row g-3">
+                <div class="col-md-7">
+                    <div class="p-3 rounded-3" style="background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.2);">
+                        <span class="small fw-bold text-warning d-block mb-1"><i class="fas fa-comment-dots me-1"></i> Delivery & Dietary Instructions:</span>
+                        <div style="color: var(--text-primary); font-size: 13px;">
+                            {{ order.delivery_notes if order and order.delivery_notes else 'Please deliver with extra butter and cutlery. Ring doorbell softly.' }}
+                        </div>
+                    </div>
                 </div>
-                <div class="text-dark small">
-                    {{ order.delivery_notes if order and order.delivery_notes else 'Leave on entryway table, please do not knock loud.' }}
+                <div class="col-md-5">
+                    <div class="p-3 rounded-3" style="background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.2);">
+                        <div class="d-flex justify-content-between mb-1" style="color: var(--text-secondary); font-size: 12px;">
+                            <span>Subtotal:</span>
+                            <span>₹{{ order.total if order and order.total else 1260 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1" style="color: var(--text-secondary); font-size: 12px;">
+                            <span>Taxes & Service:</span>
+                            <span>Included</span>
+                        </div>
+                        <div class="d-flex justify-content-between pt-2 border-top fw-bold" style="color: var(--primary-color); font-size: 16px; border-color: rgba(212,175,55,0.2) !important;">
+                            <span>Total Bill:</span>
+                            <span>₹{{ order.total if order and order.total else 1260 }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal: Delivered OTP Verification (Section G.3 Spec) -->
-<div class="modal fade" id="deliveryOtpModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-success">
-                    <i class="fas fa-check-circle me-1"></i> Confirm Room Delivery
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div id="otpInputSection">
-                    <div class="alert alert-info py-2 small mb-3">
-                        <i class="fas fa-shield-alt me-1"></i> High-value order verification is enabled. Ask the guest for their 6-digit order OTP (Demo: <strong>119284</strong>).
-                    </div>
-                    <label class="form-label fw-semibold small required">Guest 6-Digit OTP</label>
-                    <input type="text" class="form-control form-control-lg text-center fw-bold letter-spacing-2 rounded-3" id="deliveryOtpCode" maxlength="6" placeholder="119284">
-                </div>
-                <div id="noOtpMessage" class="d-none">
-                    <p class="mb-0">Are you sure you want to mark this order as successfully delivered to Room?</p>
-                </div>
-            </div>
-            <div class="modal-footer border-top px-4 py-3">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success rounded-pill px-4" id="confirmDeliveryBtn" onclick="submitDelivered()">
-                    Confirm Delivery
-                </button>
-            </div>
+<!-- OTP Entry Modal (Section G.2/G.3 Spec) -->
+<div class="app-modal-overlay" id="otpModal">
+    <div class="app-modal-card" style="max-width: 440px; text-align: center;">
+        <div style="font-size: 44px; color: var(--warning-color); margin-bottom: 12px;">
+            <i class="fas fa-key"></i>
+        </div>
+        <h4 class="fw-bold mb-2" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Delivery OTP Verification</h4>
+        <p class="small mb-3" style="color: var(--text-secondary);">
+            Ask the guest for the 6-digit confirmation code on their screen or phone receipt.
+        </p>
+        <div class="form-group mb-3">
+            <input type="text" id="deliveryOtpInput" class="form-control text-center fw-bold fs-4" placeholder="••••••" maxlength="6" style="letter-spacing: 6px;">
+        </div>
+        <div class="d-flex gap-2 justify-content-center">
+            <button type="button" class="btn btn-secondary" onclick="closeOtpModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btnVerifyOtp" onclick="submitOtpAndDeliver()">
+                Confirm & Deliver
+            </button>
         </div>
     </div>
 </div>
@@ -158,17 +166,17 @@
 .stepper-wrapper {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
     position: relative;
+    margin-bottom: 20px;
 }
 .stepper-wrapper::before {
-    content: "";
     position: absolute;
-    top: 20px;
+    top: 24px;
     left: 40px;
     right: 40px;
     height: 3px;
-    background-color: #dee2e6;
+    content: '';
+    background: rgba(212, 175, 55, 0.2);
     z-index: 1;
 }
 .stepper-item {
@@ -179,55 +187,64 @@
     flex: 1;
     z-index: 2;
 }
-.step-counter {
-    width: 42px;
-    height: 42px;
+.stepper-item .step-counter {
+    position: relative;
+    z-index: 5;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #fff;
-    border: 3px solid #dee2e6;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    margin-bottom: 6px;
-    font-size: 14px;
-    color: #6c757d;
-    transition: all 0.2s ease;
+    background: #162236;
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    color: var(--text-secondary);
+    font-size: 18px;
+    transition: all 0.3s;
 }
-.step-name {
+.stepper-item .step-name {
+    margin-top: 10px;
     font-size: 12px;
-    color: #6c757d;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 .stepper-item.active .step-counter {
-    border-color: #0d6efd;
-    background-color: #0d6efd;
-    color: #fff;
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: #0f1a2a;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+}
+.stepper-item.active .step-name {
+    color: var(--primary-color);
 }
 .stepper-item.completed .step-counter {
-    border-color: #198754;
-    background-color: #198754;
-    color: #fff;
+    border-color: var(--success-color);
+    background: var(--success-color);
+    color: #ffffff;
+}
+.stepper-item.completed .step-name {
+    color: #2ee59d;
 }
 </style>
 
+{% block extra_js %}
 <script>
 const orderId = "{{ order_id }}";
-let currentStatus = "{{ (order.status if order and order.status else 'received')|lower }}";
-let requireOtp = {{ 'true' if (order and order.require_otp) else 'false' }};
+let currentStatus = "{{ (order.status if order and order.status else 'delivering') }}";
+let isOtpRequired = '{{ "true" if order and order.require_otp else "false" }}' === 'true';
 
 const stages = ['received', 'preparing', 'ready', 'delivering', 'delivered'];
 
-function updateStepperUI() {
-    const currentIdx = stages.indexOf(currentStatus);
-    stages.forEach((stage, idx) => {
-        const el = document.getElementById(`step-${stage}`);
+function updateStepperUI(status) {
+    const idx = stages.indexOf(status);
+    stages.forEach((st, i) => {
+        const el = document.getElementById(`step-${st}`);
         if (!el) return;
         el.classList.remove('active', 'completed');
-        if (idx < currentIdx) {
-            el.classList.add('completed');
-        } else if (idx === currentIdx) {
-            el.classList.add('active');
-        }
+        if (i < idx) el.classList.add('completed');
+        else if (i === idx) el.classList.add('active');
     });
 }
 
@@ -241,85 +258,82 @@ async function advanceStatus(newStatus) {
         const json = await res.json();
         if (json.ok) {
             currentStatus = newStatus;
-            updateStepperUI();
+            updateStepperUI(currentStatus);
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Order moved to ${newStatus}`);
+                AppConventions.Toast.success(`Order marked as ${newStatus}`);
             }
         } else {
-            alert(json.error?.message || 'Failed to update order');
+            const errMsg = json.message || 'Status transition failed';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
-        alert('Network error updating status');
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error');
     }
 }
 
 function promptDelivered() {
-    const modalEl = document.getElementById('deliveryOtpModal');
-    const otpInputSection = document.getElementById('otpInputSection');
-    const noOtpMessage = document.getElementById('noOtpMessage');
-
-    if (requireOtp) {
-        otpInputSection.classList.remove('d-none');
-        noOtpMessage.classList.add('d-none');
+    if (isOtpRequired) {
+        document.getElementById('otpModal').classList.add('active');
+        document.getElementById('deliveryOtpInput').focus();
     } else {
-        otpInputSection.classList.add('d-none');
-        noOtpMessage.classList.remove('d-none');
+        advanceStatus('delivered');
     }
-    const modal = new bootstrap.Modal(modalEl);
-    modal.show();
 }
 
-async function submitDelivered() {
-    const otp = document.getElementById('deliveryOtpCode').value.trim();
-    const payload = { status: 'delivered' };
-    if (requireOtp) {
-        payload.otp = otp;
+function closeOtpModal() {
+    document.getElementById('otpModal').classList.remove('active');
+}
+
+async function submitOtpAndDeliver() {
+    const otp = document.getElementById('deliveryOtpInput').value.trim();
+    if (!otp) {
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Please enter the 6-digit OTP.');
+        return;
     }
+
+    const btn = document.getElementById('btnVerifyOtp');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Verifying...';
 
     try {
         const res = await fetch(`/api/orders/${orderId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+                status: 'delivered',
+                otp: otp
+            })
         });
         const json = await res.json();
         if (json.ok) {
-            const modalEl = document.getElementById('deliveryOtpModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-
+            closeOtpModal();
             currentStatus = 'delivered';
-            updateStepperUI();
+            updateStepperUI('delivered');
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success('Order successfully delivered!');
+                AppConventions.Toast.success('Order delivered & OTP confirmed!');
             }
-            setTimeout(() => {
-                window.location.href = '/staff/room-service';
-            }, 1200);
         } else {
-            alert(json.error?.message || 'Delivery verification failed');
+            const errMsg = json.message || 'Incorrect OTP code. Please check with guest.';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
-        alert('Network error completing delivery');
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Verification error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Confirm & Deliver';
     }
 }
 
-async function toggleOtpRequirement(checked) {
-    requireOtp = checked;
-    try {
-        await fetch(`/api/orders/${orderId}/status`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: currentStatus, require_otp: checked })
-        });
-        if (window.AppConventions && AppConventions.Toast) {
-            AppConventions.Toast.info(`OTP requirement ${checked ? 'enabled' : 'disabled'}`);
-        }
-    } catch (e) {
-        console.error(e);
+function toggleOtpRequirement(checked) {
+    isOtpRequired = checked;
+    if (window.AppConventions && AppConventions.Toast) {
+        AppConventions.Toast.info(`Delivery OTP ${checked ? 'enabled' : 'disabled'}`);
     }
 }
 
-document.addEventListener('DOMContentLoaded', updateStepperUI);
+document.addEventListener('DOMContentLoaded', () => {
+    updateStepperUI(currentStatus);
+});
 </script>
+{% endblock %}
 {% endblock %}

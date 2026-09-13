@@ -1,189 +1,248 @@
 {% extends "base.html" %}
 
-{% block title %}Global System Settings - Super Admin - Nur-E-Haya{% endblock %}
+{% block title %}Global System Settings — Super Admin — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 900px;">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-danger text-white fw-medium px-2 py-1 rounded-pill">Root Config</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">Super Admin</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Global Hotel Platform Settings</h2>
-            <p class="text-muted small mb-0">Environment configurations, payment gateway tokens, OTP policies, and feature flags</p>
+<div class="screen-shell" style="max-width: 1000px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / L.1 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-sliders-h text-warning"></i>
+            <span>Root Configuration & Platform Governance</span>
+            <span class="badge bg-danger text-white rounded-pill ms-2" style="font-size: 11px;">Super Admin</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="/super-admin/audit-log" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+        <div class="topbar-actions">
+            <a href="/super-admin/audit-log" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-history me-1"></i> Audit Trail
             </a>
-            <a href="/super-admin/admins" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-                <i class="fas fa-users-cog me-1"></i> Admin Directory
+            <a href="/super-admin/admins" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-user-shield me-1"></i> Admins Directory
             </a>
         </div>
     </div>
 
     <!-- Tabbed Settings Sections (Section L.2 Spec) -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-        <div class="card-header bg-white border-bottom p-0">
-            <ul class="nav nav-tabs border-0 px-3 pt-3" id="settingsTab" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active fw-semibold" id="payment-tab" data-bs-toggle="tab" data-bs-target="#tab-payment">
-                        <i class="fas fa-credit-card me-1 text-primary"></i> Payment Gateway
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link fw-semibold" id="otp-tab" data-bs-toggle="tab" data-bs-target="#tab-otp">
-                        <i class="fas fa-key me-1 text-warning"></i> OTP & Security
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link fw-semibold" id="pricing-tab" data-bs-toggle="tab" data-bs-target="#tab-pricing">
-                        <i class="fas fa-percent me-1 text-success"></i> Pricing & Tax
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link fw-semibold" id="flags-tab" data-bs-toggle="tab" data-bs-target="#tab-flags">
-                        <i class="fas fa-flag me-1 text-info"></i> Feature Flags
-                    </button>
-                </li>
-            </ul>
+    <div class="card p-0 overflow-hidden mb-4" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px;">
+        <div class="p-3 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important; background: rgba(15, 26, 42, 0.8);">
+            <div class="filter-pills" id="settingsTabPills">
+                <button type="button" class="filter-pill active" onclick="switchSettingsTab('payment', this)">
+                    <i class="fas fa-credit-card me-1 text-primary"></i> Payment Gateway
+                </button>
+                <button type="button" class="filter-pill" onclick="switchSettingsTab('otp', this)">
+                    <i class="fas fa-key me-1 text-warning"></i> OTP Policies
+                </button>
+                <button type="button" class="filter-pill" onclick="switchSettingsTab('pricing', this)">
+                    <i class="fas fa-percent me-1 text-success"></i> Pricing & Tax
+                </button>
+                <button type="button" class="filter-pill" onclick="switchSettingsTab('flags', this)">
+                    <i class="fas fa-flag me-1 text-info"></i> Feature Flags
+                </button>
+            </div>
         </div>
 
-        <div class="card-body p-4">
-            <div class="tab-content" id="settingsTabContent">
-                <!-- 1. Payment Tab -->
-                <div class="tab-pane fade show active" id="tab-payment">
-                    <h5 class="fw-bold mb-3">Payment Gateway Provider</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Active Gateway Provider</label>
-                            <select class="form-select rounded-3" id="payProvider">
-                                <option value="razorpay" selected>Razorpay (India UPI / Cards)</option>
-                                <option value="stripe">Stripe Global</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Publishable / Live API Key</label>
-                            <input type="text" class="form-control rounded-3" id="payApiKey" placeholder="rzp_live_••••1234" value="rzp_live_••••1234">
-                            <div class="form-text small text-muted"><i class="fas fa-lock me-1"></i>Masked input write-only. Full secret never sent over GET.</div>
-                        </div>
-                        <div class="col-md-12">
-                            <label class="form-label small fw-semibold">Webhook Secret Key</label>
-                            <input type="password" class="form-control rounded-3" id="payWebhookSecret" placeholder="••••••••••••••••">
+        <div class="p-4">
+            <!-- 1. Payment Tab -->
+            <div id="tab-payment" class="settings-tab-pane">
+                <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    <i class="fas fa-credit-card text-warning me-2"></i> Payment Gateway Configuration
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label required" for="payProvider">Gateway Provider</label>
+                        <select class="form-control" id="payProvider">
+                            <option value="razorpay" selected>Razorpay (India UPI, Cards, NetBanking)</option>
+                            <option value="stripe">Stripe Global Commerce</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required" for="payApiKey">Live / Publishable API Key</label>
+                        <input type="text" class="form-control" id="payApiKey" placeholder="rzp_live_••••1234" value="rzp_live_••••1234">
+                        <div class="small mt-1" style="color: var(--text-secondary); font-size: 11px;">
+                            <i class="fas fa-lock me-1"></i> Secrets are masked. Write-only key replacement.
                         </div>
                     </div>
-                </div>
-
-                <!-- 2. OTP Tab -->
-                <div class="tab-pane fade" id="tab-otp">
-                    <h5 class="fw-bold mb-3">Guest OTP Verification Policies</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">SMS / OTP Provider</label>
-                            <select class="form-select rounded-3" id="otpProvider">
-                                <option value="twilio" selected>Twilio SMS Service</option>
-                                <option value="sendgrid">SendGrid Email OTP</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">OTP Length (Digits)</label>
-                            <input type="number" class="form-control rounded-3" id="otpLength" min="4" max="8" value="6">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Expiry Duration (Minutes)</label>
-                            <input type="number" class="form-control rounded-3" id="otpExpiry" min="1" max="15" value="5">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Max Failed Attempts (Lockout)</label>
-                            <input type="number" class="form-control rounded-3" id="otpMaxAttempts" min="3" max="10" value="5">
-                        </div>
+                    <div class="col-md-12">
+                        <label class="form-label" for="payWebhookSecret">Webhook Signature Secret</label>
+                        <input type="password" class="form-control" id="payWebhookSecret" placeholder="••••••••••••••••">
                     </div>
                 </div>
+            </div>
 
-                <!-- 3. Pricing Defaults Tab -->
-                <div class="tab-pane fade" id="tab-pricing">
-                    <h5 class="fw-bold mb-3">System-Wide Pricing & Surcharges</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Goods & Services Tax (GST %)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control rounded-start-3" id="taxPercent" step="0.1" value="5.0">
-                                <span class="input-group-text rounded-end-3">%</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Service Charge (%)</label>
-                            <div class="input-group">
-                                <input type="number" class="form-control rounded-start-3" id="serviceChargePercent" step="0.1" value="2.5">
-                                <span class="input-group-text rounded-end-3">%</span>
-                            </div>
-                        </div>
+            <!-- 2. OTP Tab -->
+            <div id="tab-otp" class="settings-tab-pane d-none">
+                <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    <i class="fas fa-key text-warning me-2"></i> OTP Authentication & Lockout Rules
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label required" for="otpProvider">OTP Delivery Provider</label>
+                        <select class="form-control" id="otpProvider">
+                            <option value="twilio" selected>Twilio SMS Provider</option>
+                            <option value="sendgrid">SendGrid Secure Email Delivery</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required" for="otpLength">OTP Code Length (Digits)</label>
+                        <input type="number" class="form-control" id="otpLength" min="4" max="8" value="6">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required" for="otpExpiry">TTL Expiry (Minutes)</label>
+                        <input type="number" class="form-control" id="otpExpiry" min="1" max="15" value="5">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required" for="otpMaxAttempts">Max Failed Attempts (Lockout)</label>
+                        <input type="number" class="form-control" id="otpMaxAttempts" min="3" max="10" value="5">
                     </div>
                 </div>
+            </div>
 
-                <!-- 4. Feature Flags Tab -->
-                <div class="tab-pane fade" id="tab-flags">
-                    <h5 class="fw-bold mb-3">Dynamic Feature Toggles</h5>
-                    <div class="d-flex flex-column gap-3">
-                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
-                            <div>
-                                <div class="fw-bold text-dark">Facility Booking Module</div>
-                                <div class="text-muted small">Enable spa, pool cabana, and gym reservations for registered guests.</div>
-                            </div>
-                            <div class="form-check form-switch fs-5">
-                                <input class="form-check-input" type="checkbox" role="switch" id="flagFacility" checked>
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3">
-                            <div>
-                                <div class="fw-bold text-dark">Dark Mode Theme Toggle</div>
-                                <div class="text-muted small">Allow guests and staff to toggle OLED dark mode palette.</div>
-                            </div>
-                            <div class="form-check form-switch fs-5">
-                                <input class="form-check-input" type="checkbox" role="switch" id="flagDarkMode">
-                            </div>
+            <!-- 3. Pricing Tab -->
+            <div id="tab-pricing" class="settings-tab-pane d-none">
+                <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    <i class="fas fa-percentage text-warning me-2"></i> Global Pricing, Taxes & Service Levies
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label required" for="taxPercent">Standard Hospitality GST / Tax (%)</label>
+                        <input type="number" class="form-control" id="taxPercent" step="0.5" min="0" max="28" value="5.0">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required" for="serviceChargePercent">Service Charge (%)</label>
+                        <input type="number" class="form-control" id="serviceChargePercent" step="0.5" min="0" max="15" value="2.5">
+                    </div>
+                    <div class="col-md-12">
+                        <div class="alert alert-info py-2 small" style="background: rgba(16,78,139,0.15); border: 1px solid rgba(16,78,139,0.3); color: #8ec5fc;">
+                            <i class="fas fa-info-circle me-1"></i> These default percentages apply to room reservations, restaurant dine-in orders, and facility reservations.
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-end pt-4 mt-4 border-top">
-                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="saveGlobalSettings()">
-                    <i class="fas fa-save me-1"></i> Save Global Configurations
+            <!-- 4. Feature Flags Tab -->
+            <div id="tab-flags" class="settings-tab-pane d-none">
+                <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    <i class="fas fa-flag text-warning me-2"></i> Platform Feature Toggles
+                </h5>
+                <div class="d-flex flex-column gap-3">
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.2);">
+                        <div>
+                            <div class="fw-bold" style="color: var(--text-bright);">Facility & Wellness Reservations</div>
+                            <div class="small" style="color: var(--text-secondary); font-size: 12px;">Allow guests to self-book cabanas, spa hydrotherapy, and tennis slots</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="flagFacilityBooking" checked style="cursor: pointer; width: 42px; height: 22px;">
+                        </div>
+                    </div>
+                    <div class="p-3 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.2);">
+                        <div>
+                            <div class="fw-bold" style="color: var(--text-bright);">AI Concierge Chatbot Autonomous Booking</div>
+                            <div class="small" style="color: var(--text-secondary); font-size: 12px;">Enable AI Assistant to query and link available room checkout sessions</div>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="flagAiBooking" checked style="cursor: pointer; width: 42px; height: 22px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-4 mt-4 border-top" style="border-color: rgba(212,175,55,0.2) !important;">
+                <button type="button" class="btn btn-secondary" onclick="loadSettings()">Reset Defaults</button>
+                <button type="button" class="btn btn-primary" id="btnSaveSettings" onclick="saveSettings()">
+                    <i class="fas fa-save me-1"></i> Save Configurations
                 </button>
             </div>
         </div>
     </div>
 </div>
 
+{% block extra_js %}
 <script>
-async function saveGlobalSettings() {
+function switchSettingsTab(tabId, btn) {
+    document.querySelectorAll('.settings-tab-pane').forEach(el => el.classList.add('d-none'));
+    document.getElementById(`tab-${tabId}`)?.classList.remove('d-none');
+    document.querySelectorAll('#settingsTabPills .filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+}
+
+async function loadSettings() {
+    try {
+        const res = await fetch('/api/super-admin/settings');
+        const json = await res.json();
+        if (json.ok && json.data) {
+            const d = json.data;
+            if (d.payment) {
+                document.getElementById('payProvider').value = d.payment.provider || 'razorpay';
+                document.getElementById('payApiKey').value = d.payment.api_key || 'rzp_live_••••1234';
+            }
+            if (d.otp) {
+                document.getElementById('otpProvider').value = d.otp.provider || 'twilio';
+                document.getElementById('otpLength').value = d.otp.length || 6;
+                document.getElementById('otpExpiry').value = d.otp.expiry_minutes || 5;
+                document.getElementById('otpMaxAttempts').value = d.otp.max_attempts || 5;
+            }
+            if (d.pricing) {
+                document.getElementById('taxPercent').value = d.pricing.tax_percent || 5.0;
+                document.getElementById('serviceChargePercent').value = d.pricing.service_charge_percent || 2.5;
+            }
+            if (d.feature_flags) {
+                document.getElementById('flagFacilityBooking').checked = !!d.feature_flags.facility_booking_enabled;
+            }
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+async function saveSettings() {
+    const btn = document.getElementById('btnSaveSettings');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Saving...';
+
+    const payload = {
+        payment: {
+            provider: document.getElementById('payProvider').value,
+            api_key: document.getElementById('payApiKey').value
+        },
+        otp: {
+            provider: document.getElementById('otpProvider').value,
+            length: parseInt(document.getElementById('otpLength').value, 10),
+            expiry_minutes: parseInt(document.getElementById('otpExpiry').value, 10),
+            max_attempts: parseInt(document.getElementById('otpMaxAttempts').value, 10)
+        },
+        pricing: {
+            tax_percent: parseFloat(document.getElementById('taxPercent').value),
+            service_charge_percent: parseFloat(document.getElementById('serviceChargePercent').value)
+        },
+        feature_flags: {
+            facility_booking_enabled: document.getElementById('flagFacilityBooking').checked,
+            ai_concierge_enabled: true
+        }
+    };
+
     try {
         const res = await fetch('/api/super-admin/settings', {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                tax_percent: parseFloat(document.getElementById('taxPercent').value),
-                service_charge_percent: parseFloat(document.getElementById('serviceChargePercent').value),
-                facility_booking_enabled: document.getElementById('flagFacility').checked,
-                dark_mode_enabled: document.getElementById('flagDarkMode').checked
-            })
+            body: JSON.stringify(payload)
         });
         const json = await res.json();
         if (json.ok) {
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success('Global settings updated and synced across all properties!');
-            } else {
-                alert('Settings saved successfully!');
+                AppConventions.Toast.success('Global platform settings updated successfully!');
             }
         } else {
-            alert('Failed to save settings');
+            const errMsg = json.message || 'Failed to save settings';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
-        alert('Network error saving settings');
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error saving settings');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save me-1"></i> Save Configurations';
     }
 }
+
+document.addEventListener('DOMContentLoaded', loadSettings);
 </script>
+{% endblock %}
 {% endblock %}

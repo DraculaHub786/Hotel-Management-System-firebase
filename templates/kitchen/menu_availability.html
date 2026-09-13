@@ -1,140 +1,179 @@
 {% extends "base.html" %}
 
-{% block title %}Menu Availability (86 List) - Nur-E-Haya Kitchen{% endblock %}
+{% block title %}Menu Availability (86 Control) — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 950px;">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-warning text-dark fw-medium px-2 py-1 rounded-pill">Kitchen / 86 Control</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalMenuItems">0 Dishes</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Menu Item Availability</h2>
-            <p class="text-muted small mb-0">Toggle item availability instantaneously. Out-of-stock items are disabled live on Guest and Room Service menus.</p>
+<div class="screen-shell" style="max-width: 1100px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / H.1 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-toggle-on text-warning"></i>
+            <span>Kitchen: 86 Menu Control</span>
+            <span class="badge bg-warning text-dark rounded-pill ms-2" id="totalMenuItems" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Dishes</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadMenuItems()">
+        <div class="topbar-actions">
+            <button type="button" class="btn btn-secondary" onclick="loadMenuItems()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/staff/kitchen" class="btn btn-primary btn-sm rounded-pill px-3">
-                <i class="fas fa-desktop me-1"></i> Open KDS
+            <a href="/staff/kitchen" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-desktop me-1"></i> Kitchen KDS
             </a>
         </div>
     </div>
 
-    <!-- Live Search & Filter -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 bg-white">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-7">
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" class="form-control bg-light border-0" id="itemSearch" placeholder="Search dishes, drinks, desserts..." oninput="filterTable()">
-                </div>
-            </div>
-            <div class="col-md-5 d-flex gap-2">
-                <select class="form-select bg-light border-0" id="categoryFilter" onchange="filterTable()">
-                    <option value="all">All Categories</option>
-                    <option value="Mains">Mains</option>
-                    <option value="Beverages">Beverages</option>
-                    <option value="Snacks">Snacks</option>
-                    <option value="Starters">Starters</option>
-                    <option value="Desserts">Desserts</option>
-                </select>
-            </div>
+    <!-- Filterbar per Section A.2 -->
+    <div class="screen-filterbar">
+        <div class="screen-search-box" style="flex: 1; min-width: 250px;">
+            <i class="fas fa-search"></i>
+            <input type="text" id="itemSearch" placeholder="Search dish, beverage, or dessert..." oninput="filterTable()">
+        </div>
+        <div class="filter-pills" id="categoryPills">
+            <button type="button" class="filter-pill active" data-cat="all" onclick="filterCat('all', this)">All</button>
+            <button type="button" class="filter-pill" data-cat="Mains" onclick="filterCat('Mains', this)">Mains</button>
+            <button type="button" class="filter-pill" data-cat="Starters" onclick="filterCat('Starters', this)">Starters</button>
+            <button type="button" class="filter-pill" data-cat="Beverages" onclick="filterCat('Beverages', this)">Beverages</button>
+            <button type="button" class="filter-pill" data-cat="Desserts" onclick="filterCat('Desserts', this)">Desserts</button>
         </div>
     </div>
 
-    <!-- Table Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+    <!-- Content Table per Section A.2 / H.2 -->
+    <div class="screen-content">
+        <div class="app-table-container">
+            <table class="app-table">
+                <thead>
                     <tr>
-                        <th class="ps-4">Item Name</th>
+                        <th style="padding-left: 24px;">Item Details</th>
                         <th>Category</th>
-                        <th>Price</th>
-                        <th class="text-center" style="width: 160px;">Availability</th>
+                        <th>Unit Price</th>
+                        <th class="text-center" style="width: 170px;">Kitchen Status</th>
                     </tr>
                 </thead>
                 <tbody id="menuTableBody">
-                    <tr>
-                        <td colspan="4" class="text-center py-5">
-                            <div class="ui-shimmer rounded-3 p-4"></div>
-                        </td>
-                    </tr>
+                    <!-- Dynamic rows -->
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
+<style>
+.switch-86 {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+.switch-86 input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider-86 {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(199, 0, 57, 0.6);
+    transition: .3s;
+    border-radius: 24px;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.slider-86:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 2px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+input:checked + .slider-86 {
+    background-color: var(--success-color, #008670);
+    border-color: #2ee59d;
+}
+input:checked + .slider-86:before {
+    transform: translateX(24px);
+}
+</style>
+
+{% block extra_js %}
 <script>
 let menuItems = [];
+let activeCat = 'all';
 
 async function loadMenuItems() {
+    const tbody = document.getElementById('menuTableBody');
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><div class="skeleton skeleton-title mx-auto" style="width: 50%;"></div><div class="skeleton skeleton-text mx-auto" style="width: 70%;"></div></td></tr>';
+
     try {
         const res = await fetch('/api/menu-items');
         const json = await res.json();
-        if (json.ok && json.data) {
+        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
             menuItems = json.data;
         } else {
+            // Seed defaults
             menuItems = [
-                { id: 'item_1', name: 'Royal Biryani Bowl', category: 'Mains', price: 450, available: true },
-                { id: 'item_2', name: 'Cold Brew Coffee', category: 'Beverages', price: 180, available: true },
-                { id: 'item_3', name: 'Club Sandwich & Truffle Fries', category: 'Snacks', price: 320, available: true },
-                { id: 'item_4', name: 'Artisan Cheese Platter', category: 'Starters', price: 650, available: false },
+                { id: 'item_1', name: 'Royal Dum Biryani Bowl', category: 'Mains', price: 450, available: true },
+                { id: 'item_2', name: 'Cold Brew Specialty Coffee', category: 'Beverages', price: 180, available: true },
+                { id: 'item_3', name: 'Club Sandwich & Truffle Fries', category: 'Mains', price: 320, available: true },
+                { id: 'item_4', name: 'Artisan Cheese & Charcuterie Platter', category: 'Starters', price: 650, available: false },
                 { id: 'item_5', name: 'Sparkling Mineral Water', category: 'Beverages', price: 120, available: true },
-                { id: 'item_6', name: 'Belgium Chocolate Lava Cake', category: 'Desserts', price: 280, available: true }
+                { id: 'item_6', name: 'Belgian Dark Chocolate Soufflé', category: 'Desserts', price: 280, available: true }
             ];
         }
         filterTable();
     } catch (e) {
         console.error(e);
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Failed to load menu items');
     }
 }
 
+function filterCat(cat, btn) {
+    activeCat = cat;
+    document.querySelectorAll('#categoryPills .filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    filterTable();
+}
+
 function filterTable() {
-    const search = document.getElementById('itemSearch').value.toLowerCase();
-    const cat = document.getElementById('categoryFilter').value;
-
-    const filtered = menuItems.filter(item => {
-        const matchSearch = item.name.toLowerCase().includes(search);
-        const matchCat = (cat === 'all' || item.category === cat);
-        return matchSearch && matchCat;
-    });
-
+    const search = (document.getElementById('itemSearch')?.value || '').toLowerCase();
     const tbody = document.getElementById('menuTableBody');
     tbody.innerHTML = '';
+
+    const filtered = menuItems.filter(item => {
+        const matchCat = (activeCat === 'all' || (item.category || '').toLowerCase() === activeCat.toLowerCase());
+        const matchSearch = (item.name || '').toLowerCase().includes(search);
+        return matchCat && matchSearch;
+    });
+
     document.getElementById('totalMenuItems').textContent = `${menuItems.length} Dishes`;
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-muted">No matching menu items found.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">No dishes matched your criteria.</td></tr>';
         return;
     }
 
     filtered.forEach(item => {
         const tr = document.createElement('tr');
-        tr.id = `row_${item.id}`;
+        const isAvail = item.available !== false;
 
         tr.innerHTML = `
-            <td class="ps-4">
-                <div class="fw-bold text-dark">${item.name}</div>
-                <div class="text-muted small">ID: ${item.id}</div>
+            <td style="padding-left: 24px;">
+                <div class="fw-bold" style="color: var(--text-bright);">${item.name}</div>
+                <div class="small" style="color: var(--text-secondary); font-size: 11px;">Ref: ${item.id || 'N/A'}</div>
             </td>
-            <td>
-                <span class="badge bg-light text-dark border px-2 py-1">${item.category || 'Mains'}</span>
-            </td>
-            <td class="fw-semibold">₹${item.price}</td>
+            <td><span class="badge rounded-pill" style="background: rgba(212,175,55,0.15); color: var(--primary-color);">${item.category || 'Kitchen'}</span></td>
+            <td class="fw-bold" style="color: var(--text-bright);">₹${item.price || 0}</td>
             <td class="text-center">
-                <div class="form-check form-switch d-inline-block">
-                    <input class="form-check-input" type="checkbox" role="switch" id="switch_${item.id}"
-                        ${item.available ? 'checked' : ''}
-                        onchange="toggleAvailability('${item.id}', this)">
-                    <label class="form-check-label small fw-semibold ms-1" id="lbl_${item.id}">
-                        ${item.available ? '<span class="text-success">Available</span>' : '<span class="text-danger">86 / Sold Out</span>'}
+                <div class="d-flex align-items-center justify-content-center gap-2">
+                    <label class="switch-86">
+                        <input type="checkbox" ${isAvail ? 'checked' : ''} onchange="toggleItemAvailability('${item.id}', this.checked, this)">
+                        <span class="slider-86"></span>
                     </label>
+                    <span class="badge ${isAvail ? 'bg-success' : 'bg-danger'} rounded-pill" style="font-size: 10px; width: 68px;">
+                        ${isAvail ? 'Available' : '86 / Out'}
+                    </span>
                 </div>
             </td>
         `;
@@ -142,51 +181,42 @@ function filterTable() {
     });
 }
 
-async function toggleAvailability(itemId, checkboxEl) {
-    const previousState = !checkboxEl.checked;
-    const newState = checkboxEl.checked;
-    const labelEl = document.getElementById(`lbl_${itemId}`);
-
-    // Optimistic UI update
-    labelEl.innerHTML = newState ? '<span class="text-success">Available</span>' : '<span class="text-danger">86 / Sold Out</span>';
+async function toggleItemAvailability(itemId, isAvailable, checkboxEl) {
+    // Optimistic UI update in local array
+    const item = menuItems.find(x => x.id === itemId);
+    const prevVal = item ? item.available : !isAvailable;
+    if (item) item.available = isAvailable;
 
     try {
         const res = await fetch(`/api/menu-items/${itemId}/availability`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ available: newState })
+            body: JSON.stringify({ available: isAvailable })
         });
         const json = await res.json();
         if (json.ok) {
-            // Update local state
-            const target = menuItems.find(x => (x.id || x.item_id) === itemId);
-            if (target) target.available = newState;
-
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Item status updated to ${newState ? 'Available' : 'Sold Out'}`);
+                AppConventions.Toast.success(`${item?.name || 'Dish'} marked as ${isAvailable ? 'Available' : '86 / Sold Out'}`);
             }
+            filterTable();
         } else {
-            // Rollback optimistic UI on error per Section H.2 spec
-            checkboxEl.checked = previousState;
-            labelEl.innerHTML = previousState ? '<span class="text-success">Available</span>' : '<span class="text-danger">86 / Sold Out</span>';
-            if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.error('Failed to update availability. Rolled back.');
-            } else {
-                alert('Failed to update availability. Rolled back.');
-            }
+            // Rollback on server failure
+            if (item) item.available = prevVal;
+            checkboxEl.checked = prevVal;
+            filterTable();
+            const errMsg = json.message || 'Failed to update availability';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
-        // Rollback optimistic UI on error
-        checkboxEl.checked = previousState;
-        labelEl.innerHTML = previousState ? '<span class="text-success">Available</span>' : '<span class="text-danger">86 / Sold Out</span>';
-        if (window.AppConventions && AppConventions.Toast) {
-            AppConventions.Toast.error('Network error. Rolled back.');
-        } else {
-            alert('Network error. Rolled back.');
-        }
+        // Rollback
+        if (item) item.available = prevVal;
+        checkboxEl.checked = prevVal;
+        filterTable();
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error updating item status');
     }
 }
 
 document.addEventListener('DOMContentLoaded', loadMenuItems);
 </script>
+{% endblock %}
 {% endblock %}

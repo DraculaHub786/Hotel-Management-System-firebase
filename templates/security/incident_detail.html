@@ -1,66 +1,77 @@
 {% extends "base.html" %}
 
-{% block title %}Incident #{{ incident_id }} - Security - Nur-E-Haya{% endblock %}
+{% block title %}Incident #{{ incident_id }} — Security — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 800px;">
+<div class="container py-4" style="max-width: 850px; padding-top: 30px;">
     <!-- Breadcrumb -->
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <a href="/staff/security" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <a href="/staff/security" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
             <i class="fas fa-arrow-left me-1"></i> Back to Incident Log
         </a>
-        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
-            Incident ID: <strong>{{ incident_id }}</strong>
+        <span class="badge rounded-pill px-3 py-2" style="background: rgba(212,175,55,0.15); color: var(--primary-color); border: 1px solid rgba(212,175,55,0.3);">
+            Incident Ref: <strong>{{ incident_id }}</strong>
         </span>
     </div>
 
     <!-- Main Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white">
-        <div class="card-header bg-white border-bottom p-4">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div class="card p-0 overflow-hidden mb-4" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px;">
+        <div class="p-4 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important; background: rgba(15, 26, 42, 0.8);">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                 <div>
-                    <span class="badge bg-danger text-white fs-6 px-3 py-1 rounded-pill mb-2 text-uppercase">
+                    <span class="badge bg-danger text-white fs-6 px-3 py-1 rounded-pill mb-2 text-uppercase" style="font-size: 11px;">
                         {{ incident.severity if incident and incident.severity else 'High' }} Severity
                     </span>
-                    <h3 class="h4 fw-bold mb-1 text-capitalize">{{ ((incident.type if incident and incident.type else 'Disturbance')|replace('_', ' ')) }}</h3>
-                    <p class="text-muted small mb-0"><i class="fas fa-map-marker-alt text-danger me-1"></i> Location: <strong>{{ incident.location_room_id if incident and incident.location_room_id else 'Room 309' }}</strong></p>
+                    <h3 class="h4 fw-bold mb-1 text-capitalize" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                        {{ ((incident.type if incident and incident.type else 'Disturbance')|replace('_', ' ')) }}
+                    </h3>
+                    <p class="small mb-0" style="color: var(--text-secondary);">
+                        <i class="fas fa-map-marker-alt text-warning me-1"></i> Location: <strong style="color: var(--text-bright);">{{ incident.location_room_id if incident and incident.location_room_id else 'Premises' }}</strong>
+                    </p>
                 </div>
-                <div class="text-end">
-                    <span class="badge rounded-pill fs-6 px-3 py-2
+                <div class="text-md-end">
+                    <span id="currentStatusBadge" class="badge rounded-pill fs-6 px-3 py-2
                         {% if incident and incident.status == 'resolved' %}bg-success text-white
                         {% elif incident and incident.status == 'investigating' %}bg-primary text-white
                         {% else %}bg-danger text-white{% endif %}">
                         {{ (incident.status or 'open')|title }}
                     </span>
-                    <div class="text-muted small mt-1">Logged: {{ (incident.created_at or 'Recently')|replace('T', ' ')|truncate(16, True, '') }}</div>
+                    <div class="small mt-2" style="color: var(--text-secondary);">
+                        Logged: {{ (incident.created_at or 'Recently')|replace('T', ' ')|truncate(16, True, '') }}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card-body p-4">
-            <h6 class="fw-bold text-secondary mb-2">Narrative & Description</h6>
-            <div class="p-3 bg-light rounded-3 border mb-4 text-dark" style="font-size: 0.95rem; line-height: 1.6;">
-                {{ incident.description if incident and incident.description else 'Loud argument reported by neighboring guest.' }}
+        <div class="p-4">
+            <h6 class="fw-bold mb-2" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                <i class="fas fa-file-alt text-warning me-2"></i> Narrative & Description
+            </h6>
+            <div class="p-3 rounded-3 mb-4" style="background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.2); color: var(--text-primary); font-size: 14px; line-height: 1.6;">
+                {{ incident.description if incident and incident.description else 'Security disturbance reported.' }}
             </div>
 
-            <!-- Resolution Notes if any -->
+            <!-- Resolution Notes Section -->
             <div id="existingResolutionSection" class="{% if not (incident and incident.resolution_notes) %}d-none{% endif %} mb-4">
-                <h6 class="fw-bold text-success mb-2"><i class="fas fa-check-circle me-1"></i> Resolution Notes</h6>
-                <div class="p-3 bg-success-subtle border border-success-subtle rounded-3 text-dark small">
-                    {{ incident.resolution_notes if incident and incident.resolution_notes else '' }}
+                <h6 class="fw-bold text-success mb-2" style="font-family: 'Cinzel', serif;">
+                    <i class="fas fa-check-circle me-1"></i> Security Resolution Notes
+                </h6>
+                <div class="p-3 rounded-3" style="background: rgba(0,134,112,0.15); border: 1px solid rgba(0,134,112,0.35); color: #fff9e6;">
+                    <div id="resNotesText">{{ incident.resolution_notes if incident and incident.resolution_notes else '' }}</div>
                 </div>
             </div>
 
-            <!-- Workflow Stage Controls -->
-            <h6 class="fw-bold mb-3">Update Incident Status</h6>
-            <div class="btn-group w-100 mb-4" role="group">
-                <button type="button" class="btn btn-outline-danger py-2" onclick="patchIncidentStatus('open')">
-                    <i class="fas fa-bell me-1"></i> Open
+            <h6 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                <i class="fas fa-step-forward text-warning me-2"></i> Update Security Status
+            </h6>
+            <div class="btn-group w-100 mb-2" role="group">
+                <button type="button" class="btn btn-secondary py-2" onclick="patchIncidentStatus('open')">
+                    <i class="fas fa-bell me-1 text-danger"></i> Open
                 </button>
-                <button type="button" class="btn btn-outline-primary py-2" onclick="patchIncidentStatus('investigating')">
-                    <i class="fas fa-search me-1"></i> Investigating
+                <button type="button" class="btn btn-secondary py-2" onclick="patchIncidentStatus('investigating')">
+                    <i class="fas fa-search me-1 text-primary"></i> Investigating
                 </button>
-                <button type="button" class="btn btn-outline-success py-2" onclick="openResolveModal()">
+                <button type="button" class="btn btn-primary py-2" onclick="openResolveModal()">
                     <i class="fas fa-check-double me-1"></i> Resolve & Close
                 </button>
             </div>
@@ -69,33 +80,33 @@
 </div>
 
 <!-- Modal: Resolve Incident -->
-<div class="modal fade" id="resolveIncidentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-success">
-                    <i class="fas fa-check-circle me-1"></i> Resolve Security Incident
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form onsubmit="confirmResolveIncident(event)">
-                <div class="modal-body p-4">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small required">Resolution Notes</label>
-                        <textarea class="form-control rounded-3" id="resNotes" rows="3" placeholder="Describe actions taken to remediate the incident..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer border-top px-4 py-3">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success rounded-pill px-4">Save & Close Incident</button>
-                </div>
-            </form>
+<div class="app-modal-overlay" id="resolveIncidentModal">
+    <div class="app-modal-card" style="max-width: 500px;">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212,175,55,0.2) !important;">
+            <h5 class="m-0 fw-bold text-success" style="font-family: 'Cinzel', serif;">
+                <i class="fas fa-check-circle me-2"></i> Resolve Security Incident
+            </h5>
+            <button type="button" onclick="closeResolveModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer;">&times;</button>
         </div>
+        <form onsubmit="confirmResolveIncident(event)">
+            <div class="form-group mb-3">
+                <label class="form-label required" for="resNotesInput">Remediation & Final Action Taken</label>
+                <textarea class="form-control" id="resNotesInput" rows="3" placeholder="Detail investigation findings, guest conversation, or safety actions taken..." required></textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top" style="border-color: rgba(212,175,55,0.2) !important;">
+                <button type="button" class="btn btn-secondary" onclick="closeResolveModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="btnConfirmResolve">Save & Close</button>
+            </div>
+        </form>
     </div>
 </div>
 
+{% block extra_js %}
 <script>
 const incId = "{{ incident_id }}";
+
+function openResolveModal() { document.getElementById('resolveIncidentModal').classList.add('active'); }
+function closeResolveModal() { document.getElementById('resolveIncidentModal').classList.remove('active'); }
 
 async function patchIncidentStatus(status, resolutionNotes = "") {
     try {
@@ -112,28 +123,26 @@ async function patchIncidentStatus(status, resolutionNotes = "") {
             if (window.AppConventions && AppConventions.Toast) {
                 AppConventions.Toast.success(`Incident status updated to ${status}`);
             }
-            setTimeout(() => window.location.reload(), 800);
+            setTimeout(() => window.location.reload(), 700);
         } else {
-            alert(json.error?.message || 'Failed to update incident');
+            const errMsg = json.message || 'Failed to update status';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
-        alert('Network error');
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error');
     }
 }
 
-function openResolveModal() {
-    const modal = new bootstrap.Modal(document.getElementById('resolveIncidentModal'));
-    modal.show();
-}
-
-async function confirmResolveIncident(e) {
+function confirmResolveIncident(e) {
     e.preventDefault();
-    const notes = document.getElementById('resNotes').value.trim();
-    const modalEl = document.getElementById('resolveIncidentModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
-
-    await patchIncidentStatus('resolved', notes);
+    const notes = document.getElementById('resNotesInput').value.trim();
+    if (!notes) {
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Resolution notes are required.');
+        return;
+    }
+    closeResolveModal();
+    patchIncidentStatus('resolved', notes);
 }
 </script>
+{% endblock %}
 {% endblock %}

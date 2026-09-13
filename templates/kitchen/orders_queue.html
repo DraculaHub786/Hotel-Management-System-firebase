@@ -1,84 +1,110 @@
 {% extends "base.html" %}
 
-{% block title %}Kitchen Display System (KDS) - Nur-E-Haya{% endblock %}
+{% block title %}Kitchen Display System (KDS) — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4 px-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-danger text-white fw-medium px-2 py-1 rounded-pill">Kitchen KDS</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="kdsTicketCount">0 Active Tickets</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Kitchen Orders Queue</h2>
-            <p class="text-muted small mb-0">Combined live feed for Room Service & Dining Room orders</p>
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / H.1 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-fire text-warning"></i>
+            <span>Kitchen Display System (KDS)</span>
+            <span class="badge bg-warning text-dark rounded-pill ms-2" id="kdsTicketCount" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Active Tickets</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="fetchKitchenTickets()">
+        <div class="topbar-actions">
+            <button type="button" class="btn btn-secondary" onclick="fetchKitchenTickets()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/staff/kitchen/menu" class="btn btn-warning btn-sm rounded-pill px-3 text-dark fw-semibold">
-                <i class="fas fa-toggle-on me-1"></i> 86 / Menu Availability
+            <a href="/staff/kitchen/menu" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-toggle-on me-1 text-warning"></i> 86 / Availability
             </a>
-            <a href="/staff/room-service" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <a href="/staff/room-service" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-concierge-bell me-1"></i> Room Service Dispatch
             </a>
         </div>
     </div>
 
-    <!-- Live KDS Grid -->
-    <div class="row g-3" id="kdsGrid">
-        <div class="col-12 text-center py-5">
-            <div class="ui-shimmer rounded-4 p-5"></div>
+    <!-- Filterbar per Section A.2 -->
+    <div class="screen-filterbar">
+        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Ticket Status:</span>
+        <div class="filter-pills">
+            <button type="button" class="filter-pill active" data-filter="all" onclick="filterKds('all', this)">All Active</button>
+            <button type="button" class="filter-pill" data-filter="received" onclick="filterKds('received', this)">
+                <i class="fas fa-inbox text-secondary me-1"></i> Received
+            </button>
+            <button type="button" class="filter-pill" data-filter="preparing" onclick="filterKds('preparing', this)">
+                <i class="fas fa-fire text-warning me-1"></i> In Cook (Preparing)
+            </button>
+            <button type="button" class="filter-pill" data-filter="ready" onclick="filterKds('ready', this)">
+                <i class="fas fa-bell text-success me-1"></i> Plated (Ready)
+            </button>
+        </div>
+        <div class="ms-auto d-none d-md-block" style="font-size: 12px; color: var(--text-secondary);">
+            <i class="fas fa-clock me-1"></i> Combined stream: In-Room Dining & Restaurant Orders
         </div>
     </div>
+
+    <!-- Live KDS Ticket Grid -->
+    <div class="row g-3 mt-1" id="kdsGrid"></div>
 </div>
 
 <style>
 .kds-card {
-    border-radius: 16px;
-    border: 2px solid #e9ecef;
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-    transition: border-color 0.2s;
+    background: rgba(22, 34, 54, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: all 0.2s ease;
 }
 .kds-card.urgent {
-    border-color: #dc3545;
+    border-left: 5px solid var(--danger-color, #c70039);
 }
 .kds-card.preparing {
-    border-color: #ffc107;
+    border-left: 5px solid var(--warning-color, #ff8c00);
+}
+.kds-card.ready {
+    border-left: 5px solid var(--success-color, #008670);
 }
 .ticket-item {
-    font-size: 1.05rem;
-    font-weight: 600;
-    padding: 6px 0;
-    border-bottom: 1px dashed #eee;
+    font-size: 14px;
+    color: var(--text-bright);
+    padding: 8px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.08);
 }
 </style>
 
+{% block extra_js %}
 <script>
 let tickets = [];
+let kdsFilter = 'all';
 
 async function fetchKitchenTickets() {
+    const grid = document.getElementById('kdsGrid');
+    if (window.AppConventions && AppConventions.AppStates) {
+        AppConventions.AppStates.renderLoading(grid, { count: 3, type: 'card' });
+    }
+
     try {
         const res = await fetch('/api/kitchen/orders');
         const json = await res.json();
-        if (json.ok && json.data && json.data.length > 0) {
+        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
             tickets = json.data;
         } else {
-            // Seed sample kitchen tickets
             tickets = [
                 {
                     order_id: 'ord_771',
                     room_number: '204',
                     items: [
-                        { name: 'Royal Biryani Bowl', qty: 2 },
-                        { name: 'Cold Brew Coffee', qty: 2 }
+                        { name: 'Royal Dum Biryani Bowl', qty: 2 },
+                        { name: 'Cold Brew Specialty Coffee', qty: 2 }
                     ],
                     status: 'preparing',
-                    delivery_notes: 'Spicy, extra raita',
-                    created_at: '2026-09-12T19:42:00Z'
+                    delivery_notes: 'Extra fragrant basmati, mild spice level.',
+                    created_at: '2026-09-13T19:42:00Z'
                 },
                 {
                     order_id: 'ord_772',
@@ -87,88 +113,109 @@ async function fetchKitchenTickets() {
                         { name: 'Club Sandwich & Truffle Fries', qty: 1 }
                     ],
                     status: 'received',
-                    delivery_notes: 'Extra ketchup please',
-                    created_at: '2026-09-12T20:01:00Z'
+                    delivery_notes: 'Serve with artisanal mayonnaise.',
+                    created_at: '2026-09-13T20:01:00Z'
                 },
                 {
                     order_id: 'ord_773',
                     room_number: 'Table 4 (Restaurant)',
                     items: [
-                        { name: 'Belgium Chocolate Lava Cake', qty: 2 }
+                        { name: 'Belgian Dark Chocolate Soufflé', qty: 2 }
                     ],
-                    status: 'received',
-                    delivery_notes: 'Serve with warm vanilla glaze',
-                    created_at: '2026-09-12T20:10:00Z'
+                    status: 'ready',
+                    delivery_notes: 'Plated with warm vanilla berry coulis.',
+                    created_at: '2026-09-13T19:25:00Z'
                 }
             ];
         }
-        renderKDS();
+        renderKds();
     } catch (e) {
         console.error(e);
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Failed to load kitchen tickets');
     }
 }
 
-function renderKDS() {
+function filterKds(filter, btn) {
+    kdsFilter = filter;
+    document.querySelectorAll('.filter-pills .filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderKds();
+}
+
+function renderKds() {
     const grid = document.getElementById('kdsGrid');
     grid.innerHTML = '';
-    document.getElementById('kdsTicketCount').textContent = `${tickets.length} Active Tickets`;
 
-    if (tickets.length === 0) {
+    const filtered = kdsFilter === 'all' 
+        ? tickets 
+        : tickets.filter(t => (t.status || 'received').toLowerCase() === kdsFilter.toLowerCase());
+
+    const activeTickets = tickets.filter(t => t.status !== 'delivered');
+    document.getElementById('kdsTicketCount').textContent = `${activeTickets.length} Active Tickets`;
+
+    if (filtered.length === 0) {
         grid.innerHTML = `
-            <div class="col-12 text-center py-5 text-muted">
-                <i class="fas fa-check-circle fa-4x text-success mb-3 opacity-75"></i>
-                <h4 class="fw-bold">All Orders Cleared!</h4>
-                <p class="small">The kitchen display is clear. New incoming kitchen items will show here instantly.</p>
+            <div class="col-12">
+                <div class="ui-empty-state">
+                    <div class="ui-empty-icon"><i class="fas fa-fire"></i></div>
+                    <div class="ui-empty-title">Kitchen Line Clear</div>
+                    <div class="ui-empty-message">No tickets currently in the selected stage.</div>
+                </div>
             </div>
         `;
         return;
     }
 
-    tickets.forEach(ticket => {
+    filtered.forEach(ticket => {
         const col = document.createElement('div');
-        col.className = 'col-12 col-md-6 col-lg-4 col-xl-3';
+        col.className = 'col-12 col-md-6 col-xl-4';
 
-        const isPrep = ticket.status === 'preparing';
-        const cardClass = isPrep ? 'preparing' : 'urgent';
+        const statusClass = ticket.status === 'ready' ? 'ready' : (ticket.status === 'preparing' ? 'preparing' : 'urgent');
 
-        let itemsHtml = (ticket.items || []).map(i => `
+        const itemsHtml = (ticket.items || []).map(i => `
             <div class="ticket-item d-flex justify-content-between align-items-center">
-                <span>${i.name}</span>
-                <span class="badge bg-dark rounded-pill px-2 py-1 fs-6">${i.qty}x</span>
+                <span><i class="fas fa-circle text-warning me-2" style="font-size: 8px;"></i>${i.name}</span>
+                <span class="badge bg-warning text-dark fw-bold px-2 py-1">${i.qty}x</span>
             </div>
         `).join('');
 
         col.innerHTML = `
-            <div class="kds-card ${cardClass} p-3 d-flex flex-column justify-content-between h-100">
-                <div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge bg-danger text-white fs-6 px-3 py-2 rounded-pill">
-                            ${ticket.room_number ? (ticket.room_number.includes('Table') ? ticket.room_number : 'Room ' + ticket.room_number) : 'Table'}
-                        </span>
-                        <span class="text-muted small fw-bold">#${ticket.order_id || ticket.id}</span>
+            <div class="kds-card ${statusClass}">
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom" style="border-color: rgba(212,175,55,0.2) !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-warning text-dark fw-bold px-2 py-1 rounded" style="font-size: 13px;">${ticket.room_number || 'Room'}</span>
+                        <span style="color: var(--text-secondary); font-size: 12px;">#${ticket.order_id}</span>
                     </div>
+                    <span class="badge rounded-pill ${ticket.status === 'ready' ? 'bg-success text-white' : (ticket.status === 'preparing' ? 'bg-warning text-dark' : 'bg-danger text-white')}" style="font-size: 11px;">
+                        ${(ticket.status || 'received').toUpperCase()}
+                    </span>
+                </div>
 
-                    <div class="mb-3">
-                        ${itemsHtml}
-                    </div>
-
+                <div class="flex-grow-1 mb-3">
+                    ${itemsHtml}
                     ${ticket.delivery_notes ? `
-                        <div class="alert alert-warning py-1 px-2 small mb-3">
-                            <i class="fas fa-exclamation-circle me-1"></i><strong>Note:</strong> ${ticket.delivery_notes}
+                        <div class="mt-2 p-2 rounded" style="background: rgba(15,26,42,0.8); border: 1px dashed rgba(212,175,55,0.25); font-size: 12px; color: var(--text-secondary);">
+                            <i class="fas fa-utensils text-warning me-1"></i> Chef note: ${ticket.delivery_notes}
                         </div>
                     ` : ''}
                 </div>
 
-                <div class="pt-3 border-top mt-auto">
+                <div class="d-flex gap-2 justify-content-between pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
                     ${ticket.status === 'received' ? `
-                        <button class="btn btn-warning text-dark fw-bold w-100 py-2 rounded-3" onclick="advanceKitchenTicket('${ticket.order_id || ticket.id}', 'preparing')">
+                        <button class="btn btn-sm btn-warning w-100 fw-bold text-dark" onclick="advanceTicket('${ticket.order_id}', 'preparing')">
                             <i class="fas fa-fire me-1"></i> Start Cooking
                         </button>
-                    ` : `
-                        <button class="btn btn-success fw-bold w-100 py-2 rounded-3" onclick="advanceKitchenTicket('${ticket.order_id || ticket.id}', 'ready')">
-                            <i class="fas fa-check me-1"></i> Bump to Ready
+                    ` : ''}
+                    ${ticket.status === 'preparing' ? `
+                        <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="advanceTicket('${ticket.order_id}', 'ready')">
+                            <i class="fas fa-check-circle me-1"></i> Mark Plated & Ready
                         </button>
-                    `}
+                    ` : ''}
+                    ${ticket.status === 'ready' ? `
+                        <button class="btn btn-sm btn-success w-100" onclick="advanceTicket('${ticket.order_id}', 'delivering')">
+                            <i class="fas fa-walking me-1"></i> Send to Dispatch
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -176,33 +223,31 @@ function renderKDS() {
     });
 }
 
-async function advanceKitchenTicket(orderId, newStatus) {
+async function advanceTicket(orderId, nextStatus) {
     try {
         const res = await fetch(`/api/orders/${orderId}/status`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
+            body: JSON.stringify({ status: nextStatus })
         });
         const json = await res.json();
         if (json.ok) {
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Ticket #${orderId} marked as ${newStatus}`);
+                AppConventions.Toast.success(`Ticket ${orderId} progressed to ${nextStatus}`);
             }
-            if (newStatus === 'ready') {
-                tickets = tickets.filter(t => t.order_id !== orderId);
-            } else {
-                const t = tickets.find(x => x.order_id === orderId);
-                if (t) t.status = newStatus;
-            }
-            renderKDS();
+            const t = tickets.find(x => x.order_id === orderId);
+            if (t) t.status = nextStatus;
+            renderKds();
         } else {
-            alert(json.error?.message || 'Failed to advance ticket');
+            const errMsg = json.message || 'Failed to advance ticket status';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
-        alert('Network error');
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error');
     }
 }
 
 document.addEventListener('DOMContentLoaded', fetchKitchenTickets);
 </script>
+{% endblock %}
 {% endblock %}

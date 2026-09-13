@@ -1,66 +1,76 @@
 {% extends "base.html" %}
 
-{% block title %}Task Detail #{{ task_id }} - Nur-E-Haya{% endblock %}
+{% block title %}Task #{{ task_id }} — Housekeeping — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 800px;">
+<div class="container py-4" style="max-width: 900px; padding-top: 30px;">
     <!-- Navigation Breadcrumb -->
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <a href="/staff/housekeeping" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <a href="/staff/housekeeping" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
             <i class="fas fa-arrow-left me-1"></i> Back to Task Board
         </a>
-        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
+        <span class="badge rounded-pill px-3 py-2" style="background: rgba(212,175,55,0.15); color: var(--primary-color); border: 1px solid rgba(212,175,55,0.3);">
             Task ID: <strong>{{ task_id }}</strong>
         </span>
     </div>
 
     <!-- Main Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-header bg-white border-bottom p-4">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div class="card p-0 overflow-hidden mb-4" style="border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; background: rgba(22, 34, 54, 0.85); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div class="p-4 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important; background: rgba(15, 26, 42, 0.8);">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                 <div>
-                    <span class="badge bg-primary text-white fs-6 px-3 py-1 rounded-pill mb-2">Room {{ task.room_id if task and task.room_id else 'General' }}</span>
-                    <h2 class="h4 fw-bold mb-1">{{ (task.type or 'checkout_clean')|replace('_', ' ')|title }}</h2>
-                    <p class="text-muted small mb-0">Created from: <strong>{{ task.created_from if task and task.created_from else 'System Schedule' }}</strong></p>
+                    <span class="badge bg-warning text-dark fw-bold fs-6 px-3 py-1 rounded mb-2">Room {{ task.room_id if task and task.room_id else '101' }}</span>
+                    <h2 class="h4 fw-bold mb-1" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                        {{ (task.type or 'turnover_clean')|replace('_', ' ')|title }}
+                    </h2>
+                    <p class="small mb-0" style="color: var(--text-secondary);">
+                        Origin: <strong>{{ task.created_from if task and task.created_from else 'Automated Checkout Clean' }}</strong>
+                    </p>
                 </div>
-                <div class="text-end">
+                <div class="text-md-end">
                     <span id="currentStatusBadge" class="badge rounded-pill fs-6 px-3 py-2 
                         {% if task and task.status == 'done' %}bg-success text-white
                         {% elif task and task.status == 'in_progress' %}bg-warning text-dark
                         {% else %}bg-danger text-white{% endif %}">
                         {{ (task.status or 'pending')|replace('_', ' ')|title }}
                     </span>
-                    <div class="text-muted small mt-1">Priority: <strong class="text-uppercase">{{ task.priority or 'standard' }}</strong></div>
+                    <div class="small mt-2" style="color: var(--text-secondary);">
+                        Priority: <strong class="text-uppercase text-warning">{{ task.priority or 'standard' }}</strong>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-3">Update Progress</h5>
+        <div class="p-4">
+            <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                <i class="fas fa-tasks me-2 text-warning"></i> Update Task Status
+            </h5>
             <div class="btn-group w-100 mb-4" role="group" aria-label="Task Status">
-                <button type="button" class="btn btn-outline-danger py-2" onclick="setTaskStatus('pending')">
-                    <i class="fas fa-inbox me-1"></i> Pending
+                <button type="button" class="btn btn-secondary py-2" onclick="setTaskStatus('pending')">
+                    <i class="fas fa-inbox me-1 text-danger"></i> Pending
                 </button>
-                <button type="button" class="btn btn-outline-warning py-2" onclick="setTaskStatus('in_progress')">
-                    <i class="fas fa-spinner me-1"></i> In Progress
+                <button type="button" class="btn btn-secondary py-2" onclick="setTaskStatus('in_progress')">
+                    <i class="fas fa-spinner me-1 text-warning"></i> In Progress
                 </button>
-                <button type="button" class="btn btn-outline-success py-2" onclick="setTaskStatus('done')">
-                    <i class="fas fa-check-circle me-1"></i> Complete & Mark Clean
+                <button type="button" class="btn btn-primary py-2" onclick="setTaskStatus('done')">
+                    <i class="fas fa-check-circle me-1"></i> Completed & Clean
                 </button>
             </div>
 
-            <hr class="my-4">
+            <hr style="border-color: rgba(212, 175, 55, 0.2);">
 
-            <!-- Issue Reporting Section -->
-            <div class="bg-light p-4 rounded-4 border">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <!-- Maintenance Reporting Section per Section E.3 -->
+            <div class="p-4 rounded-3 border" style="background: rgba(199, 0, 57, 0.08); border-color: rgba(199, 0, 57, 0.35) !important;">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div>
-                        <h6 class="fw-bold mb-1 text-danger">
-                            <i class="fas fa-exclamation-triangle me-1"></i> Maintenance Needed?
+                        <h6 class="fw-bold mb-1 text-danger" style="font-family: 'Cinzel', serif; font-size: 16px;">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Maintenance Defect Discovered?
                         </h6>
-                        <p class="text-muted small mb-0">Found a broken fixture, AC leak, or plumbing fault? Report an issue directly to maintenance.</p>
+                        <p class="small mb-0" style="color: var(--text-primary);">
+                            Found broken plumbing, AC leaking, electrical malfunction, or furniture damage during cleaning? Escalate immediately.
+                        </p>
                     </div>
-                    <button type="button" class="btn btn-danger rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#reportIssueModal">
+                    <button type="button" class="btn btn-danger" onclick="openReportModal()" style="font-size: 13px; padding: 10px 20px;">
                         <i class="fas fa-tools me-1"></i> Report Issue
                     </button>
                 </div>
@@ -70,84 +80,95 @@
 </div>
 
 <!-- Report Issue Modal (Section E.3 Spec) -->
-<div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-danger" id="reportIssueModalLabel">
-                    <i class="fas fa-tools me-1"></i> Report Maintenance Issue
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="reportIssueForm" onsubmit="submitReportIssue(event)">
-                <div class="modal-body p-4">
-                    <div class="alert alert-warning py-2 small mb-3">
-                        <i class="fas fa-shield-alt me-1"></i> Submitting this report will automatically put <strong>Room {{ task.room_id if task and task.room_id else '204' }}</strong> into <strong>Maintenance</strong> status.
-                    </div>
-
-                    <!-- Issue Type -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small required">Issue Type</label>
-                        <select class="form-select rounded-3" id="issueType" required>
-                            <option value="" disabled selected>Select issue category...</option>
-                            <option value="plumbing">Plumbing (Leak, Toilet, Sink)</option>
-                            <option value="electrical">Electrical (Lights, Power Outlet, Switch)</option>
-                            <option value="ac_heating">AC / Heating (HVAC unit, Temperature)</option>
-                            <option value="furniture">Furniture / Fixture Damage</option>
-                            <option value="other">Other Issue</option>
-                        </select>
-                    </div>
-
-                    <!-- Description -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small required">Description</label>
-                        <textarea class="form-control rounded-3" id="issueDescription" rows="3" maxlength="500" placeholder="Detail the fault or issue clearly..." required></textarea>
-                        <div class="text-end text-muted small mt-1"><span id="descCharCount">0</span>/500 characters</div>
-                    </div>
-
-                    <!-- Photo Upload -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small">Photo Evidence (Optional)</label>
-                        <input type="file" class="form-control rounded-3" id="issuePhoto" accept="image/*">
-                        <div class="form-text small">Accepted formats: JPG, PNG. Max size 5MB.</div>
-                    </div>
-
-                    <!-- Priority Radio -->
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold small required d-block">Priority</label>
-                        <div class="d-flex gap-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="priorityRadio" id="prioLow" value="low">
-                                <label class="form-check-label small" for="prioLow">Low</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="priorityRadio" id="prioMed" value="medium" checked>
-                                <label class="form-check-label small" for="prioMed">Medium</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="priorityRadio" id="prioHigh" value="high">
-                                <label class="form-check-label small text-danger fw-semibold" for="prioHigh">High (Urgent)</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer border-top px-4 py-3">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4" id="submitIssueBtn">
-                        <i class="fas fa-paper-plane me-1"></i> Submit Ticket
-                    </button>
-                </div>
-            </form>
+<div class="app-modal-overlay" id="reportIssueModal">
+    <div class="app-modal-card" style="max-width: 520px;">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.25) !important;">
+            <h5 class="m-0 fw-bold" style="font-family: 'Cinzel', serif; color: var(--danger-color);">
+                <i class="fas fa-tools me-2"></i> Report Maintenance Defect
+            </h5>
+            <button type="button" onclick="closeReportModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer;">&times;</button>
         </div>
+
+        <form id="reportIssueForm" onsubmit="submitReportIssue(event)" novalidate>
+            <div class="alert alert-warning py-2 small mb-3">
+                <i class="fas fa-shield-alt me-1"></i> Submitting this issue puts <strong>Room {{ task.room_id if task and task.room_id else '101' }}</strong> into <strong>Maintenance block</strong> automatically.
+            </div>
+
+            <!-- Issue Type -->
+            <div class="form-group mb-3">
+                <label class="form-label required" for="issueType">Issue Category</label>
+                <select class="form-control" id="issueType" name="issue_type" required>
+                    <option value="" disabled selected>Select category...</option>
+                    <option value="plumbing">Plumbing (Leak, Toilet, Sink, Drain)</option>
+                    <option value="electrical">Electrical (Lighting, Switch, Plug socket)</option>
+                    <option value="ac_heating">AC / Heating (HVAC unit, thermostat)</option>
+                    <option value="furniture">Furniture / Fixture damage</option>
+                    <option value="other">Other maintenance issue</option>
+                </select>
+                <div class="form-field-error" data-for="issue_type"></div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group mb-3">
+                <label class="form-label required" for="issueDescription">Description</label>
+                <textarea class="form-control" id="issueDescription" name="description" rows="3" maxlength="500" placeholder="State exact location and nature of the defect..." required></textarea>
+                <div class="d-flex justify-content-between align-items-center mt-1">
+                    <div class="form-field-error" data-for="description"></div>
+                    <div class="small text-muted ms-auto"><span id="descCharCount">0</span>/500</div>
+                </div>
+            </div>
+
+            <!-- Photo Upload -->
+            <div class="form-group mb-3">
+                <label class="form-label" for="issuePhoto">Photo Evidence (Optional, max 5MB)</label>
+                <input type="file" class="form-control" id="issuePhoto" accept="image/*">
+                <div class="small mt-1" style="color: var(--text-secondary); font-size: 11px;">Image files only (JPG, PNG).</div>
+            </div>
+
+            <!-- Priority -->
+            <div class="form-group mb-4">
+                <label class="form-label required d-block">Priority Level</label>
+                <div class="d-flex gap-4">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-primary); font-size: 13px;">
+                        <input type="radio" name="priorityRadio" value="low">
+                        <span>Low</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-primary); font-size: 13px;">
+                        <input type="radio" name="priorityRadio" value="medium" checked>
+                        <span>Medium</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #ff6b6b; font-size: 13px; font-weight: bold;">
+                        <input type="radio" name="priorityRadio" value="high">
+                        <span>High (Urgent)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top" style="border-color: rgba(212,175,55,0.2) !important;">
+                <button type="button" class="btn btn-secondary" onclick="closeReportModal()">Cancel</button>
+                <button type="submit" class="btn btn-danger" id="submitIssueBtn">
+                    <i class="fas fa-paper-plane me-1"></i> Submit Ticket
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
+{% block extra_js %}
 <script>
 const taskId = "{{ task_id }}";
 
-document.getElementById('issueDescription').addEventListener('input', function() {
+document.getElementById('issueDescription')?.addEventListener('input', function() {
     document.getElementById('descCharCount').textContent = this.value.length;
 });
+
+function openReportModal() {
+    document.getElementById('reportIssueModal').classList.add('active');
+}
+
+function closeReportModal() {
+    document.getElementById('reportIssueModal').classList.remove('active');
+}
 
 async function setTaskStatus(status) {
     try {
@@ -159,64 +180,76 @@ async function setTaskStatus(status) {
         const json = await res.json();
         if (json.ok) {
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Task status updated to ${status.replace('_', ' ')}`);
-            } else {
-                alert('Task updated successfully');
+                AppConventions.Toast.success(`Task marked as ${status.replace(/_/g, ' ')}`);
             }
-            setTimeout(() => window.location.reload(), 800);
+            setTimeout(() => window.location.reload(), 600);
         } else {
-            alert(json.error?.message || 'Update failed');
+            const errMsg = json.message || 'Failed to update status';
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.error(errMsg);
+            }
         }
     } catch (e) {
-        alert('Network error updating status');
+        if (window.AppConventions && AppConventions.Toast) {
+            AppConventions.Toast.error('Network error updating task status');
+        }
     }
 }
 
 async function submitReportIssue(e) {
     e.preventDefault();
-    const submitBtn = document.getElementById('submitIssueBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Submitting...';
-
-    const issue_type = document.getElementById('issueType').value;
-    const description = document.getElementById('issueDescription').value;
+    const btn = document.getElementById('submitIssueBtn');
+    const issueType = document.getElementById('issueType').value;
+    const description = document.getElementById('issueDescription').value.trim();
     const priority = document.querySelector('input[name="priorityRadio"]:checked')?.value || 'medium';
+
+    if (!issueType) {
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Please select an issue category.');
+        return;
+    }
+    if (!description) {
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Please provide a description.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-spinner"></span> Submitting...';
 
     try {
         const res = await fetch(`/api/housekeeping/tasks/${taskId}/report-issue`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                issue_type: issue_type,
+                issue_type: issueType,
                 description: description,
                 priority: priority
             })
         });
         const json = await res.json();
         if (json.ok) {
-            // Close modal
-            const modalEl = document.getElementById('reportIssueModal');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-
+            closeReportModal();
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Maintenance ticket ${json.data.maintenance_ticket_id} created! Room ${json.data.room_id} blocked.`);
-            } else {
-                alert(`Maintenance ticket created: ${json.data.maintenance_ticket_id}`);
+                AppConventions.Toast.success(`Maintenance ticket ${json.data.maintenance_ticket_id} created. Room placed in maintenance block.`);
             }
             setTimeout(() => {
                 window.location.href = '/staff/housekeeping';
             }, 1200);
         } else {
-            alert(json.error?.message || 'Failed to submit maintenance report');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Submit Ticket';
+            const errMsg = json.message || 'Failed to file maintenance report';
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.error(errMsg);
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Submit Ticket';
         }
     } catch (err) {
-        alert('Network error submitting issue');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Submit Ticket';
+        if (window.AppConventions && AppConventions.Toast) {
+            AppConventions.Toast.error('Network error submitting maintenance report');
+        }
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Submit Ticket';
     }
 }
 </script>
+{% endblock %}
 {% endblock %}

@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: '{{ facility.name or "Facility Slot" }}',
             date: slotDateInput.value,
             slot: selectedSlot,
-            unit_price: {{ facility.price or 1500 }},
+            unit_price: Number('{{ facility.price or 1500 }}'),
             qty: 1
         };
 

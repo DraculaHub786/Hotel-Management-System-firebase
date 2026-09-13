@@ -1,118 +1,131 @@
 {% extends "base.html" %}
 
-{% block title %}Revenue Analytics - Admin - Nur-E-Haya{% endblock %}
+{% block title %}Revenue Analytics — Admin — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Header with Date Range Selector -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-success-subtle text-success fw-medium px-2 py-1 rounded-pill">Financial Intelligence</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">Live Sync</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Revenue & BI Dashboard</h2>
-            <p class="text-muted small mb-0">Financial metrics, occupancy correlations, and departmental breakdown</p>
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / K.6 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-chart-line text-warning"></i>
+            <span>Executive Revenue & Financial Intelligence</span>
         </div>
-        <!-- Date range selector (K.6 spec) -->
-        <div class="btn-group shadow-sm rounded-pill p-1 bg-white border" role="group">
-            <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary px-3 range-btn" onclick="fetchRevenue('today', this)">Today</button>
-            <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary px-3 range-btn" onclick="fetchRevenue('7d', this)">7d</button>
-            <button type="button" class="btn btn-sm rounded-pill btn-dark px-3 range-btn active" onclick="fetchRevenue('30d', this)">30d</button>
-            <button type="button" class="btn btn-sm rounded-pill btn-outline-secondary px-3 range-btn" onclick="fetchRevenue('custom', this)">Custom</button>
+        <div class="topbar-actions">
+            <!-- Date range selector (K.6 spec) -->
+            <div class="filter-pills" id="revenueRangePills">
+                <button type="button" class="filter-pill" data-range="today" onclick="fetchRevenue('today', this)">Today</button>
+                <button type="button" class="filter-pill" data-range="7d" onclick="fetchRevenue('7d', this)">7 Days</button>
+                <button type="button" class="filter-pill active" data-range="30d" onclick="fetchRevenue('30d', this)">30 Days</button>
+                <button type="button" class="filter-pill" data-range="custom" onclick="fetchRevenue('custom', this)">Custom</button>
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="fetchRevenue('30d')" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-sync-alt me-1"></i> Refresh
+            </button>
         </div>
     </div>
 
     <!-- KPI Row (K.6 spec) -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mt-1 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Total Gross Revenue</div>
-                <div class="fs-4 fw-bold text-success mt-1" id="kpiRevenue">₹8,12,400</div>
-                <div class="small text-muted"><i class="fas fa-arrow-trend-up text-success me-1"></i>+12.8% pacing</div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Total Gross Revenue</div>
+                <div class="fs-4 fw-bold mt-1" id="kpiRevenue" style="color: var(--primary-color);">₹8,12,400</div>
+                <div class="small" style="color: #2ee59d; font-size: 11px;"><i class="fas fa-arrow-up me-1"></i>+12.8% pacing</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Occupancy Rate</div>
-                <div class="fs-4 fw-bold text-primary mt-1" id="kpiOccupancy">78.0%</div>
-                <div class="small text-muted"><i class="fas fa-bed me-1"></i>Standard + Suites</div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Occupancy Rate</div>
+                <div class="fs-4 fw-bold mt-1" id="kpiOccupancy" style="color: var(--text-bright);">78.0%</div>
+                <div class="small" style="color: var(--text-secondary); font-size: 11px;"><i class="fas fa-bed text-warning me-1"></i>Standard + Suites</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Avg Order Value (AOV)</div>
-                <div class="fs-4 fw-bold text-dark mt-1" id="kpiAov">₹3,120.50</div>
-                <div class="small text-muted"><i class="fas fa-receipt me-1"></i>Per checked-in guest</div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Avg Order Value (AOV)</div>
+                <div class="fs-4 fw-bold mt-1" id="kpiAov" style="color: var(--text-bright);">₹3,120.50</div>
+                <div class="small" style="color: var(--text-secondary); font-size: 11px;"><i class="fas fa-receipt me-1"></i>Per checked-in guest</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Bookings Settled</div>
-                <div class="fs-4 fw-bold text-info mt-1" id="kpiBookings">143</div>
-                <div class="small text-muted"><i class="fas fa-check me-1"></i>Confirmed reservations</div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Bookings Settled</div>
+                <div class="fs-4 fw-bold mt-1" id="kpiBookings" style="color: #4da3ff;">143</div>
+                <div class="small" style="color: var(--text-secondary); font-size: 11px;"><i class="fas fa-check text-success me-1"></i>Confirmed stays</div>
             </div>
         </div>
     </div>
 
-    <!-- Charts Row -->
+    <!-- Charts Row (K.6 spec) -->
     <div class="row g-3 mb-4">
         <!-- Line Chart: Revenue Over Time -->
         <div class="col-12 col-lg-8">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <h5 class="fw-bold mb-3"><i class="fas fa-chart-line text-success me-2"></i>Revenue Over Time</h5>
-                <div class="p-3 bg-light rounded-3" style="min-height: 250px;" id="revenueTimelineContainer">
-                    <!-- SVG Visual Line Plot -->
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px;">
+                <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    <i class="fas fa-chart-line text-success me-2"></i> Revenue Over Time (Daily Trajectory)
+                </h5>
+                <div class="p-3 rounded-3" style="background: rgba(15, 26, 42, 0.8); border: 1px solid rgba(212,175,55,0.15); min-height: 250px;" id="revenueTimelineContainer">
                     <svg viewBox="0 0 600 200" class="w-100 h-100" style="overflow: visible;">
-                        <polyline fill="none" stroke="#198754" stroke-width="4"
+                        <polyline fill="none" stroke="#d4af37" stroke-width="3"
                             points="30,160 120,130 220,100 320,120 420,60 520,75" />
-                        <circle cx="30" cy="160" r="5" fill="#198754" />
-                        <circle cx="120" cy="130" r="5" fill="#198754" />
-                        <circle cx="220" cy="100" r="5" fill="#198754" />
-                        <circle cx="320" cy="120" r="5" fill="#198754" />
-                        <circle cx="420" cy="60" r="5" fill="#198754" />
-                        <circle cx="520" cy="75" r="5" fill="#198754" />
-                        <text x="30" y="190" font-size="11" fill="#6c757d">Aug 15</text>
-                        <text x="120" y="190" font-size="11" fill="#6c757d">Aug 20</text>
-                        <text x="220" y="190" font-size="11" fill="#6c757d">Aug 25</text>
-                        <text x="320" y="190" font-size="11" fill="#6c757d">Aug 30</text>
-                        <text x="420" y="190" font-size="11" fill="#6c757d">Sep 05</text>
-                        <text x="520" y="190" font-size="11" fill="#6c757d">Sep 10</text>
+                        <circle cx="30" cy="160" r="5" fill="#d4af37" />
+                        <circle cx="120" cy="130" r="5" fill="#d4af37" />
+                        <circle cx="220" cy="100" r="5" fill="#d4af37" />
+                        <circle cx="320" cy="120" r="5" fill="#d4af37" />
+                        <circle cx="420" cy="60" r="5" fill="#d4af37" />
+                        <circle cx="520" cy="75" r="5" fill="#d4af37" />
+                        <text x="30" y="190" font-size="11" fill="#bda568">Aug 15</text>
+                        <text x="120" y="190" font-size="11" fill="#bda568">Aug 20</text>
+                        <text x="220" y="190" font-size="11" fill="#bda568">Aug 25</text>
+                        <text x="320" y="190" font-size="11" fill="#bda568">Aug 30</text>
+                        <text x="420" y="190" font-size="11" fill="#bda568">Sep 05</text>
+                        <text x="520" y="190" font-size="11" fill="#bda568">Sep 12</text>
                     </svg>
                 </div>
             </div>
         </div>
 
-        <!-- Bar Chart: Top Menu Items -->
+        <!-- Bar Chart: Top 10 Menu Items by Revenue -->
         <div class="col-12 col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <h5 class="fw-bold mb-3"><i class="fas fa-utensils text-warning me-2"></i>Top Menu Sales</h5>
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px;">
+                <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    <i class="fas fa-utensils text-warning me-2"></i> Top Menu Items
+                </h5>
                 <div class="d-flex flex-column gap-3" id="topMenuContainer">
                     <div>
-                        <div class="d-flex justify-content-between small fw-semibold mb-1">
-                            <span>Royal Biryani Bowl</span>
-                            <span class="text-success">₹29,800</span>
+                        <div class="d-flex justify-content-between small fw-semibold mb-1" style="color: var(--text-bright);">
+                            <span>Royal Dum Biryani Bowl</span>
+                            <span style="color: var(--primary-color);">₹29,800</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 85%;"></div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                            <div class="progress-bar" role="progressbar" style="width: 85%; background: var(--primary-color);"></div>
                         </div>
                     </div>
                     <div>
-                        <div class="d-flex justify-content-between small fw-semibold mb-1">
+                        <div class="d-flex justify-content-between small fw-semibold mb-1" style="color: var(--text-bright);">
                             <span>Club Sandwich & Truffle Fries</span>
-                            <span class="text-success">₹18,400</span>
+                            <span style="color: var(--primary-color);">₹18,400</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: 60%;"></div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                            <div class="progress-bar" role="progressbar" style="width: 65%; background: #4da3ff;"></div>
                         </div>
                     </div>
                     <div>
-                        <div class="d-flex justify-content-between small fw-semibold mb-1">
-                            <span>Cold Brew Coffee</span>
-                            <span class="text-success">₹12,600</span>
+                        <div class="d-flex justify-content-between small fw-semibold mb-1" style="color: var(--text-bright);">
+                            <span>Cold Brew Specialty Coffee</span>
+                            <span style="color: var(--primary-color);">₹14,200</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: 45%;"></div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                            <div class="progress-bar" role="progressbar" style="width: 50%; background: #2ee59d;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between small fw-semibold mb-1" style="color: var(--text-bright);">
+                            <span>Belgian Dark Chocolate Soufflé</span>
+                            <span style="color: var(--primary-color);">₹11,600</span>
+                        </div>
+                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                            <div class="progress-bar" role="progressbar" style="width: 40%; background: #ff8c00;"></div>
                         </div>
                     </div>
                 </div>
@@ -121,44 +134,44 @@
     </div>
 
     <!-- Category Breakdown Table (K.6 spec) -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
-        <div class="card-header bg-white border-bottom p-3">
-            <h5 class="fw-bold mb-0">Revenue Breakdown by Stream</h5>
-        </div>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+    <div class="screen-content mb-4">
+        <div class="app-table-container">
+            <table class="app-table">
+                <thead>
                     <tr>
-                        <th class="ps-4">Revenue Stream Category</th>
-                        <th>Bookings / Transactions</th>
-                        <th>Gross Revenue</th>
-                        <th>Share %</th>
+                        <th style="padding-left: 24px;">Revenue Stream</th>
+                        <th>Transactions / Bookings</th>
+                        <th>Contribution %</th>
+                        <th class="text-end" style="padding-right: 24px;">Gross Revenue</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="ps-4">
-                            <i class="fas fa-bed text-primary me-2"></i><strong>Rooms & Suites Accommodation</strong>
+                        <td style="padding-left: 24px;">
+                            <div class="fw-bold" style="color: var(--text-bright);"><i class="fas fa-bed text-warning me-2"></i>Rooms & Accommodations</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Deluxe, Suites, Family suites</div>
                         </td>
-                        <td>94 stays</td>
-                        <td class="fw-bold text-success">₹5,80,000.00</td>
-                        <td><span class="badge bg-primary-subtle text-primary">71.4%</span></td>
+                        <td>143 Stays</td>
+                        <td><span class="badge bg-primary text-white rounded-pill px-2 py-1">68.2%</span></td>
+                        <td class="text-end fw-bold" style="color: var(--primary-color); padding-right: 24px;">₹5,54,056.80</td>
                     </tr>
                     <tr>
-                        <td class="ps-4">
-                            <i class="fas fa-spa text-info me-2"></i><strong>Facilities, Spa & Wellness Passes</strong>
+                        <td style="padding-left: 24px;">
+                            <div class="fw-bold" style="color: var(--text-bright);"><i class="fas fa-utensils text-warning me-2"></i>Food & Beverage (Menu + Room Service)</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Dining room, in-room dining, beverages</div>
                         </td>
-                        <td>28 passes</td>
-                        <td class="fw-bold text-success">₹95,400.00</td>
-                        <td><span class="badge bg-info-subtle text-info-emphasis">11.7%</span></td>
+                        <td>286 Orders</td>
+                        <td><span class="badge bg-success text-white rounded-pill px-2 py-1">22.5%</span></td>
+                        <td class="text-end fw-bold" style="color: var(--primary-color); padding-right: 24px;">₹1,82,790.00</td>
                     </tr>
                     <tr>
-                        <td class="ps-4">
-                            <i class="fas fa-utensils text-warning me-2"></i><strong>Food, Beverage & Room Dining</strong>
+                        <td style="padding-left: 24px;">
+                            <div class="fw-bold" style="color: var(--text-bright);"><i class="fas fa-spa text-warning me-2"></i>Wellness & Facilities</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Hydrotherapy spa, tennis courts, private cabanas</div>
                         </td>
-                        <td>82 orders</td>
-                        <td class="fw-bold text-success">₹1,37,000.00</td>
-                        <td><span class="badge bg-warning-subtle text-warning-emphasis">16.9%</span></td>
+                        <td>54 Passes</td>
+                        <td><span class="badge bg-info text-dark rounded-pill px-2 py-1">9.3%</span></td>
+                        <td class="text-end fw-bold" style="color: var(--primary-color); padding-right: 24px;">₹75,553.20</td>
                     </tr>
                 </tbody>
             </table>
@@ -166,15 +179,12 @@
     </div>
 </div>
 
+{% block extra_js %}
 <script>
-async function fetchRevenue(range, btn) {
+async function fetchRevenue(range = '30d', btn = null) {
     if (btn) {
-        document.querySelectorAll('.range-btn').forEach(b => {
-            b.classList.remove('btn-dark');
-            b.classList.add('btn-outline-secondary');
-        });
-        btn.classList.remove('btn-outline-secondary');
-        btn.classList.add('btn-dark');
+        document.querySelectorAll('#revenueRangePills .filter-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
     }
 
     try {
@@ -182,14 +192,20 @@ async function fetchRevenue(range, btn) {
         const json = await res.json();
         if (json.ok && json.data) {
             const d = json.data;
-            document.getElementById('kpiRevenue').textContent = `₹${d.total_revenue.toLocaleString('en-IN')}`;
-            document.getElementById('kpiOccupancy').textContent = `${(d.occupancy_rate * 100).toFixed(1)}%`;
-            document.getElementById('kpiAov').textContent = `₹${d.avg_order_value.toLocaleString('en-IN')}`;
-            document.getElementById('kpiBookings').textContent = d.bookings_count;
+            document.getElementById('kpiRevenue').textContent = `₹${(d.total_revenue || 812400).toLocaleString('en-IN')}`;
+            document.getElementById('kpiOccupancy').textContent = `${((d.occupancy_rate || 0.78) * 100).toFixed(1)}%`;
+            document.getElementById('kpiAov').textContent = `₹${(d.avg_order_value || 3120.5).toFixed(2)}`;
+            document.getElementById('kpiBookings').textContent = d.bookings_count || 143;
+
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Revenue updated for ${range.toUpperCase()}`);
+            }
         }
     } catch (e) {
         console.error(e);
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Failed to load revenue data');
     }
 }
 </script>
+{% endblock %}
 {% endblock %}

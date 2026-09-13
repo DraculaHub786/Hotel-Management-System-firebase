@@ -1,31 +1,35 @@
 {% extends "base.html" %}
 
-{% block title %}Laundry Task #{{ task_id }} - Nur-E-Haya{% endblock %}
+{% block title %}Laundry Order #{{ task_id }} — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width: 800px;">
+<div class="container py-4" style="max-width: 850px; padding-top: 30px;">
     <!-- Navigation Breadcrumb -->
     <div class="d-flex align-items-center justify-content-between mb-4">
-        <a href="/staff/laundry" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        <a href="/staff/laundry" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
             <i class="fas fa-arrow-left me-1"></i> Back to Laundry Board
         </a>
-        <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
-            Task ID: <strong>{{ task_id }}</strong>
+        <span class="badge rounded-pill px-3 py-2" style="background: rgba(212,175,55,0.15); color: var(--primary-color); border: 1px solid rgba(212,175,55,0.3);">
+            Order ID: <strong>{{ task_id }}</strong>
         </span>
     </div>
 
     <!-- Main Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-        <div class="card-header bg-white border-bottom p-4">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div class="card p-0 overflow-hidden mb-4" style="border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; background: rgba(22, 34, 54, 0.85); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div class="p-4 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important; background: rgba(15, 26, 42, 0.8);">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                 <div>
-                    <span class="badge bg-info-subtle text-info-emphasis fs-6 px-3 py-1 rounded-pill mb-2">
-                        <i class="fas fa-tshirt me-1"></i> Laundry Order
+                    <span class="badge bg-warning text-dark fw-bold fs-6 px-3 py-1 rounded mb-2">
+                        <i class="fas fa-tshirt me-1"></i> Garment Care
                     </span>
-                    <h2 class="h4 fw-bold mb-1">{{ task.room_guest if task and task.room_guest else 'Room 204 - Eleanor Vance' }}</h2>
-                    <p class="text-muted small mb-0">Created: <strong>{{ task.created_at if task and task.created_at else 'Recent' }}</strong></p>
+                    <h2 class="h4 fw-bold mb-1" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                        {{ task.room_guest if task and task.room_guest else 'Room 204 — Eleanor Vance' }}
+                    </h2>
+                    <p class="small mb-0" style="color: var(--text-secondary);">
+                        Logged: <strong>{{ task.created_at if task and task.created_at else 'Recent' }}</strong>
+                    </p>
                 </div>
-                <div class="text-end">
+                <div class="text-md-end">
                     <span id="currentStatusBadge" class="badge rounded-pill fs-6 px-3 py-2
                         {% if task and task.status == 'delivered' %}bg-success text-white
                         {% elif task and task.status == 'ready' %}bg-warning text-dark
@@ -37,32 +41,34 @@
             </div>
         </div>
 
-        <div class="card-body p-4">
-            <!-- Items spec -->
-            <h5 class="fw-bold mb-3">Garment Items List</h5>
-            <div class="table-responsive mb-4">
-                <table class="table table-bordered align-middle">
-                    <thead class="table-light">
+        <div class="p-4">
+            <!-- Items Spec -->
+            <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                <i class="fas fa-list-check me-2 text-warning"></i> Garment Manifest
+            </h5>
+            <div class="table-responsive mb-4" style="border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; overflow: hidden;">
+                <table class="app-table mb-0">
+                    <thead>
                         <tr>
                             <th>Item Description</th>
-                            <th style="width: 120px;" class="text-center">Quantity</th>
+                            <th style="width: 140px;" class="text-center">Quantity</th>
                         </tr>
                     </thead>
-                    <tbody id="itemsTableBody">
+                    <tbody>
                         {% if task and task.items %}
                             {% for item in task.items %}
                             <tr>
-                                <td><i class="fas fa-check-circle text-primary me-2"></i>{{ item.name }}</td>
+                                <td><i class="fas fa-check text-warning me-2"></i>{{ item.name }}</td>
                                 <td class="text-center fw-bold">{{ item.qty }}</td>
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td><i class="fas fa-check-circle text-primary me-2"></i>Evening Dress / Suit</td>
+                                <td><i class="fas fa-check text-warning me-2"></i>Evening Dress / Tailored Suit</td>
                                 <td class="text-center fw-bold">2</td>
                             </tr>
                             <tr>
-                                <td><i class="fas fa-check-circle text-primary me-2"></i>Cotton Shirts</td>
+                                <td><i class="fas fa-check text-warning me-2"></i>Egyptian Cotton Shirts</td>
                                 <td class="text-center fw-bold">3</td>
                             </tr>
                         {% endif %}
@@ -73,33 +79,35 @@
             <!-- Times spec -->
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
-                    <div class="p-3 bg-light rounded-3 border">
-                        <label class="form-label text-muted small fw-semibold mb-1">Pickup Time</label>
-                        <div class="fw-bold fs-6" id="displayPickup">
-                            {{ (task.pickup_time or '2026-09-12T10:00')|replace('T', ' ') }}
+                    <div class="p-3 rounded-3" style="background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.2);">
+                        <label class="form-label mb-1" style="color: var(--text-secondary); font-size: 11px;">Pickup Time</label>
+                        <div class="fw-bold" style="color: var(--text-bright);">
+                            {{ (task.pickup_time or '2026-09-13T10:00')|replace('T', ' ') }}
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="p-3 bg-light rounded-3 border">
-                        <label class="form-label text-muted small fw-semibold mb-1">Est. Delivery Time</label>
-                        <input type="datetime-local" class="form-control form-control-sm rounded-3 mt-1" id="editDeliveryTime" value="{{ task.delivery_time if task and task.delivery_time else '2026-09-12T18:00' }}">
+                    <div class="p-3 rounded-3" style="background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.2);">
+                        <label class="form-label mb-1" style="color: var(--text-secondary); font-size: 11px;">Est. Delivery Time</label>
+                        <input type="datetime-local" class="form-control" id="editDeliveryTime" value="{{ task.delivery_time if task and task.delivery_time else '2026-09-13T18:00' }}" style="height: 38px;">
                     </div>
                 </div>
             </div>
 
-            <h5 class="fw-bold mb-3">Update Stage</h5>
-            <div class="btn-group w-100 mb-4" role="group">
-                <button type="button" class="btn btn-outline-secondary py-2" onclick="setLaundryStatus('collected')">
+            <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                <i class="fas fa-step-forward me-2 text-warning"></i> Update Stage
+            </h5>
+            <div class="btn-group w-100 mb-2" role="group">
+                <button type="button" class="btn btn-secondary py-2" onclick="setLaundryStatus('collected')">
                     <i class="fas fa-inbox me-1"></i> Collected
                 </button>
-                <button type="button" class="btn btn-outline-primary py-2" onclick="setLaundryStatus('washing')">
+                <button type="button" class="btn btn-secondary py-2" onclick="setLaundryStatus('washing')">
                     <i class="fas fa-soap me-1"></i> Washing
                 </button>
-                <button type="button" class="btn btn-outline-warning py-2" onclick="setLaundryStatus('ready')">
-                    <i class="fas fa-check me-1"></i> Ready
+                <button type="button" class="btn btn-secondary py-2" onclick="setLaundryStatus('ready')">
+                    <i class="fas fa-check me-1 text-warning"></i> Ready
                 </button>
-                <button type="button" class="btn btn-outline-success py-2" onclick="setLaundryStatus('delivered')">
+                <button type="button" class="btn btn-primary py-2" onclick="setLaundryStatus('delivered')">
                     <i class="fas fa-box-open me-1"></i> Delivered
                 </button>
             </div>
@@ -107,32 +115,35 @@
     </div>
 </div>
 
+{% block extra_js %}
 <script>
 const taskId = "{{ task_id }}";
 
 async function setLaundryStatus(status) {
-    const deliveryTime = document.getElementById('editDeliveryTime').value;
+    const deliveryTime = document.getElementById('editDeliveryTime')?.value;
     try {
+        const payload = { status: status };
+        if (deliveryTime) payload.delivery_time = deliveryTime;
+
         const res = await fetch(`/api/laundry/tasks/${taskId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                status: status,
-                delivery_time: deliveryTime
-            })
+            body: JSON.stringify(payload)
         });
         const json = await res.json();
         if (json.ok) {
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Laundry task updated to ${status}`);
+                AppConventions.Toast.success(`Laundry order moved to ${status}`);
             }
-            setTimeout(() => window.location.reload(), 800);
+            setTimeout(() => window.location.reload(), 600);
         } else {
-            alert(json.error?.message || 'Update failed');
+            const errMsg = json.message || 'Failed to update order status';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
-        alert('Network error updating laundry status');
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error');
     }
 }
 </script>
+{% endblock %}
 {% endblock %}

@@ -1,96 +1,95 @@
 {% extends "base.html" %}
 
-{% block title %}Housekeeping Task Board - Nur-E-Haya{% endblock %}
+{% block title %}Housekeeping Task Board — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-primary-subtle text-primary fw-medium px-2 py-1 rounded-pill">Housekeeping</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="totalTasksCount">0 Tasks</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Housekeeping Task Board</h2>
-            <p class="text-muted small mb-0">Real-time room turnover & maintenance triage board</p>
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / E.2 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-broom text-warning"></i>
+            <span>Housekeeping: Task Board</span>
+            <span class="badge bg-warning text-dark rounded-pill ms-2" id="totalTasksCount" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Tasks</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadTasks()">
+        <div class="topbar-actions">
+            <button type="button" class="btn btn-secondary" onclick="loadTasks()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/staff/front-desk/rooms" class="btn btn-primary btn-sm rounded-pill px-3">
-                <i class="fas fa-th-large me-1"></i> View Room Board
+            <a href="/staff/front-desk/rooms" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-th me-1"></i> Room Board
             </a>
+            <button type="button" class="btn btn-primary" onclick="openNewTaskModal()" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-plus me-1"></i> New Task
+            </button>
         </div>
     </div>
 
-    <!-- Priority Legend -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-light">
-        <div class="card-body py-2 px-3 d-flex align-items-center justify-content-between flex-wrap gap-2 small">
-            <div class="d-flex align-items-center gap-3">
-                <span class="fw-semibold text-secondary">Priority Filter:</span>
-                <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
-                    <i class="fas fa-star me-1"></i> VIP High Priority
-                </span>
-                <span class="badge rounded-pill bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1">
-                    <i class="fas fa-clock me-1"></i> Guest Waiting
-                </span>
-                <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
-                    <i class="fas fa-circle me-1" style="font-size: 8px;"></i> Standard
-                </span>
-            </div>
-            <div class="text-muted">
-                <i class="fas fa-info-circle me-1"></i> Tap card status dropdown to instantly update progress
-            </div>
+    <!-- Filterbar per Section A.2 -->
+    <div class="screen-filterbar">
+        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Priority:</span>
+        <div class="filter-pills">
+            <button type="button" class="filter-pill active" data-priority="all" onclick="filterPriority('all', this)">All Priorities</button>
+            <button type="button" class="filter-pill" data-priority="vip" onclick="filterPriority('vip', this)">
+                <i class="fas fa-star text-danger me-1"></i> VIP Urgent
+            </button>
+            <button type="button" class="filter-pill" data-priority="guest-waiting" onclick="filterPriority('guest-waiting', this)">
+                <i class="fas fa-clock text-warning me-1"></i> Guest Waiting
+            </button>
+            <button type="button" class="filter-pill" data-priority="standard" onclick="filterPriority('standard', this)">
+                <i class="fas fa-circle text-info me-1" style="font-size: 8px;"></i> Standard
+            </button>
+        </div>
+        <div class="ms-auto d-none d-md-block" style="font-size: 12px; color: var(--text-secondary);">
+            <i class="fas fa-info-circle me-1"></i> Drag & drop cards or tap status dropdown on touch devices
         </div>
     </div>
 
-    <!-- Kanban Board Container -->
-    <div class="row g-3" id="kanbanBoard">
+    <!-- Kanban Board Container (3 Columns: Pending | In Progress | Done) -->
+    <div class="row g-3 mt-1" id="kanbanContainer">
         <!-- Column 1: Pending -->
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+        <div class="col-12 col-lg-4">
+            <div class="card p-3 h-100" style="background: rgba(22, 34, 54, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important;">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge rounded-pill bg-danger text-white px-2 py-1">Pending</span>
-                        <span class="text-muted small fw-semibold" id="pendingCount">0</span>
+                        <span class="badge bg-danger text-white rounded-pill px-2 py-1">Pending</span>
+                        <span class="fw-bold" id="pendingCount" style="color: var(--text-bright);">0</span>
                     </div>
-                    <span class="text-muted small"><i class="fas fa-inbox"></i></span>
+                    <span style="color: var(--text-secondary); font-size: 13px;"><i class="fas fa-inbox"></i></span>
                 </div>
-                <div class="card-body p-3 kanban-column" id="pendingCol" ondragover="allowDrop(event)" ondrop="drop(event, 'pending')">
-                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                <div class="kanban-column" id="pendingCol" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'pending')">
+                    <!-- Cards injected via JS -->
                 </div>
             </div>
         </div>
 
         <!-- Column 2: In Progress -->
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+        <div class="col-12 col-lg-4">
+            <div class="card p-3 h-100" style="background: rgba(22, 34, 54, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important;">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge rounded-pill bg-warning text-dark px-2 py-1">In Progress</span>
-                        <span class="text-muted small fw-semibold" id="inProgressCount">0</span>
+                        <span class="badge bg-warning text-dark rounded-pill px-2 py-1">In Progress</span>
+                        <span class="fw-bold" id="inProgressCount" style="color: var(--text-bright);">0</span>
                     </div>
-                    <span class="text-muted small"><i class="fas fa-spinner fa-spin"></i></span>
+                    <span style="color: var(--text-secondary); font-size: 13px;"><i class="fas fa-spinner fa-spin"></i></span>
                 </div>
-                <div class="card-body p-3 kanban-column" id="inProgressCol" ondragover="allowDrop(event)" ondrop="drop(event, 'in_progress')">
-                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                <div class="kanban-column" id="inProgressCol" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'in_progress')">
+                    <!-- Cards injected via JS -->
                 </div>
             </div>
         </div>
 
         <!-- Column 3: Done -->
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
-                <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+        <div class="col-12 col-lg-4">
+            <div class="card p-3 h-100" style="background: rgba(22, 34, 54, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important;">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge rounded-pill bg-success text-white px-2 py-1">Done</span>
-                        <span class="text-muted small fw-semibold" id="doneCount">0</span>
+                        <span class="badge bg-success text-white rounded-pill px-2 py-1">Done</span>
+                        <span class="fw-bold" id="doneCount" style="color: var(--text-bright);">0</span>
                     </div>
-                    <span class="text-muted small"><i class="fas fa-check-circle"></i></span>
+                    <span style="color: var(--text-secondary); font-size: 13px;"><i class="fas fa-check-circle"></i></span>
                 </div>
-                <div class="card-body p-3 kanban-column" id="doneCol" ondragover="allowDrop(event)" ondrop="drop(event, 'done')">
-                    <div class="ui-shimmer rounded-3 p-4 mb-2"></div>
+                <div class="kanban-column" id="doneCol" ondragover="allowDrop(event)" ondrop="handleDrop(event, 'done')">
+                    <!-- Cards injected via JS -->
                 </div>
             </div>
         </div>
@@ -104,138 +103,180 @@
     flex-direction: column;
     gap: 12px;
 }
-.kanban-card {
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 12px;
+.hk-card {
+    background: rgba(15, 26, 42, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 10px;
     padding: 14px;
-    background: #fff;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
     cursor: grab;
+    position: relative;
+    overflow: hidden;
 }
-.kanban-card:hover {
+.hk-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    border-color: var(--primary-color);
+    box-shadow: 0 6px 20px rgba(212, 175, 55, 0.25);
 }
-.kanban-card.vip {
-    border-left: 4px solid #dc3545;
+.hk-card.vip {
+    border-left: 4px solid var(--danger-color, #c70039);
 }
-.kanban-card.guest-waiting {
-    border-left: 4px solid #ffc107;
+.hk-card.guest-waiting {
+    border-left: 4px solid var(--warning-color, #ff8c00);
 }
-.kanban-card.standard {
-    border-left: 4px solid #0d6efd;
+.hk-card.standard {
+    border-left: 4px solid var(--secondary-color, #104e8b);
+}
+.avatar-hk {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: #0f1a2a;
+    font-weight: bold;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 </style>
 
+{% block extra_js %}
 <script>
 let allTasks = [];
+let currentFilter = 'all';
 
 async function loadTasks() {
+    const pCol = document.getElementById('pendingCol');
+    const ipCol = document.getElementById('inProgressCol');
+    const dCol = document.getElementById('doneCol');
+
+    // Show loading skeleton
+    if (window.AppConventions && AppConventions.AppStates) {
+        AppConventions.AppStates.renderLoading(pCol, { count: 2, type: 'card' });
+        AppConventions.AppStates.renderLoading(ipCol, { count: 2, type: 'card' });
+        AppConventions.AppStates.renderLoading(dCol, { count: 2, type: 'card' });
+    }
+
     try {
         const res = await fetch('/api/housekeeping/tasks');
         const json = await res.json();
-        if (json.ok && json.data) {
+        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
             allTasks = json.data;
-            renderBoard();
         } else {
-            // Seed sample tasks if empty
+            // Seed fallback mock items
             allTasks = [
-                { task_id: 'task_101', room_id: '101', type: 'checkout_clean', priority: 'vip', status: 'pending', assigned_to: 'Maria S.' },
-                { task_id: 'task_102', room_id: '204', type: 'daily_tidy', priority: 'guest-waiting', status: 'in_progress', assigned_to: 'Alex R.' },
-                { task_id: 'task_103', room_id: '305', type: 'deep_clean', priority: 'standard', status: 'done', assigned_to: 'Maria S.' }
+                { task_id: 'task_101', room_id: '101', type: 'checkout_clean', priority: 'vip', status: 'pending', assigned_to: 'Maria Santos', created_from: 'booking_checkout' },
+                { task_id: 'task_204', room_id: '204', type: 'daily_tidy', priority: 'guest-waiting', status: 'in_progress', assigned_to: 'Alex Rivera', created_from: 'guest_request' },
+                { task_id: 'task_305', room_id: '305', type: 'deep_clean', priority: 'standard', status: 'done', assigned_to: 'Maria Santos', created_from: 'scheduled_rotation' }
             ];
-            renderBoard();
         }
+        renderBoard();
     } catch (e) {
-        console.error('Error fetching tasks', e);
+        console.error('Error fetching housekeeping tasks', e);
         if (window.AppConventions && AppConventions.Toast) {
-            AppConventions.Toast.error('Failed to load housekeeping tasks');
+            AppConventions.Toast.error('Failed to load housekeeping tasks.');
         }
     }
 }
 
+function filterPriority(prio, btn) {
+    currentFilter = prio;
+    document.querySelectorAll('.filter-pills .filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderBoard();
+}
+
 function renderBoard() {
-    const pendingCol = document.getElementById('pendingCol');
-    const inProgressCol = document.getElementById('inProgressCol');
-    const doneCol = document.getElementById('doneCol');
+    const pCol = document.getElementById('pendingCol');
+    const ipCol = document.getElementById('inProgressCol');
+    const dCol = document.getElementById('doneCol');
 
-    pendingCol.innerHTML = '';
-    inProgressCol.innerHTML = '';
-    doneCol.innerHTML = '';
+    pCol.innerHTML = '';
+    ipCol.innerHTML = '';
+    dCol.innerHTML = '';
 
-    let pending = 0, inProg = 0, done = 0;
+    const filtered = currentFilter === 'all' 
+        ? allTasks 
+        : allTasks.filter(t => (t.priority || 'standard').toLowerCase() === currentFilter.toLowerCase());
 
-    allTasks.forEach(task => {
+    let pCount = 0, ipCount = 0, dCount = 0;
+
+    filtered.forEach(task => {
         const card = createCardEl(task);
         if (task.status === 'in_progress') {
-            inProgressCol.appendChild(card);
-            inProg++;
+            ipCol.appendChild(card);
+            ipCount++;
         } else if (task.status === 'done') {
-            doneCol.appendChild(card);
-            done++;
+            dCol.appendChild(card);
+            dCount++;
         } else {
-            pendingCol.appendChild(card);
-            pending++;
+            pCol.appendChild(card);
+            pCount++;
         }
     });
 
-    document.getElementById('pendingCount').textContent = pending;
-    document.getElementById('inProgressCount').textContent = inProg;
-    document.getElementById('doneCount').textContent = done;
+    document.getElementById('pendingCount').textContent = pCount;
+    document.getElementById('inProgressCount').textContent = ipCount;
+    document.getElementById('doneCount').textContent = dCount;
     document.getElementById('totalTasksCount').textContent = `${allTasks.length} Tasks`;
 
-    if (pending === 0) pendingCol.innerHTML = '<div class="text-center text-muted py-5 small"><i class="fas fa-check-double mb-2 d-block fa-2x text-muted opacity-50"></i>No pending turnover tasks</div>';
-    if (inProg === 0) inProgressCol.innerHTML = '<div class="text-center text-muted py-5 small"><i class="fas fa-coffee mb-2 d-block fa-2x text-muted opacity-50"></i>No tasks actively in progress</div>';
-    if (done === 0) doneCol.innerHTML = '<div class="text-center text-muted py-5 small"><i class="fas fa-bed mb-2 d-block fa-2x text-muted opacity-50"></i>Completed tasks will show here</div>';
+    if (pCount === 0) {
+        pCol.innerHTML = `<div class="ui-empty-state" style="padding: 30px 15px; margin: 10px 0;"><div class="ui-empty-icon" style="font-size: 28px;"><i class="fas fa-check-double"></i></div><div class="ui-empty-title" style="font-size: 14px;">No Pending Tasks</div><div class="ui-empty-message" style="font-size: 12px; margin-bottom: 0;">Turnovers are currently up to date.</div></div>`;
+    }
+    if (ipCount === 0) {
+        ipCol.innerHTML = `<div class="ui-empty-state" style="padding: 30px 15px; margin: 10px 0;"><div class="ui-empty-icon" style="font-size: 28px;"><i class="fas fa-coffee"></i></div><div class="ui-empty-title" style="font-size: 14px;">None In Progress</div><div class="ui-empty-message" style="font-size: 12px; margin-bottom: 0;">No cleaning tasks actively running.</div></div>`;
+    }
+    if (dCount === 0) {
+        dCol.innerHTML = `<div class="ui-empty-state" style="padding: 30px 15px; margin: 10px 0;"><div class="ui-empty-icon" style="font-size: 28px;"><i class="fas fa-bed"></i></div><div class="ui-empty-title" style="font-size: 14px;">No Completed Tasks</div><div class="ui-empty-message" style="font-size: 12px; margin-bottom: 0;">Completed turnover cards will display here.</div></div>`;
+    }
 }
 
 function createCardEl(task) {
     const div = document.createElement('div');
-    const priorityClass = (task.priority || 'standard').toLowerCase();
-    div.className = `kanban-card ${priorityClass}`;
+    const priority = (task.priority || 'standard').toLowerCase();
+    div.className = `hk-card ${priority}`;
     div.draggable = true;
     div.id = `card_${task.task_id}`;
-    div.ondragstart = (e) => drag(e, task.task_id);
+    div.ondragstart = (e) => { e.dataTransfer.setData("taskId", task.task_id); };
 
     let badgePriority = '';
-    if (priorityClass === 'vip') {
-        badgePriority = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill"><i class="fas fa-star me-1"></i>VIP</span>';
-    } else if (priorityClass === 'guest-waiting') {
-        badgePriority = '<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill"><i class="fas fa-clock me-1"></i>Guest Waiting</span>';
+    if (priority === 'vip') {
+        badgePriority = `<span class="badge bg-danger text-white rounded-pill" style="font-size: 10px;"><i class="fas fa-star me-1"></i>VIP</span>`;
+    } else if (priority === 'guest-waiting') {
+        badgePriority = `<span class="badge bg-warning text-dark rounded-pill" style="font-size: 10px;"><i class="fas fa-clock me-1"></i>Guest Waiting</span>`;
     } else {
-        badgePriority = '<span class="badge bg-light text-secondary border rounded-pill">Standard</span>';
+        badgePriority = `<span class="badge rounded-pill" style="background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 10px;">Standard</span>`;
     }
 
-    const typeBadge = (task.type || 'clean').replace('_', ' ').toUpperCase();
+    const typeBadge = (task.type || 'turnover_clean').replace(/_/g, ' ').toUpperCase();
 
     div.innerHTML = `
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <div>
-                <span class="badge bg-primary text-white fw-bold px-2 py-1 rounded me-1">Room ${task.room_id || 'N/A'}</span>
-                <span class="badge bg-light text-dark border rounded-pill small">${typeBadge}</span>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex align-items-center gap-1">
+                <span class="badge bg-warning text-dark fw-bold px-2 py-1 rounded" style="font-size: 12px;">Room ${task.room_id || 'N/A'}</span>
+                <span class="badge rounded-pill" style="background: rgba(212,175,55,0.15); color: var(--primary-color); font-size: 10px;">${typeBadge}</span>
             </div>
             ${badgePriority}
         </div>
-        <p class="text-muted small mb-2" style="font-size: 0.82rem;">
-            ${task.created_from ? `Source: ${task.created_from}` : 'Turnover required'}
+        <p class="small mb-2" style="color: var(--text-primary); font-size: 12px;">
+            <i class="fas fa-info-circle me-1" style="color: var(--text-secondary);"></i>
+            ${task.created_from ? `Source: ${task.created_from.replace(/_/g, ' ')}` : 'Turnover required'}
         </p>
-        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-            <div class="d-flex align-items-center gap-1 small text-muted">
-                <div class="avatar-circle rounded-circle bg-secondary-subtle text-secondary fw-bold d-inline-flex align-items-center justify-content-center" style="width: 24px; height: 24px; font-size: 10px;">
-                    ${(task.assigned_to || 'HK')[0]}
-                </div>
-                <span>${task.assigned_to || 'Unassigned'}</span>
+        <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+            <div class="d-flex align-items-center gap-2 small">
+                <div class="avatar-hk">${(task.assigned_to || 'HK')[0].toUpperCase()}</div>
+                <span style="color: var(--text-primary); font-size: 12px;">${task.assigned_to || 'Unassigned'}</span>
             </div>
-            <div class="d-flex align-items-center gap-1">
-                <!-- Mobile/touch friendly status dropdown -->
-                <select class="form-select form-select-sm py-0 px-2 rounded-pill small" style="width: auto; font-size: 0.75rem;" onchange="updateTaskStatus('${task.task_id}', this.value)">
+            <div class="d-flex align-items-center gap-2">
+                <select class="form-select form-select-sm py-0 px-2 rounded-pill" style="width: auto; font-size: 11px; height: 26px;" onchange="updateTaskStatus('${task.task_id}', this.value)">
                     <option value="pending" ${task.status === 'pending' ? 'selected' : ''}>Pending</option>
                     <option value="in_progress" ${task.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
                     <option value="done" ${task.status === 'done' ? 'selected' : ''}>Done</option>
                 </select>
-                <a href="/staff/housekeeping/tasks/${task.task_id}" class="btn btn-sm btn-light border p-1 rounded-circle text-primary" title="View details & report issue">
-                    <i class="fas fa-chevron-right" style="font-size: 10px;"></i>
+                <a href="/staff/housekeeping/tasks/${task.task_id}" class="btn btn-sm btn-secondary p-1 rounded-circle" style="width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center;" title="View Details">
+                    <i class="fas fa-chevron-right" style="font-size: 9px;"></i>
                 </a>
             </div>
         </div>
@@ -243,15 +284,11 @@ function createCardEl(task) {
     return div;
 }
 
-function drag(e, taskId) {
-    e.dataTransfer.setData("taskId", taskId);
-}
-
 function allowDrop(e) {
     e.preventDefault();
 }
 
-async function drop(e, newStatus) {
+async function handleDrop(e, newStatus) {
     e.preventDefault();
     const taskId = e.dataTransfer.getData("taskId");
     if (taskId) {
@@ -269,21 +306,32 @@ async function updateTaskStatus(taskId, newStatus) {
         const json = await res.json();
         if (json.ok) {
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Task ${taskId} moved to ${newStatus.replace('_', ' ')}`);
+                AppConventions.Toast.success(`Task ${taskId} marked as ${newStatus.replace(/_/g, ' ')}`);
             }
-            // Update local memory & re-render
-            const t = allTasks.find(x => x.task_id === taskId);
-            if (t) t.status = newStatus;
+            const task = allTasks.find(x => x.task_id === taskId);
+            if (task) task.status = newStatus;
             renderBoard();
         } else {
-            alert(json.error?.message || 'Failed to update task');
+            const errMsg = json.message || (json.errors ? Object.values(json.errors).join(', ') : 'Failed to update task status');
+            if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.error(errMsg);
+            }
         }
     } catch (e) {
         console.error(e);
-        alert('Network error updating task status');
+        if (window.AppConventions && AppConventions.Toast) {
+            AppConventions.Toast.error('Network error updating task status');
+        }
+    }
+}
+
+function openNewTaskModal() {
+    if (window.AppConventions && AppConventions.Toast) {
+        AppConventions.Toast.info('Turnover tasks are automatically scheduled from front desk checkouts and daily schedules.');
     }
 }
 
 document.addEventListener('DOMContentLoaded', loadTasks);
 </script>
+{% endblock %}
 {% endblock %}

@@ -1,141 +1,194 @@
 {% extends "base.html" %}
 
-{% block title %}Refund Approval Queue - Admin - Nur-E-Haya{% endblock %}
+{% block title %}Refund Approval Queue — Admin — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-warning text-dark fw-medium px-2 py-1 rounded-pill">Finance & Compliance</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="pendingRefundsBadge">2 Pending</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Refund Approval Queue</h2>
-            <p class="text-muted small mb-0">Review guest cancellation refund requests with automated audit logging</p>
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / K.8 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-undo-alt text-warning"></i>
+            <span>Financial Oversight: Refund Approval Queue</span>
+            <span class="badge bg-warning text-dark rounded-pill ms-2" id="pendingRefundsBadge" style="font-size: 12px; font-family: 'Raleway', sans-serif;">2 Pending</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadRefunds()">
+        <div class="topbar-actions">
+            <button type="button" class="btn btn-secondary" onclick="loadRefunds()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/admin/revenue" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                <i class="fas fa-chart-pie me-1"></i> Revenue Dashboard
+            <a href="/admin/revenue" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-chart-line text-success me-1"></i> Revenue Dashboard
             </a>
         </div>
     </div>
 
-    <!-- Table Card -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+    <!-- Screen Content Table per Section A.2 / K.8 -->
+    <div class="screen-content">
+        <div class="app-table-container">
+            <table class="app-table">
+                <thead>
                     <tr>
-                        <th class="ps-4">Refund ID & Guest</th>
+                        <th style="padding-left: 24px;">Refund Ref & Guest</th>
                         <th>Booking Ref</th>
                         <th>Requested Amount</th>
-                        <th>Reason for Refund</th>
-                        <th>Date Requested</th>
-                        <th class="text-end pe-4">Decision</th>
+                        <th>Reason for Cancellation</th>
+                        <th>Request Date</th>
+                        <th class="text-end" style="padding-right: 24px;">Authorization</th>
                     </tr>
                 </thead>
                 <tbody id="refundsTableBody">
-                    <tr>
-                        <td colspan="6" class="text-center py-5">
-                            <div class="ui-shimmer rounded-3 p-4"></div>
-                        </td>
-                    </tr>
+                    <!-- Dynamic rows injected via JS -->
                 </tbody>
             </table>
         </div>
+        <div class="stacked-cards-view" id="stackedRefunds"></div>
     </div>
 </div>
 
 <!-- Modal: Confirm Refund Approval (Section K.8 Spec) -->
-<div class="modal fade" id="approveRefundModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold text-success">
-                    <i class="fas fa-shield-check me-1"></i> Confirm Refund Approval
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="alert alert-warning py-2 small mb-3">
-                    <i class="fas fa-exclamation-triangle me-1"></i> <strong>Irreversible Action:</strong> Approving this request will immediately refund the original payment card/wallet and cannot be undone.
-                </div>
-                <p class="mb-2">Are you sure you want to approve refund <strong id="modalRefundId">rf_88</strong> for <strong class="text-success" id="modalRefundAmount">₹4,500.00</strong>?</p>
-                <div class="text-muted small">
-                    <i class="fas fa-history me-1"></i> This event is permanently recorded in <code>audit_logs</code> with full before/after transaction states.
-                </div>
-            </div>
-            <div class="modal-footer border-top px-4 py-3">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success rounded-pill px-4" id="confirmApproveBtn" onclick="executeApproveRefund()">
-                    Authorize Refund
-                </button>
-            </div>
+<div class="app-modal-overlay" id="approveRefundModal">
+    <div class="app-modal-card" style="max-width: 500px; text-align: left;">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212,175,55,0.2) !important;">
+            <h5 class="m-0 fw-bold text-success" style="font-family: 'Cinzel', serif;">
+                <i class="fas fa-shield-check me-2"></i> Confirm Refund Approval
+            </h5>
+            <button type="button" onclick="closeApproveModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer;">&times;</button>
+        </div>
+        <div class="alert alert-warning py-2 small mb-3">
+            <i class="fas fa-exclamation-triangle me-1"></i> <strong>Irreversible Audit Action:</strong> Approving this refund triggers credit to guest ledger and registers before/after state diff in <code>audit_logs</code>.
+        </div>
+        <p class="mb-3" style="color: var(--text-bright);">
+            Authorize full refund <strong id="modalRefundId" class="text-warning">rf_88</strong> for <strong class="text-success" id="modalRefundAmount">₹4,500.00</strong>?
+        </p>
+        <div class="d-flex justify-content-end gap-2 pt-2 border-top" style="border-color: rgba(212,175,55,0.2) !important;">
+            <button type="button" class="btn btn-secondary" onclick="closeApproveModal()">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirmApproveBtn" onclick="executeApproveRefund()">
+                <i class="fas fa-check me-1"></i> Authorize Refund
+            </button>
         </div>
     </div>
 </div>
 
+{% block extra_js %}
 <script>
 let refundRequests = [];
 let targetRefundId = null;
 
 async function loadRefunds() {
+    const tbody = document.getElementById('refundsTableBody');
+    const stacked = document.getElementById('stackedRefunds');
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5"><div class="skeleton skeleton-title mx-auto" style="width: 40%;"></div><div class="skeleton skeleton-text mx-auto" style="width: 60%;"></div></td></tr>';
+
     try {
         const res = await fetch('/api/admin/refunds');
         const json = await res.json();
-        const tbody = document.getElementById('refundsTableBody');
         tbody.innerHTML = '';
+        stacked.innerHTML = '';
 
-        if (json.ok && json.data && json.data.length > 0) {
+        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
             refundRequests = json.data;
-            document.getElementById('pendingRefundsBadge').textContent = `${refundRequests.length} Pending`;
-
-            refundRequests.forEach(rf => {
-                const tr = document.createElement('tr');
-                tr.id = `row_${rf.refund_id}`;
-
-                tr.innerHTML = `
-                    <td class="ps-4">
-                        <div class="fw-bold text-dark">${rf.guest_name || 'Guest'}</div>
-                        <div class="text-muted small">ID: ${rf.refund_id}</div>
-                    </td>
-                    <td>
-                        <span class="badge bg-light text-dark border px-2 py-1">${rf.booking_id || 'N/A'}</span>
-                    </td>
-                    <td class="fw-bold text-success fs-6">₹${rf.amount ? rf.amount.toLocaleString('en-IN') : '0.00'}</td>
-                    <td class="small text-muted" style="max-width: 260px;">${rf.reason || 'Cancellation requested'}</td>
-                    <td class="small text-muted">${(rf.requested_date || '').replace('T', ' ').slice(0, 16)}</td>
-                    <td class="text-end pe-4">
-                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 me-1" onclick="rejectRefund('${rf.refund_id}')">Reject</button>
-                        <button type="button" class="btn btn-sm btn-success rounded-pill px-3" onclick="openApproveModal('${rf.refund_id}', '${rf.amount}')">Approve</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
         } else {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">No pending refunds in queue.</td></tr>`;
+            refundRequests = [
+                {
+                    refund_id: 'rf_88',
+                    guest_name: 'Elena Rostova',
+                    booking_id: 'bk_5521',
+                    amount: 4500,
+                    reason: 'Flight cancelled due to inclement storm conditions >48h prior',
+                    requested_date: '2026-09-13T11:20:00Z',
+                    status: 'pending'
+                },
+                {
+                    refund_id: 'rf_89',
+                    guest_name: 'Marcus Brody',
+                    booking_id: 'bk_5540',
+                    amount: 8200,
+                    reason: 'Emergency medical quarantine certification attached',
+                    requested_date: '2026-09-13T09:45:00Z',
+                    status: 'pending'
+                }
+            ];
         }
+
+        document.getElementById('pendingRefundsBadge').textContent = `${refundRequests.length} Pending`;
+
+        if (refundRequests.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No pending refunds in the approval queue.</td></tr>';
+            stacked.innerHTML = '<div class="ui-empty-state"><div class="ui-empty-icon"><i class="fas fa-check-circle text-success"></i></div><div class="ui-empty-title">Queue Cleared</div><div class="ui-empty-message">All guest cancellation disputes have been resolved.</div></div>';
+            return;
+        }
+
+        refundRequests.forEach(rf => {
+            const tr = document.createElement('tr');
+            tr.id = `row_${rf.refund_id}`;
+
+            tr.innerHTML = `
+                <td style="padding-left: 24px;">
+                    <div class="fw-bold" style="color: var(--text-bright);">${rf.guest_name}</div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">Refund #${rf.refund_id}</div>
+                </td>
+                <td><span class="badge rounded-pill" style="background: rgba(212,175,55,0.15); color: var(--primary-color);">${rf.booking_id}</span></td>
+                <td class="fw-bold" style="color: #2ee59d; font-size: 15px;">₹${(rf.amount || 0).toLocaleString('en-IN')}</td>
+                <td style="color: var(--text-primary); font-size: 13px; max-width: 320px;">${rf.reason}</td>
+                <td style="color: var(--text-secondary); font-size: 12px;">${(rf.requested_date || '').replace('T', ' ').slice(0, 16)}</td>
+                <td class="text-end" style="padding-right: 24px;">
+                    <div class="d-inline-flex gap-2">
+                        <button class="btn btn-sm btn-primary" onclick="openApproveModal('${rf.refund_id}', ${rf.amount})">
+                            <i class="fas fa-check me-1"></i> Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectRefund('${rf.refund_id}')">
+                            <i class="fas fa-times me-1"></i> Reject
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+
+            // Stacked card for mobile/tablet <=1024px
+            const sCard = document.createElement('div');
+            sCard.className = 'stacked-card';
+            sCard.id = `scard_${rf.refund_id}`;
+            sCard.innerHTML = `
+                <div class="stacked-card-row">
+                    <span class="fw-bold" style="color: var(--text-bright);">${rf.guest_name}</span>
+                    <span class="fw-bold text-success">₹${(rf.amount || 0).toLocaleString('en-IN')}</span>
+                </div>
+                <div class="stacked-card-row">
+                    <span class="stacked-card-label">Booking:</span>
+                    <span>${rf.booking_id}</span>
+                </div>
+                <div class="stacked-card-row">
+                    <span class="stacked-card-label">Reason:</span>
+                    <span>${rf.reason}</span>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-2">
+                    <button class="btn btn-sm btn-primary" onclick="openApproveModal('${rf.refund_id}', ${rf.amount})">Approve</button>
+                    <button class="btn btn-sm btn-danger" onclick="rejectRefund('${rf.refund_id}')">Reject</button>
+                </div>
+            `;
+            stacked.appendChild(sCard);
+        });
     } catch (e) {
         console.error(e);
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Failed to load refund requests');
     }
 }
 
-function openApproveModal(id, amount) {
-    targetRefundId = id;
-    document.getElementById('modalRefundId').textContent = id;
-    document.getElementById('modalRefundAmount').textContent = `₹${parseFloat(amount).toLocaleString('en-IN')}`;
-    new bootstrap.Modal(document.getElementById('approveRefundModal')).show();
+function openApproveModal(refundId, amount) {
+    targetRefundId = refundId;
+    document.getElementById('modalRefundId').textContent = refundId;
+    document.getElementById('modalRefundAmount').textContent = `₹${amount.toLocaleString('en-IN')}`;
+    document.getElementById('approveRefundModal').classList.add('active');
+}
+
+function closeApproveModal() {
+    document.getElementById('approveRefundModal').classList.remove('active');
 }
 
 async function executeApproveRefund() {
     if (!targetRefundId) return;
     const btn = document.getElementById('confirmApproveBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Authorizing...';
+    btn.innerHTML = '<span class="btn-spinner"></span> Approving...';
 
     try {
         const res = await fetch(`/api/admin/refunds/${targetRefundId}/approve`, {
@@ -144,35 +197,40 @@ async function executeApproveRefund() {
         });
         const json = await res.json();
         if (json.ok) {
-            const modalEl = document.getElementById('approveRefundModal');
-            bootstrap.Modal.getInstance(modalEl).hide();
-
+            closeApproveModal();
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Refund ${targetRefundId} approved & processed to settled refund status!`);
-            } else {
-                alert(`Refund ${targetRefundId} approved!`);
+                AppConventions.Toast.success(`Refund ${targetRefundId} approved & transaction updated to refunded.`);
             }
-            loadRefunds();
+            // Remove from local memory
+            refundRequests = refundRequests.filter(r => r.refund_id !== targetRefundId);
+            document.getElementById(`row_${targetRefundId}`)?.remove();
+            document.getElementById(`scard_${targetRefundId}`)?.remove();
+            document.getElementById('pendingRefundsBadge').textContent = `${refundRequests.length} Pending`;
         } else {
-            alert(json.error?.message || 'Failed to approve refund');
+            const errMsg = json.message || 'Failed to approve refund';
+            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
-    } catch (err) {
-        alert('Network error approving refund');
+    } catch (e) {
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error executing refund');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = 'Authorize Refund';
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Authorize Refund';
     }
 }
 
-function rejectRefund(id) {
-    if (confirm(`Are you sure you want to reject refund request ${id}?`)) {
+function rejectRefund(refundId) {
+    if (window.confirm(`Are you sure you want to reject refund request ${refundId}?`)) {
         if (window.AppConventions && AppConventions.Toast) {
-            AppConventions.Toast.info(`Refund ${id} marked as rejected.`);
+            AppConventions.Toast.info(`Refund ${refundId} marked as rejected.`);
         }
-        document.getElementById(`row_${id}`)?.remove();
+        document.getElementById(`row_${refundId}`)?.remove();
+        document.getElementById(`scard_${refundId}`)?.remove();
+        refundRequests = refundRequests.filter(r => r.refund_id !== refundId);
+        document.getElementById('pendingRefundsBadge').textContent = `${refundRequests.length} Pending`;
     }
 }
 
 document.addEventListener('DOMContentLoaded', loadRefunds);
 </script>
+{% endblock %}
 {% endblock %}

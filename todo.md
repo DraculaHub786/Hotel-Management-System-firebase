@@ -314,7 +314,7 @@ Server-side side effect (not client-triggered): auto-creates a `housekeeping_tas
 ---
 
 <!--
-## E. Housekeeping Screens
+## E. Housekeeping Screens - COMPLETED
 
 ### E.1 Screen inventory
 | # | Screen | Route |
@@ -362,7 +362,7 @@ Response `data`:
 ---
 
 <!--
-## F. Laundry Screens
+## F. Laundry Screens - COMPLETED
 
 ### F.1 Screen inventory
 | # | Screen | Route |
@@ -392,7 +392,7 @@ Response `data`:
 ---
 
 <!--
-## G. Room Service Screens
+## G. Room Service Screens - COMPLETED
 
 ### G.1 Screen inventory
 | # | Screen | Route |
@@ -426,7 +426,7 @@ If OTP required and status transitions to `delivered`, request must include `otp
 ---
 
 <!--
-## H. Kitchen Screens
+## H. Kitchen Screens - COMPLETED
 
 ### H.1 Screen inventory
 | # | Screen | Route |
@@ -452,7 +452,7 @@ This write is shared/visible identically on the guest `/menu` page (same source 
 ---
 
 <!--
-## I. Security Screens
+## I. Security Screens - COMPLETED
 
 ### I.1 Screen inventory
 | # | Screen | Route |
@@ -487,7 +487,7 @@ Response `data`:
 ---
 
 <!--
-## J. Maintenance Screens
+## J. Maintenance Screens - COMPLETED
 
 ### J.1 Screen inventory
 | # | Screen | Route |
@@ -512,7 +512,7 @@ Response `data`:
 ---
 
 <!--
-## K. Admin Screens
+## K. Admin Screens - COMPLETED
 
 ### K.1 Screen inventory
 | # | Screen | Route |
@@ -616,7 +616,7 @@ Response `data`:
 ---
 
 <!--
-## L. Super Admin Screens
+## L. Super Admin Screens - COMPLETED
 
 ### L.1 Screen inventory
 | # | Screen | Route |
@@ -678,7 +678,7 @@ Response `data`:
 ---
 
 <!--
-## M. Cross-Cutting: Shared Shell Layout (all authenticated roles)
+## M. Cross-Cutting: Shared Shell Layout (all authenticated roles) - COMPLETED
 
 ```
 [Sidebar — left, 240px, collapsible on tablet]

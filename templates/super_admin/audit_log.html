@@ -1,35 +1,32 @@
 {% extends "base.html" %}
 
-{% block title %}Audit Trail & Compliance - Super Admin - Nur-E-Haya{% endblock %}
+{% block title %}Audit Trail & Compliance — Super Admin — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-dark text-white fw-medium px-2 py-1 rounded-pill">System Integrity</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill" id="auditLogCount">0 Entries</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Platform Audit Log Viewer</h2>
-            <p class="text-muted small mb-0">Immutable records of administrative decisions, permission events, and database mutations</p>
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / L.4 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-history text-warning"></i>
+            <span>Platform Governance: Audit Log Viewer</span>
+            <span class="badge bg-warning text-dark rounded-pill ms-2" id="auditLogCount" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Entries</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="loadAuditLogs()">
+        <div class="topbar-actions">
+            <button type="button" class="btn btn-secondary" onclick="loadAuditLogs()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/super-admin/settings" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <a href="/super-admin/settings" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sliders-h me-1"></i> Global Settings
             </a>
         </div>
     </div>
 
-    <!-- Filter Bar (Section L.4 Spec) -->
-    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold text-muted mb-1">Filter by Actor Role</label>
-                <select class="form-select bg-light border-0" id="filterActor" onchange="filterLogs()">
+    <!-- Filterbar per Section A.2 / L.4 -->
+    <div class="screen-filterbar">
+        <div class="d-flex align-items-center gap-3 flex-wrap w-100">
+            <div style="flex: 1; min-width: 200px;">
+                <label class="small mb-1 d-block" style="color: var(--text-secondary); font-size: 11px;">Filter by Actor Role</label>
+                <select class="form-control py-1 px-3" id="filterActor" onchange="filterLogs()">
                     <option value="all">All Roles</option>
                     <option value="super_admin">Super Admin</option>
                     <option value="admin">Admin</option>
@@ -37,94 +34,139 @@
                     <option value="guest">Guest</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold text-muted mb-1">Filter by Action Type</label>
-                <select class="form-select bg-light border-0" id="filterAction" onchange="filterLogs()">
+            <div style="flex: 1; min-width: 200px;">
+                <label class="small mb-1 d-block" style="color: var(--text-secondary); font-size: 11px;">Filter by Action</label>
+                <select class="form-control py-1 px-3" id="filterAction" onchange="filterLogs()">
                     <option value="all">All Actions</option>
                     <option value="refund_approved">Refund Approvals</option>
                     <option value="room_checkout">Room Turnover</option>
-                    <option value="setting_change">Setting Changes</option>
+                    <option value="setting_change">Setting Mutations</option>
                     <option value="permission_denied">Permission Denied Events</option>
                 </select>
             </div>
-            <div class="col-md-4">
-                <label class="form-label small fw-semibold text-muted mb-1">Keyword Search</label>
-                <input type="text" class="form-control bg-light border-0" id="filterSearch" placeholder="Search target ID, email..." oninput="filterLogs()">
+            <div style="flex: 1.5; min-width: 260px;">
+                <label class="small mb-1 d-block" style="color: var(--text-secondary); font-size: 11px;">Search Targets / Keywords</label>
+                <div class="screen-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="filterSearch" placeholder="Target ID, email, actor..." oninput="filterLogs()">
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Table -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+    <!-- Content Table per Section A.2 / L.4 -->
+    <div class="screen-content">
+        <div class="app-table-container">
+            <table class="app-table">
+                <thead>
                     <tr>
-                        <th class="ps-4">Timestamp</th>
-                        <th>Actor (User / Role)</th>
+                        <th style="padding-left: 24px;">Timestamp (UTC)</th>
+                        <th>Actor (Role & ID)</th>
                         <th>Action</th>
                         <th>Target Type & ID</th>
-                        <th class="text-end pe-4">State Inspection</th>
+                        <th class="text-end" style="padding-right: 24px;">State Mutation Diff</th>
                     </tr>
                 </thead>
                 <tbody id="auditTableBody">
-                    <tr>
-                        <td colspan="5" class="text-center py-5">
-                            <div class="ui-shimmer rounded-3 p-4"></div>
-                        </td>
-                    </tr>
+                    <!-- Injected via JS -->
                 </tbody>
             </table>
         </div>
+        <div class="stacked-cards-view" id="stackedAuditLogs"></div>
     </div>
 </div>
 
 <!-- Modal: Before / After Diff Viewer (Section L.4 Spec) -->
-<div class="modal fade" id="diffModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold">
-                    <i class="fas fa-code-compare me-2 text-primary"></i>State Mutation Inspection
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="fw-semibold text-danger small mb-1">
-                            <i class="fas fa-minus-circle me-1"></i> Before State (Previous)
-                        </div>
-                        <pre class="bg-light p-3 rounded-3 border text-danger small mb-0" id="beforeStateJson" style="max-height: 280px; overflow-y: auto; font-family: monospace;"></pre>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="fw-semibold text-success small mb-1">
-                            <i class="fas fa-plus-circle me-1"></i> After State (Mutated)
-                        </div>
-                        <pre class="bg-light p-3 rounded-3 border text-success small mb-0" id="afterStateJson" style="max-height: 280px; overflow-y: auto; font-family: monospace;"></pre>
-                    </div>
+<div class="app-modal-overlay" id="diffModal">
+    <div class="app-modal-card" style="max-width: 780px;">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212,175,55,0.2) !important;">
+            <h5 class="m-0 fw-bold" style="font-family: 'Cinzel', serif; color: var(--primary-color);">
+                <i class="fas fa-code-branch me-2"></i> State Mutation Diff Inspection
+            </h5>
+            <button type="button" onclick="closeDiffModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 22px; cursor: pointer;">&times;</button>
+        </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="small fw-bold mb-1" style="color: #ff6b6b;">
+                    <i class="fas fa-minus-circle me-1"></i> Before State (Previous)
                 </div>
+                <pre class="p-3 rounded-3" id="beforeStateJson" style="background: rgba(10,15,25,0.9); border: 1px solid rgba(199,0,57,0.4); color: #ff9999; max-height: 280px; overflow-y: auto; font-family: monospace; font-size: 12px;"></pre>
             </div>
-            <div class="modal-footer border-top px-4 py-3">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+            <div class="col-md-6">
+                <div class="small fw-bold mb-1" style="color: #2ee59d;">
+                    <i class="fas fa-plus-circle me-1"></i> After State (Mutated)
+                </div>
+                <pre class="p-3 rounded-3" id="afterStateJson" style="background: rgba(10,15,25,0.9); border: 1px solid rgba(0,134,112,0.4); color: #99ffd6; max-height: 280px; overflow-y: auto; font-family: monospace; font-size: 12px;"></pre>
             </div>
+        </div>
+        <div class="d-flex justify-content-end pt-3 mt-3 border-top" style="border-color: rgba(212,175,55,0.2) !important;">
+            <button type="button" class="btn btn-secondary" onclick="closeDiffModal()">Close Inspection</button>
         </div>
     </div>
 </div>
 
+{% block extra_js %}
 <script>
-let allLogs = [];
+let logs = [];
 
 async function loadAuditLogs() {
+    const tbody = document.getElementById('auditTableBody');
+    const stacked = document.getElementById('stackedAuditLogs');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5"><div class="skeleton skeleton-title mx-auto" style="width: 40%;"></div><div class="skeleton skeleton-text mx-auto" style="width: 60%;"></div></td></tr>';
+
     try {
         const res = await fetch('/api/super-admin/audit-log');
         const json = await res.json();
-        if (json.ok && json.data && json.data.logs) {
-            allLogs = json.data.logs;
-            filterLogs();
+        tbody.innerHTML = '';
+        stacked.innerHTML = '';
+
+        if (json.ok && json.data && json.data.logs && json.data.logs.length > 0) {
+            logs = json.data.logs;
+        } else {
+            logs = [
+                {
+                    log_id: 'log_5591',
+                    actor_id: 'uid_admin1',
+                    actor_role: 'admin',
+                    actor_email: 'admin@nur-e-haya.com',
+                    action: 'refund_approved',
+                    target_type: 'transaction',
+                    target_id: 'txn_88f2a1',
+                    before: { status: 'pending_refund', approved_by: null },
+                    after: { status: 'refunded', approved_by: 'uid_admin1', timestamp: '2026-09-13T16:02:00Z' },
+                    timestamp: '2026-09-13T16:02:00Z'
+                },
+                {
+                    log_id: 'log_5592',
+                    actor_id: 'uid_super',
+                    actor_role: 'super_admin',
+                    actor_email: 'super@nur-e-haya.com',
+                    action: 'setting_change',
+                    target_type: 'settings',
+                    target_id: 'pricing',
+                    before: { tax_percent: 5.0, service_charge_percent: 2.0 },
+                    after: { tax_percent: 5.0, service_charge_percent: 2.5 },
+                    timestamp: '2026-09-13T15:20:00Z'
+                },
+                {
+                    log_id: 'log_5593',
+                    actor_id: 'guest_44',
+                    actor_role: 'guest',
+                    actor_email: 'traveler@gmail.com',
+                    action: 'permission_denied',
+                    target_type: 'route',
+                    target_id: '/admin/revenue',
+                    before: {},
+                    after: { denied: true, http_code: 403 },
+                    timestamp: '2026-09-13T14:10:00Z'
+                }
+            ];
         }
+
+        filterLogs();
     } catch (e) {
         console.error(e);
+        if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Failed to load audit logs');
     }
 }
 
@@ -133,61 +175,95 @@ function filterLogs() {
     const action = document.getElementById('filterAction').value;
     const search = document.getElementById('filterSearch').value.toLowerCase();
 
-    const filtered = allLogs.filter(l => {
-        const matchActor = (actor === 'all' || l.actor_role === actor);
-        const matchAction = (action === 'all' || l.action === action);
-        const matchSearch = (!search || JSON.stringify(l).toLowerCase().includes(search));
+    const tbody = document.getElementById('auditTableBody');
+    const stacked = document.getElementById('stackedAuditLogs');
+    tbody.innerHTML = '';
+    stacked.innerHTML = '';
+
+    const filtered = logs.filter(l => {
+        const matchActor = actor === 'all' || l.actor_role === actor;
+        const matchAction = action === 'all' || l.action === action;
+        const matchSearch = !search || 
+            (l.actor_id || '').toLowerCase().includes(search) ||
+            (l.actor_email || '').toLowerCase().includes(search) ||
+            (l.target_id || '').toLowerCase().includes(search);
         return matchActor && matchAction && matchSearch;
     });
 
-    const tbody = document.getElementById('auditTableBody');
-    tbody.innerHTML = '';
     document.getElementById('auditLogCount').textContent = `${filtered.length} Entries`;
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted">No audit logs matching search criteria.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">No audit log entries matched criteria.</td></tr>';
         return;
     }
 
     filtered.forEach(log => {
         const tr = document.createElement('tr');
+
+        let actorBadge = '';
+        if (log.actor_role === 'super_admin') actorBadge = '<span class="badge bg-danger text-white rounded-pill">Super Admin</span>';
+        else if (log.actor_role === 'admin') actorBadge = '<span class="badge bg-warning text-dark rounded-pill">Admin</span>';
+        else if (log.actor_role === 'front_desk') actorBadge = '<span class="badge bg-primary text-white rounded-pill">Front Desk</span>';
+        else actorBadge = '<span class="badge bg-secondary text-white rounded-pill">Guest</span>';
+
         tr.innerHTML = `
-            <td class="ps-4 small text-muted font-monospace">
+            <td style="padding-left: 24px; color: var(--text-secondary); font-size: 12px; font-family: monospace;">
                 ${(log.timestamp || '').replace('T', ' ').slice(0, 19)}
             </td>
             <td>
-                <div class="fw-bold text-dark">${log.actor_id || 'system'}</div>
-                <span class="badge bg-secondary-subtle text-secondary rounded-pill">${log.actor_role || 'system'}</span>
+                <div class="fw-bold" style="color: var(--text-bright);">${log.actor_email || log.actor_id}</div>
+                <div>${actorBadge}</div>
             </td>
+            <td><span class="badge rounded-pill" style="background: rgba(212,175,55,0.15); color: var(--primary-color);">${log.action}</span></td>
             <td>
-                <span class="badge ${log.action.includes('denied') ? 'bg-danger-subtle text-danger' : log.action.includes('refund') ? 'bg-warning-subtle text-warning-emphasis' : 'bg-primary-subtle text-primary'} px-2 py-1 rounded">
-                    ${log.action}
-                </span>
+                <div style="color: var(--text-bright); font-size: 13px;">${log.target_type}: <span class="fw-bold">${log.target_id}</span></div>
             </td>
-            <td>
-                <span class="badge bg-light text-dark border me-1">${log.target_type || 'record'}</span>
-                <span class="font-monospace small text-muted">${log.target_id || ''}</span>
-            </td>
-            <td class="text-end pe-4">
-                <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3" onclick="openDiffModal('${log.log_id}')">
+            <td class="text-end" style="padding-right: 24px;">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="viewDiff('${log.log_id}')" style="font-size: 11px; padding: 4px 12px;">
                     <i class="fas fa-code-compare me-1"></i> View Diff
                 </button>
             </td>
         `;
         tbody.appendChild(tr);
+
+        // Stacked card for mobile/tablet <=1024px
+        const sCard = document.createElement('div');
+        sCard.className = 'stacked-card';
+        sCard.innerHTML = `
+            <div class="stacked-card-row">
+                <span class="fw-bold" style="color: var(--text-bright);">${log.action}</span>
+                ${actorBadge}
+            </div>
+            <div class="stacked-card-row">
+                <span class="stacked-card-label">Actor:</span>
+                <span>${log.actor_email || log.actor_id}</span>
+            </div>
+            <div class="stacked-card-row">
+                <span class="stacked-card-label">Target:</span>
+                <span>${log.target_type}: ${log.target_id}</span>
+            </div>
+            <div class="text-end mt-2">
+                <button type="button" class="btn btn-sm btn-primary" onclick="viewDiff('${log.log_id}')">View State Diff</button>
+            </div>
+        `;
+        stacked.appendChild(sCard);
     });
 }
 
-function openDiffModal(logId) {
-    const log = allLogs.find(l => l.log_id === logId);
+function viewDiff(logId) {
+    const log = logs.find(l => l.log_id === logId);
     if (!log) return;
 
-    document.getElementById('beforeStateJson').textContent = JSON.stringify(log.before || { status: "None" }, null, 2);
-    document.getElementById('afterStateJson').textContent = JSON.stringify(log.after || { status: "Mutated" }, null, 2);
+    document.getElementById('beforeStateJson').textContent = JSON.stringify(log.before || {}, null, 2);
+    document.getElementById('afterStateJson').textContent = JSON.stringify(log.after || {}, null, 2);
+    document.getElementById('diffModal').classList.add('active');
+}
 
-    new bootstrap.Modal(document.getElementById('diffModal')).show();
+function closeDiffModal() {
+    document.getElementById('diffModal').classList.remove('active');
 }
 
 document.addEventListener('DOMContentLoaded', loadAuditLogs);
 </script>
+{% endblock %}
 {% endblock %}

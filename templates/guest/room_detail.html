@@ -183,7 +183,7 @@
 {% block extra_js %}
 <script>
 let guestNum = 1;
-const maxGuests = {{ room.max_guests or 4 }};
+const maxGuests = Number('{{ room.max_guests or 4 }}');
 
 function swapImg(src) {
     document.getElementById('mainGalleryImage').src = src;
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'room',
             ref_id: '{{ room.id or room_id }}',
             name: '{{ room.type or "Deluxe" }} Room {{ room.number or "101" }}',
-            unit_price: {{ room.price or 3500 }},
+            unit_price: Number('{{ room.price or 3500 }}'),
             check_in: checkInInput.value,
             check_out: checkOutInput.value,
             guests: guestNum,

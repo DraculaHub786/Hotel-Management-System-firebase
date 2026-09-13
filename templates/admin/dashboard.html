@@ -1,170 +1,169 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Control Center - Nur-E-Haya{% endblock %}
+{% block title %}Admin Control Center — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-danger text-white fw-medium px-2 py-1 rounded-pill">Hotel Administration</span>
-                <span class="badge bg-success-subtle text-success px-2 py-1 rounded-pill">All Systems Online</span>
-            </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Management Command Center</h2>
-            <p class="text-muted small mb-0">Full oversight across rooms, staff, operations, security, and revenue streams</p>
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / K.1 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-crown text-warning"></i>
+            <span>Executive Command Center</span>
+            <span class="badge bg-success text-white rounded-pill ms-2" style="font-size: 11px; font-family: 'Raleway', sans-serif;">All Systems Operational</span>
         </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="/admin/revenue" class="btn btn-outline-success btn-sm rounded-pill px-3">
-                <i class="fas fa-chart-line me-1"></i> Revenue Hub
+        <div class="topbar-actions">
+            <a href="/admin/revenue" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-chart-line text-success me-1"></i> Revenue Hub
             </a>
-            <a href="/admin/staff/invite" class="btn btn-primary btn-sm rounded-pill px-3">
+            <a href="/admin/staff/invite" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-user-plus me-1"></i> Invite Staff
             </a>
         </div>
     </div>
 
     <!-- KPI Cards Row -->
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mt-1 mb-4">
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Monthly Revenue</div>
-                <div class="fs-4 fw-bold text-success mt-1">₹8,12,400</div>
-                <div class="small text-muted"><i class="fas fa-arrow-up text-success me-1"></i>+14.2% vs last mo.</div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Monthly Revenue</div>
+                <div class="fs-4 fw-bold mt-1" style="color: var(--primary-color);">₹8,12,400</div>
+                <div class="small" style="color: #2ee59d; font-size: 11px;"><i class="fas fa-arrow-up me-1"></i>+14.2% vs last month</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Occupancy Rate</div>
-                <div class="fs-4 fw-bold text-primary mt-1">78.4%</div>
-                <div class="small text-muted"><i class="fas fa-bed me-1"></i>24 of 30 Rooms Active</div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Occupancy Rate</div>
+                <div class="fs-4 fw-bold mt-1" style="color: var(--text-bright);">78.4%</div>
+                <div class="small" style="color: var(--text-secondary); font-size: 11px;"><i class="fas fa-bed text-warning me-1"></i>24 of 30 Rooms Booked</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Pending Refunds</div>
-                <div class="fs-4 fw-bold text-warning-emphasis mt-1">2 Requests</div>
-                <div class="small text-muted"><a href="/admin/refunds" class="text-decoration-none">Review Queue &rarr;</a></div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Pending Refunds</div>
+                <div class="fs-4 fw-bold mt-1" style="color: var(--warning-color);">2 Requests</div>
+                <div class="small" style="font-size: 11px;"><a href="/admin/refunds" style="color: var(--primary-color); text-decoration: none;">Review Queue &rarr;</a></div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                <div class="text-muted small fw-semibold">Active Staff</div>
-                <div class="fs-4 fw-bold text-dark mt-1">18 Online</div>
-                <div class="small text-muted"><i class="fas fa-users text-primary me-1"></i>Across 6 departments</div>
+            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Active Staff</div>
+                <div class="fs-4 fw-bold mt-1" style="color: var(--text-bright);">18 On Duty</div>
+                <div class="small" style="color: var(--text-secondary); font-size: 11px;"><i class="fas fa-users text-info me-1"></i>Across 6 departments</div>
             </div>
         </div>
     </div>
 
     <!-- Management Modules Grid -->
-    <h5 class="fw-bold mb-3">Operational Modules</h5>
+    <h5 class="fw-bold mb-3" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+        <i class="fas fa-th-large text-warning me-2"></i> Operational Management Consoles
+    </h5>
     <div class="row g-3 mb-4">
         <!-- Staff Management -->
         <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 bg-primary-subtle text-primary p-3 fs-5">
+                    <div class="rounded-3 p-3 fs-5" style="background: rgba(212,175,55,0.15); color: var(--primary-color);">
                         <i class="fas fa-user-shield"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0">Staff & Roles</h5>
-                        <p class="text-muted small mb-0">Roster, schedules, permissions</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Staff & Roles</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary);">Roster, schedules, token invites</p>
                     </div>
                 </div>
                 <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/staff" class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1">Staff Roster</a>
-                    <a href="/admin/staff/invite" class="btn btn-primary btn-sm rounded-pill">Invite</a>
+                    <a href="/admin/staff" class="btn btn-secondary btn-sm flex-grow-1">Staff Roster</a>
+                    <a href="/admin/staff/invite" class="btn btn-primary btn-sm">+ Invite</a>
                 </div>
             </div>
         </div>
 
         <!-- Room Inventory -->
         <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 bg-success-subtle text-success p-3 fs-5">
+                    <div class="rounded-3 p-3 fs-5" style="background: rgba(0,134,112,0.15); color: #2ee59d;">
                         <i class="fas fa-door-open"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0">Room Inventory</h5>
-                        <p class="text-muted small mb-0">Rates, amenities, availability</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Room Inventory</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary);">Rates, amenities, capacity</p>
                     </div>
                 </div>
                 <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/rooms" class="btn btn-outline-success btn-sm rounded-pill flex-grow-1">Manage Rooms</a>
-                    <a href="/admin/rooms/new" class="btn btn-success btn-sm rounded-pill">Add Room</a>
+                    <a href="/admin/rooms" class="btn btn-secondary btn-sm flex-grow-1">Rooms Catalog</a>
+                    <a href="/admin/rooms/new" class="btn btn-primary btn-sm">+ Add Room</a>
                 </div>
             </div>
         </div>
 
         <!-- Revenue Dashboard -->
         <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 bg-info-subtle text-info-emphasis p-3 fs-5">
-                        <i class="fas fa-chart-pie"></i>
+                    <div class="rounded-3 p-3 fs-5" style="background: rgba(16,78,139,0.2); color: #4da3ff;">
+                        <i class="fas fa-chart-line"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0">Revenue & BI</h5>
-                        <p class="text-muted small mb-0">Analytics, sales breakdown, trends</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Revenue Analytics</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary);">KPI breakdown, top menu items</p>
                     </div>
                 </div>
                 <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/revenue" class="btn btn-info text-dark btn-sm rounded-pill w-100 fw-semibold">View Financial Analytics</a>
+                    <a href="/admin/revenue" class="btn btn-primary btn-sm w-100">Open Analytics</a>
                 </div>
             </div>
         </div>
 
         <!-- Bookings Oversight -->
         <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 bg-secondary-subtle text-secondary p-3 fs-5">
+                    <div class="rounded-3 p-3 fs-5" style="background: rgba(255,140,0,0.15); color: var(--warning-color);">
                         <i class="fas fa-calendar-check"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0">Bookings Oversight</h5>
-                        <p class="text-muted small mb-0">All reservations & orders</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Bookings Oversight</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary);">Audit check-ins, guest stays</p>
                     </div>
                 </div>
                 <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/bookings" class="btn btn-outline-secondary btn-sm rounded-pill w-100">Browse Master Log</a>
+                    <a href="/admin/bookings" class="btn btn-secondary btn-sm w-100">Master Bookings</a>
                 </div>
             </div>
         </div>
 
-        <!-- Refund Approval Queue -->
+        <!-- Incident Rollup -->
         <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 bg-warning-subtle text-warning-emphasis p-3 fs-5">
-                        <i class="fas fa-undo-alt"></i>
-                    </div>
-                    <div>
-                        <h5 class="fw-bold mb-0">Refund Approval</h5>
-                        <p class="text-muted small mb-0">Dispute & cancellation triage</p>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/refunds" class="btn btn-outline-warning text-dark btn-sm rounded-pill w-100">Open Refund Queue</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Security & Maintenance Rollup -->
-        <div class="col-12 col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 bg-danger-subtle text-danger p-3 fs-5">
+                    <div class="rounded-3 p-3 fs-5" style="background: rgba(199,0,57,0.15); color: #ff6b6b;">
                         <i class="fas fa-shield-alt"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0">Security Rollup</h5>
-                        <p class="text-muted small mb-0">Incident history, CCTV, locks</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Incident Rollup</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary);">Security & maintenance alerts</p>
                     </div>
                 </div>
                 <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/incidents" class="btn btn-outline-danger btn-sm rounded-pill w-100">Audit Incident Records</a>
+                    <a href="/admin/incidents" class="btn btn-secondary btn-sm w-100">View Rollup</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Refunds Approval Queue -->
+        <div class="col-12 col-md-4">
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-3 fs-5" style="background: rgba(212,175,55,0.15); color: var(--primary-color);">
+                        <i class="fas fa-undo-alt"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Refund Queue</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary);">Dispute review & ledger audit</p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-auto">
+                    <a href="/admin/refunds" class="btn btn-primary btn-sm w-100">Review Refunds (2)</a>
                 </div>
             </div>
         </div>
