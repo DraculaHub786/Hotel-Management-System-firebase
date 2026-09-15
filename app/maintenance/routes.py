@@ -2,7 +2,7 @@ import time
 import logging
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
-from app.firebase_db import maintenance_tickets_col, maintenance_orders_col, assets_col
+from app.firebase_db import maintenance_tickets_col, maintenance_orders_col, assets_col, rooms_col
 from app.auth.decorators import login_required, role_required
 from api_utils import api_success, api_error, permission_denied
 
@@ -53,8 +53,9 @@ def api_update_ticket(ticket_id):
     new_status = data.get('status')
     resolution_note = data.get('resolution_note', data.get('resolution_notes', ''))
 
-    if new_status == 'resolved' and not str(resolution_note).strip():
-        return api_error(message="Resolution note is required when resolving a ticket.", status=400)
+    if new_status == 'resolved':
+        if not str(resolution_note).strip():
+            return api_error(message="Resolution note is required when resolving a ticket.", status=400)
 
     doc = maintenance_tickets_col().document(str(ticket_id)).get()
     
@@ -64,12 +65,26 @@ def api_update_ticket(ticket_id):
     if 'assigned_to' in data: updates['assigned_to'] = data['assigned_to']
     updates['updated_at'] = datetime.utcnow().isoformat() + "Z"
 
+    if new_status == 'resolved':
+        updates['room_unblocked'] = True
+        tdata = doc.to_dict() if doc.exists else {}
+        room_id = tdata.get('room_id')
+        rnum = tdata.get('room_number')
+        if room_id:
+            rdoc = rooms_col().document(str(room_id)).get()
+            if rdoc.exists:
+                rdoc.reference.update({"status": "available"})
+        elif rnum:
+            for rdoc in rooms_col().where('number', '==', str(rnum)).stream():
+                rdoc.reference.update({"status": "available"})
+
     if doc.exists:
         doc.reference.update(updates)
         rdata = doc.to_dict()
         rdata.update(updates)
+        rdata['id'] = ticket_id
     else:
-        rdata = {"id": ticket_id, **updates}
+        rdata = {"ticket_id": ticket_id, "id": ticket_id, **updates}
 
     return api_success(rdata)
 

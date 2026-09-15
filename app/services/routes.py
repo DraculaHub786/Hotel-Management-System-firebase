@@ -66,6 +66,24 @@ def api_update_housekeeping_task(task_id):
         rdata = doc.to_dict()
         rdata.update(updates)
         rdata['id'] = task_id
+
+        # Bi-directional state change: if task is marked done, mark the linked room available
+        if status == 'done':
+            rnum = str(rdata.get('room_number', ''))
+            if rnum:
+                num_part = rnum.split('-')[-1]
+                for rdoc in rooms_col().where('number', '==', rnum).stream():
+                    rdoc.reference.update({"status": "available"})
+                for rdoc in rooms_col().where('number', '==', num_part).stream():
+                    rdoc.reference.update({"status": "available"})
+                for rdoc in rooms_col().where('flat_code', '==', rnum).stream():
+                    rdoc.reference.update({"status": "available"})
+                for rdoc in rooms_col().where('flat_no', '==', rnum).stream():
+                    rdoc.reference.update({"status": "available"})
+                for doc_key in [f"rm_{rnum}", f"room_{rnum}", f"room_{num_part}", f"rm_{num_part}", rnum]:
+                    rd = rooms_col().document(doc_key).get()
+                    if rd.exists:
+                        rd.reference.update({"status": "available"})
     else:
         # Mock or test document fallback
         rdata = {"id": task_id, "status": status}
@@ -76,9 +94,26 @@ def api_update_housekeeping_task(task_id):
 @role_required('admin', 'manager', 'housekeeping')
 def api_report_housekeeping_issue(task_id):
     data = request.get_json() or {}
+    doc = housekeeping_tasks_col().document(str(task_id)).get()
+    tdata = doc.to_dict() if doc.exists else {}
+
+    rnum = data.get('room_number') or tdata.get('room_number') or "101"
+    room_id = data.get('room_id')
+    if room_id:
+        rd = rooms_col().document(str(room_id)).get()
+        if rd.exists:
+            rd.reference.update({"status": "maintenance"})
+    if rnum:
+        for rdoc in rooms_col().where('number', '==', str(rnum)).stream():
+            rdoc.reference.update({"status": "maintenance"})
+            if not room_id:
+                room_id = rdoc.id
+
     ticket_data = {
         "source": "housekeeping",
         "task_id": task_id,
+        "room_number": str(rnum),
+        "room_id": room_id or f"room_{rnum}",
         "issue_type": data.get('issue_type', 'general'),
         "description": data.get('description', ''),
         "priority": data.get('priority', 'high'),
@@ -88,6 +123,8 @@ def api_report_housekeeping_issue(task_id):
     tref = maintenance_tickets_col().add(ticket_data)
     return api_success({
         "maintenance_ticket_id": tref[1].id,
+        "room_id": room_id or f"room_{rnum}",
+        "room_blocked": True,
         "message": "Maintenance issue reported and ticket dispatched."
     })
 

@@ -18,27 +18,32 @@
 
       <div class="row g-4">
         {% set minibar_items = [
-          {"name": "Evian Natural Spring Water (750ml)", "price": 250, "category": "Water", "stock": "Chiller A"},
-          {"name": "Perrier Sparkling Mineral Water", "price": 320, "category": "Sparkling", "stock": "Chiller A"},
-          {"name": "Artisanal Dark Chocolate Truffles", "price": 450, "category": "Confectionery", "stock": "Snack Tray"},
-          {"name": "Roasted Pistachios & Salted Cashews", "price": 380, "category": "Dry Fruits", "stock": "Snack Tray"},
-          {"name": "Cold Brew Hazelnut Latte", "price": 290, "category": "Beverage", "stock": "Chiller B"},
-          {"name": "Organic Pressed Green Juice", "price": 350, "category": "Wellness", "stock": "Chiller B"}
+          {"name": "Evian Natural Spring Water (750ml)", "price": 250, "category": "Water", "stock": "Chiller A", "img": "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=500&q=80"},
+          {"name": "Perrier Sparkling Mineral Water", "price": 320, "category": "Sparkling", "stock": "Chiller A", "img": "https://images.unsplash.com/photo-1559839914-17aae19cec71?auto=format&fit=crop&w=500&q=80"},
+          {"name": "Artisanal Dark Chocolate Truffles", "price": 450, "category": "Confectionery", "stock": "Snack Tray", "img": "https://images.unsplash.com/photo-1549007994-cb92caebd54b?auto=format&fit=crop&w=500&q=80"},
+          {"name": "Roasted Pistachios & Salted Cashews", "price": 380, "category": "Dry Fruits", "stock": "Snack Tray", "img": "https://images.unsplash.com/photo-1536591375315-1b83689047e0?auto=format&fit=crop&w=500&q=80"},
+          {"name": "Cold Brew Hazelnut Latte", "price": 290, "category": "Beverage", "stock": "Chiller B", "img": "https://images.unsplash.com/photo-1517701604599-bb29b565090c?auto=format&fit=crop&w=500&q=80"},
+          {"name": "Organic Pressed Green Juice", "price": 350, "category": "Wellness", "stock": "Chiller B", "img": "https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&w=500&q=80"}
         ] %}
 
         {% for itm in minibar_items %}
         <div class="col-md-6 col-lg-4">
-          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between">
-            <div>
-              <span class="badge-pill priority-low mb-2">{{ itm.stock }}</span>
-              <h4 class="fw-bold fs-6 mb-1">{{ itm.name }}</h4>
-              <p class="text-secondary small mb-3">Category: {{ itm.category }}</p>
+          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between p-0 overflow-hidden" style="border: 1px solid rgba(212,175,55,0.25);">
+            <div style="height: 160px; background: url('{{ itm.img }}') center/cover; position: relative;">
+              <span class="badge position-absolute top-0 end-0 m-2 px-2 py-1 fw-bold text-warning" style="background: rgba(15,26,42,0.85); border: 1px solid var(--primary-color);">₹{{ itm.price }}</span>
+              <span class="badge-pill priority-low position-absolute bottom-0 start-0 m-2" style="font-size: 11px;">{{ itm.stock }}</span>
             </div>
-            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-              <span class="fw-bold fs-5 text-primary">₹{{ itm.price }}</span>
-              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="chargeMiniBar('{{ itm.name }}', {{ itm.price }})">
-                <i class="fas fa-plus me-1"></i> Log Consumption
-              </button>
+            <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+              <div>
+                <h4 class="fw-bold fs-6 mb-1">{{ itm.name }}</h4>
+                <p class="text-secondary small mb-3">Category: {{ itm.category }}</p>
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                <span class="fw-bold fs-5 text-primary">₹{{ itm.price }}</span>
+                <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="chargeMiniBar('{{ itm.name }}', {{ itm.price }})">
+                  <i class="fas fa-plus me-1"></i> Log Consumption
+                </button>
+              </div>
             </div>
           </div>
         </div>

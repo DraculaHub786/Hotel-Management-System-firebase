@@ -114,12 +114,12 @@ class HotelSupportBot:
             
             # Amenities
             "amenities": {
-                "keywords": ["amenity", "amenities", "facility", "facilities", "wifi", "gym", "pool", "spa", "parking"],
+                "keywords": ["amenity", "amenities", "wifi", "internet", "parking", "safe", "kettle", "ac", "room features"],
                 "patterns": [
                     r"what amenities",
                     r"do you have (a )?wifi",
-                    r"is there (a )?(gym|pool|spa)",
-                    r"facilities available"
+                    r"room features",
+                    r"is wifi free"
                 ],
                 "responses": [
                     "All rooms include: WiFi, AC, TV, and Room Service. Higher-tier rooms offer Mini Bar, Jacuzzi, Ocean Views, and Butler Service. Hotel amenities include 24/7 front desk, restaurant, and concierge services!",
@@ -269,6 +269,121 @@ class HotelSupportBot:
                     "Need changes? Visit MY BOOKINGS on your dashboard. For major modifications (dates/rooms), you'll need to cancel and rebook. For small adjustments, email support@nur-e-haya.com or call us!",
                     "Modification process: Access MY BOOKINGS, select your reservation. Date/room changes require cancellation and rebooking (standard cancellation policy applies). For guest count or special requests, email support@nur-e-haya.com!"
                 ]
+            },
+            
+            # Spa & Ayurvedic Wellness
+            "spa_wellness": {
+                "keywords": ["spa", "massage", "ayurveda", "ayurvedic", "abhyanga", "shirodhara", "hammam", "turkish", "facial", "wellness", "body massage", "deep tissue", "scrub", "reflexology"],
+                "patterns": [
+                    r"\bspa\b",
+                    r"\bmassage\b",
+                    r"tell me about (the )?spa",
+                    r"spa treatments?",
+                    r"book (a )?spa",
+                    r"massage (price|rate|cost)",
+                    r"ayurvedic (spa|massage|therapy)",
+                    r"what spa",
+                    r"spa timings?",
+                    r"(facial|hammam|shirodhara|abhyanga)"
+                ],
+                "responses": [
+                    "🌿 **The Royal Ayur Spa & Wellness Sanctuary** ✨\n\nExperience bespoke Ayurvedic therapies and holistic rejuvenation:\n• **Abhyanga Full-Body Herbal Oil Massage**: 75 mins | ₹3,500 (Warm medicated oils, lymphatic detox)\n• **Shirodhara Deep Relaxation**: 60 mins | ₹4,200 (Warm herbal oil stream to relieve anxiety & insomnia)\n• **Turkish Hammam & Eucalyptus Steam**: 90 mins | ₹4,800 (Traditional exfoliating foam wash & stone bath)\n• **Balinese Deep Tissue & Hot Stone Fusion**: 90 mins | ₹4,500 (Heated volcanic basalt stones)\n• **Royal Gold Radiance Botanical Facial**: 60 mins | ₹3,200 (24K gold leaves & herbal serums)\n\n🕒 **Operating Hours**: 7:00 AM – 10:00 PM Daily (Floor 3)\n💆 **To Book**: Go to **Spa & Facilities** on your menu or dial extension 4 from your room phone!",
+                    "Indulge in royal tranquility at The Royal Ayur Spa! Our certified Ayurvedic practitioners provide therapeutic massages, Shirodhara, Turkish Hammam, and rejuvenating organic facials. Operating 7:00 AM – 10:00 PM daily. Reserve your time slot under the Spa & Facilities page or contact our front desk."
+                ],
+                "suggestions": ["What are your Spa rates?", "Book an Ayurvedic Massage", "Rooftop Pool Timings", "View All Facilities"]
+            },
+            
+            # Heated Infinity Pool & Cabanas
+            "pool_cabana": {
+                "keywords": ["pool", "swimming", "infinity pool", "cabana", "rooftop pool", "swim", "hydrotherapy", "sun lounger", "towel"],
+                "patterns": [
+                    r"pool timings?",
+                    r"swimming pool (open|timing|hours)",
+                    r"rooftop pool",
+                    r"is (the )?pool heated",
+                    r"book (a )?cabana",
+                    r"pool (depth|rules|charges)"
+                ],
+                "responses": [
+                    "🏊‍♂️ **Skyline Heated Infinity Pool & Private Cabanas** 🌅\n\nPerched on our 14th-floor rooftop with sweeping city skyline views:\n• **Hours**: Open daily 6:00 AM – 9:00 PM\n• **Water Temperature**: Heated year-round to a soothing 28°C – 30°C\n• **Depth**: 4.5 ft with a dedicated shallow splash zone for children\n• **VIP Private Heated Cabanas**: Dedicated butler service, tropical fruit platter & mocktail service (₹3,500 for 2 hours)\n• **Inclusions**: Fluffy Egyptian cotton towels, bathrobes, and sun loungers complimentary for all hotel guests.\n\nFree swimming access is included for all room guests; private cabanas can be booked under the **Spa & Facilities** tab!",
+                    "Our 14th-floor heated infinity pool is open from 6:00 AM to 9:00 PM every day! Enjoy temperature-controlled waters at 28°C-30°C, panoramic views, sunset lounge seating, and private cabana rentals. Complimentary towels and poolside service are provided."
+                ],
+                "suggestions": ["Book Private Cabana", "Pool Timings & Rules", "Spa & Wellness Menu", "TechnoGym Fitness"]
+            },
+            
+            # Fitness Arena & Thermal Sauna
+            "fitness_sauna": {
+                "keywords": ["gym", "fitness", "technogym", "workout", "weights", "trainer", "sauna", "steam room", "cardio", "treadmill", "exercise"],
+                "patterns": [
+                    r"gym timings?",
+                    r"is (there a )?gym",
+                    r"fitness center",
+                    r"sauna (available|timing)",
+                    r"steam room",
+                    r"personal trainer",
+                    r"workout facilities"
+                ],
+                "responses": [
+                    "💪 **TechnoGym Fitness Arena & Thermal Suites** 🏋️\n\nMaintain your wellness regimen with cutting-edge fitness technology:\n• **Fitness Arena**: Open 24/7 (Complimentary access using your room keycard)\n• **Equipment**: TechnoGym Artis cardio consoles with virtual routes, Olympic free weights, cable stations, and Smith machine\n• **Certified Personal Trainers**: 1-on-1 private coaching sessions available 6:00 AM – 9:00 PM (₹2,000/hour)\n• **Thermal Suite**: Authentic Finnish dry cedarwood sauna & eucalyptus aromatherapy steam room (Open 6:00 AM – 10:00 PM)\n• **Complimentary**: Chilled infused fruit water, workout towels, and luxury locker suites on Floor 4.\n\nBook personal trainers or thermal sessions via **Spa & Facilities**!",
+                    "Our state-of-the-art TechnoGym Fitness Arena is open 24 hours a day with room keycard access. Features include Olympic weights, smart cardio machines, certified trainers, plus a Finnish dry sauna and eucalyptus steam room open 6:00 AM - 10:00 PM daily."
+                ],
+                "suggestions": ["Book Personal Trainer", "Sauna & Cold Plunge", "Morning Yoga Classes", "Facilities Catalog"]
+            },
+            
+            # Yoga & Sound Meditation
+            "yoga_meditation": {
+                "keywords": ["yoga", "meditation", "pranayama", "sound bath", "chakra", "singing bowl", "hatha", "zen", "breathwork"],
+                "patterns": [
+                    r"yoga (class|session|timing)",
+                    r"meditation (session|timing)",
+                    r"sound bath",
+                    r"pranayama",
+                    r"chakra healing",
+                    r"yoga schedule"
+                ],
+                "responses": [
+                    "🧘‍♀️ **Rooftop Zen Yoga & Sound Healing Pavilion** 🌸\n\nNurture body and spirit in our open-air glass pavilion on Floor 14:\n• **Sunrise Hatha Yoga & Prāṇāyāma**: 6:30 AM – 7:30 AM daily (₹1,200 per guest)\n• **Tibetan Singing Bowl Sound Bath**: 5:30 PM – 6:30 PM (₹2,200 per guest, acoustic chakra balancing)\n• **Sunset Mindful Breathwork**: 6:30 PM – 7:15 PM (₹1,000 per guest)\n• **Private Restorative Sessions**: 1-on-1 custom yoga masterclasses with master yogis (₹2,500/hr)\n\nComplimentary Manduka eco-mats, bolsters, and organic herbal infusion teas provided for every participant!",
+                    "Join our mindful movement sessions at the Rooftop Zen Pavilion! We host daily Sunrise Hatha Yoga at 6:30 AM and Tibetan Sound Bath Meditations at 5:30 PM. Mats, cushions, and organic tea are complimentary for attendees. Reserve your spot on the Facilities page."
+                ],
+                "suggestions": ["Sunrise Yoga Timings", "Tibetan Sound Bath", "Book Private Yoga", "Spa Treatments"]
+            },
+            
+            # Royal Salon & Grooming
+            "salon_grooming": {
+                "keywords": ["salon", "haircut", "shave", "hair spa", "grooming", "manicure", "pedicure", "bridal", "blowdry", "barber"],
+                "patterns": [
+                    r"salon services?",
+                    r"hair cut",
+                    r"hair spa",
+                    r"grooming services?",
+                    r"bridal styling",
+                    r"(manicure|pedicure)",
+                    r"royal shave"
+                ],
+                "responses": [
+                    "✂️ **The Royal Salon & Executive Grooming** 💈\n\nRefined grooming and salon artistry on Floor 3:\n• **Gentleman's Royal Shave**: 45 mins | ₹1,500 (Hot towel ritual, single-edge razor, sandalwood oil balm)\n• **Ayurvedic Kesh Kanti Hair Spa**: 60 mins | ₹2,400 (Warm bhringraj oil head massage & herbal steam pack)\n• **Luxury Manicure & Pedicure Ritual**: 60 mins | ₹2,000 (Himalayan salt exfoliation & paraffin soak)\n• **Bridal & Gala Couture Styling**: Hair styling, makeup artistry & organic skincare (From ₹5,500)\n\n🕒 **Hours**: Open 9:00 AM – 8:00 PM Daily. Walk-ins welcome or pre-book via the Facilities tab!",
+                    "Visit The Royal Salon for executive men's grooming, hair spa treatments, manicures, pedicures, and bridal styling. Located on Floor 3, open 9:00 AM to 8:00 PM daily. Book your appointment directly in the Facilities section."
+                ],
+                "suggestions": ["Executive Grooming Menu", "Hair Spa Treatment", "Spa & Wellness", "Contact Concierge"]
+            },
+            
+            # Hotel Facilities Overview
+            "facilities_overview": {
+                "keywords": ["facilities", "facility", "experiences", "amenities", "what to do", "recreation", "activities"],
+                "patterns": [
+                    r"facilit(y|ies)",
+                    r"hotel facilities",
+                    r"all facilities",
+                    r"facilities available",
+                    r"what experiences",
+                    r"things to do in hotel",
+                    r"hotel amenities"
+                ],
+                "responses": [
+                    "✨ **Nur-e-Haya Luxury Experiences & Facilities Overview** 🏰\n\nImmerse yourself in our five-star wellness and recreation destinations:\n1️⃣ **The Royal Ayur Spa**: Ayurvedic therapies, Shirodhara, Turkish hammam & eucalyptus steam (Floor 3)\n2️⃣ **Skyline Heated Infinity Pool**: Panoramic rooftop pool, private heated cabanas & sunset lounge (Floor 14)\n3️⃣ **TechnoGym Fitness Arena**: 24/7 high-tech cardio, Olympic weights & Finnish sauna (Floor 4)\n4️⃣ **Zen Yoga Pavilion**: Sunrise Prāṇāyāma & Tibetan sound bath meditation (Floor 14)\n5️⃣ **The Royal Salon**: Executive grooming, hair rituals & gala styling (Floor 3)\n6️⃣ **Gourmet Dining**: 24/7 room service, royal Mughal breakfast, and multicuisine restaurant\n\nYou can view photos, choose time slots, and reserve experiences under the **Spa & Facilities** tab (`/facilities`)!",
+                    "Nur-e-Haya features world-class facilities: The Royal Ayur Spa, a 14th-floor heated rooftop infinity pool, 24/7 TechnoGym with sauna & steam, Zen Yoga Pavilion, and Royal Executive Salon. Explore all offerings and book time slots under the Spa & Facilities page!"
+                ],
+                "suggestions": ["Spa Treatments & Rates", "Rooftop Pool Timings", "24/7 Fitness Center", "Book Room"]
             }
         }
     
@@ -467,12 +582,15 @@ class HotelSupportBot:
                 "timestamp": datetime.now().isoformat()
             }
         
+        now_iso = datetime.utcnow().isoformat() + "Z"
+        
         if not message or not message.strip():
             return {
                 "response": "I didn't catch that. Could you please type your question?",
                 "intent": None,
                 "confidence": 0,
-                "suggestions": self.get_suggested_questions()[:4]
+                "suggestions": self.get_suggested_questions()[:4],
+                "timestamp": now_iso
             }
         
         # 1. Check Identity / Who are you
@@ -482,7 +600,8 @@ class HotelSupportBot:
                 "response": identity_response,
                 "intent": "identity",
                 "confidence": 1.0,
-                "suggestions": ["Room types & prices", "Check-in times", "Dining menu", "Cancellation policy"]
+                "suggestions": ["Spa treatments & rates", "Rooftop pool hours", "Room types & prices", "Dining menu"],
+                "timestamp": now_iso
             }
 
         # 2. Check Wellbeing / How are you
@@ -492,7 +611,8 @@ class HotelSupportBot:
                 "response": wellbeing_response,
                 "intent": "wellbeing",
                 "confidence": 1.0,
-                "suggestions": ["How do I book a room?", "What are your room rates?", "Do you have a pool?"]
+                "suggestions": ["How do I book a room?", "Tell me about the Spa", "Heated pool timings", "Dining menu"],
+                "timestamp": now_iso
             }
 
         # 3. Check Greetings
@@ -502,7 +622,8 @@ class HotelSupportBot:
                 "response": greeting_response,
                 "intent": "greeting",
                 "confidence": 1.0,
-                "suggestions": ["What are your room rates?", "Check-in and check-out times?", "Is breakfast included?"]
+                "suggestions": ["What are your Spa rates?", "Rooftop pool hours", "Room prices & types", "Check-in times"],
+                "timestamp": now_iso
             }
         
         # 4. Check Thanks
@@ -512,7 +633,8 @@ class HotelSupportBot:
                 "response": thanks_response,
                 "intent": "gratitude",
                 "confidence": 1.0,
-                "suggestions": ["Explore luxury rooms", "View hotel facilities", "Contact front desk"]
+                "suggestions": ["Explore luxury rooms", "View hotel facilities", "Book Spa treatment", "Contact front desk"],
+                "timestamp": now_iso
             }
         
         # 5. Check Goodbye
@@ -522,7 +644,8 @@ class HotelSupportBot:
                 "response": goodbye_response,
                 "intent": "farewell",
                 "confidence": 1.0,
-                "suggestions": []
+                "suggestions": [],
+                "timestamp": now_iso
             }
         
         # 6. Check Confusion
@@ -532,7 +655,8 @@ class HotelSupportBot:
                 "response": confusion_response,
                 "intent": "help",
                 "confidence": 1.0,
-                "suggestions": self.get_suggested_questions()[:4]
+                "suggestions": self.get_suggested_questions()[:4],
+                "timestamp": now_iso
             }
         
         # 7. Extract intent from knowledge base
@@ -541,16 +665,32 @@ class HotelSupportBot:
         if intent:
             response = self._get_response(intent)
             if response:
+                kb_entry = self.knowledge_base.get(intent, {})
+                custom_suggestions = kb_entry.get("suggestions")
+                if not custom_suggestions:
+                    if "spa" in intent:
+                        custom_suggestions = ["What are your Spa rates?", "Book an Ayurvedic Massage", "Rooftop Pool Timings", "View All Facilities"]
+                    elif "pool" in intent:
+                        custom_suggestions = ["Book Private Cabana", "Pool Timings & Rules", "TechnoGym Fitness", "Spa Treatments"]
+                    elif "fitness" in intent or "gym" in intent or "sauna" in intent:
+                        custom_suggestions = ["Personal Trainer Rates", "Sauna & Cold Plunge", "Morning Yoga Classes", "Facilities Catalog"]
+                    elif "yoga" in intent:
+                        custom_suggestions = ["Sunrise Yoga Timings", "Tibetan Sound Bath", "Book Private Yoga", "Spa Treatments"]
+                    elif "salon" in intent:
+                        custom_suggestions = ["Executive Grooming Menu", "Hair Spa Treatment", "Spa & Wellness", "Contact Concierge"]
+                    elif "facilities" in intent:
+                        custom_suggestions = ["Spa Treatments & Rates", "Rooftop Pool Timings", "24/7 Fitness Center", "Book Room"]
+                    elif "dining" in intent:
+                        custom_suggestions = ["Order Room Service", "Breakfast Timings", "Restaurant Menu", "Dietary Options"]
+                    else:
+                        custom_suggestions = ["How do I book a room?", "What are your check-in times?", "What is your cancellation policy?", "What payment methods do you accept?"]
+
                 return {
                     "response": response,
                     "intent": intent,
-                    "confidence": 0.88,
-                    "suggestions": [
-                        "How do I book a room?",
-                        "What are your check-in times?",
-                        "What is your cancellation policy?",
-                        "What payment methods do you accept?"
-                    ]
+                    "confidence": 0.94,
+                    "suggestions": custom_suggestions,
+                    "timestamp": now_iso
                 }
         
         # 8. Dynamic Fallback response with rotating answers
@@ -559,26 +699,25 @@ class HotelSupportBot:
             "intent": "unknown",
             "confidence": 0.35,
             "suggestions": [
-                "How do I book a room?",
+                "What spa treatments do you have?",
+                "What are your heated pool timings?",
                 "What are your room rates?",
-                "What are your check-in times?",
-                "What is your cancellation policy?"
-            ]
+                "What are your check-in times?"
+            ],
+            "timestamp": now_iso
         }
     
     def get_suggested_questions(self):
         """Get list of suggested questions users can ask"""
         return [
-            "How do I book a room?",
-            "What are the check-in and check-out times?",
-            "What is your cancellation policy?",
-            "What room types and prices do you offer?",
-            "What payment methods do you accept?",
-            "How can I contact customer support?",
-            "Do you offer airport shuttle service?",
-            "Can I bring my pet?",
-            "Is breakfast included?",
-            "How do I modify my booking?"
+            "What spa treatments and rates do you offer?",
+            "What are the heated rooftop pool timings?",
+            "How do I book a room at Nur-e-Haya?",
+            "What are check-in and check-out times?",
+            "Tell me about the 24/7 gym and sauna",
+            "What dining options and menus are available?",
+            "Do you offer yoga classes and sound baths?",
+            "What is your cancellation policy?"
         ]
 
 # Singleton instance

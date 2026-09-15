@@ -125,15 +125,19 @@ The platform includes pre-configured seed accounts representing each department 
 | Role / Department | Email Address | Default Password | Landing Portal | Access Scope |
 | :--- | :--- | :--- | :--- | :--- |
 | **System Administrator** | `admin@nur-e-haya.com` | `Hotel@123` | `/admin` | Full executive command center, revenue BI, staff management |
+| **Super Administrator** | `superadmin@nur-e-haya.com` | `Hotel@123` | `/super-admin` | Global multi-property controls, payment gateway & audit log diffs |
 | **Admin Tester** | `test1@gmail.com` | `Hotel@123` | `/admin` | Alternate system administrator account |
 | **General Manager** | `manager@nur-e-haya.com` | `Hotel@123` | `/manager` | Operations overview, property performance, occupancy metrics |
 | **Front Desk Officer** | `frontdesk@nur-e-haya.com` | `Hotel@123` | `/staff/front-desk` | Room status board, live check-ins, keycard issuance |
 | **Housekeeping Lead** | `cleaning@nur-e-haya.com` | `Hotel@123` | `/staff/housekeeping`| Kanban turnover board (dirty &rarr; cleaning &rarr; inspected) |
 | **Head Chef** | `chef@nur-e-haya.com` | `Hotel@123` | `/staff/kitchen` | Kitchen Display System (KDS), dish prep queues, 86 items |
+| **Captain Waiter** | `waiter@nur-e-haya.com` | `Hotel@123` | `/dining/tables` | Table floor layout, live order delivery pass, table reset |
 | **Laundry Specialist** | `laundry@nur-e-haya.com` | `Hotel@123` | `/staff/laundry` | Linen batches, dry cleaning, guest laundry dispatch |
 | **Chief Engineer** | `maintenance@nur-e-haya.com`| `Hotel@123` | `/staff/maintenance` | Work orders, equipment tickets, auto room unblocking |
+| **Chief Security Officer** | `security@nur-e-haya.com` | `Hotel@123` | `/staff/security` | Incident logging, physical security, guest verification flags |
 | **Chief Concierge** | `concierge@nur-e-haya.com` | `Hotel@123` | `/staff/concierge` | VIP requests, city tours, guest transport, luggage |
 | **Senior Accountant** | `accountant@nur-e-haya.com` | `Hotel@123` | `/accounts` | Billing reconciliation, folio audits, refund processing |
+| **VIP Club Member** | `member@nur-e-haya.com` | `Hotel@123` | `/dashboard` | Privileged guest account with automatic 5% discounts |
 | **Guest Traveler** | `user@nur-e-haya.com` | `Hotel@123` | `/dashboard` | Reservations, dining orders, digital keycard, AI concierge |
 
 ---

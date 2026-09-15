@@ -52,41 +52,54 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td>Room Charges — Luxury Suite Stay</td>
-          <td class="text-center">2</td>
-          <td class="text-end">5,000.00</td>
-          <td class="text-end">10,000.00</td>
-        </tr>
-        <tr>
-          <td>In-Room Gourmet Dining & Breakfast</td>
-          <td class="text-center">1</td>
-          <td class="text-end">1,850.00</td>
-          <td class="text-end">1,850.00</td>
-        </tr>
-        <tr>
-          <td>The Royal Ayur Spa Holistic Treatment</td>
-          <td class="text-center">1</td>
-          <td class="text-end">2,500.00</td>
-          <td class="text-end">2,500.00</td>
-        </tr>
+        {% if invoice.get and invoice.get('items') %}
+          {% for itm in invoice.get('items') %}
+          <tr>
+            <td>{{ itm.name }}</td>
+            <td class="text-center">{{ itm.nights or itm.qty or 1 }}</td>
+            <td class="text-end">₹{{ "%.2f"|format(itm.unit_price or itm.price or 0) }}</td>
+            <td class="text-end">₹{{ "%.2f"|format(itm.line_total or itm.total or 0) }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td>Room Charges — Luxury Suite Stay</td>
+            <td class="text-center">2</td>
+            <td class="text-end">5,000.00</td>
+            <td class="text-end">10,000.00</td>
+          </tr>
+          <tr>
+            <td>In-Room Gourmet Dining & Breakfast</td>
+            <td class="text-center">1</td>
+            <td class="text-end">1,850.00</td>
+            <td class="text-end">1,850.00</td>
+          </tr>
+        {% endif %}
       </tbody>
       <tfoot>
         <tr>
           <td colspan="3" class="text-end fw-semibold">Subtotal:</td>
-          <td class="text-end fw-semibold">₹14,350.00</td>
+          <td class="text-end fw-semibold">₹{{ "%.2f"|format(invoice.subtotal or 11850) }}</td>
         </tr>
+        {% if invoice.discount %}
         <tr>
           <td colspan="3" class="text-end text-success fw-semibold">VIP Member Discount (5%):</td>
-          <td class="text-end text-success fw-semibold">-₹717.50</td>
+          <td class="text-end text-success fw-semibold">-₹{{ "%.2f"|format(invoice.discount) }}</td>
         </tr>
+        {% endif %}
         <tr>
-          <td colspan="3" class="text-end fw-semibold">GST (18% Hospitality Tax):</td>
-          <td class="text-end fw-semibold">₹2,453.85</td>
+          <td colspan="3" class="text-end fw-semibold">Hospitality GST (5%):</td>
+          <td class="text-end fw-semibold">₹{{ "%.2f"|format(invoice.tax or 592.5) }}</td>
         </tr>
+        {% if invoice.service_charge %}
+        <tr>
+          <td colspan="3" class="text-end fw-semibold">Service Charge (2.5%):</td>
+          <td class="text-end fw-semibold">₹{{ "%.2f"|format(invoice.service_charge) }}</td>
+        </tr>
+        {% endif %}
         <tr class="fs-5 fw-bold border-top border-dark">
           <td colspan="3" class="text-end text-primary">Total Paid:</td>
-          <td class="text-end text-primary">₹16,086.35</td>
+          <td class="text-end text-primary">₹{{ "%.2f"|format(invoice.total or 12442.5) }}</td>
         </tr>
       </tfoot>
     </table>

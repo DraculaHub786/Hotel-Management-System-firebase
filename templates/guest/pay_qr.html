@@ -52,7 +52,7 @@
     <div class="qr-card">
         <span style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px;">Unified Payment QR</span>
         <h2 style="font-size: 32px; font-weight: 800; color: var(--primary-color); font-family: 'Cinzel', serif; margin: 8px 0 14px;">
-            ₹{{ transaction.order_summary.total if transaction else 8815 }}
+            ₹{{ (transaction.order_summary.total if (transaction and transaction.order_summary and transaction.order_summary.total) else (transaction.amount if (transaction and transaction.amount) else 8815)) }}
         </h2>
 
         <!-- QR code image -->
@@ -106,8 +106,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function fetchQR() {
         try {
             const data = await AppAPI.post('/api/payment/create-qr', { txn_id: txnId });
-            qrImg.src = `data:image/png;base64,${data.qr_image_base64}`;
-            troubleLink.href = data.qr_payload;
+            const b64 = data.qr_image_base64 || data.qr_base64 || data.qr_code || '';
+            qrImg.src = b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
+            troubleLink.href = data.qr_payload || `/pay/${txnId}/otp`;
         } catch (err) {
             Toast.error('Could not generate QR code. Retrying...');
         }

@@ -1,81 +1,776 @@
 {% extends "base.html" %}
 
-{% block title %}Hotel Facilities & Experiences — Nur-e-Haya{% endblock %}
+{% block title %}Spa, Wellness & Experiences — Nur-e-Haya Luxury Hotel{% endblock %}
+
+{% block extra_css %}
+<style>
+.facilities-hero {
+    background: linear-gradient(135deg, rgba(10, 18, 30, 0.95), rgba(15, 26, 42, 0.92)),
+                url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1600&q=80') center/cover;
+    border-radius: 16px;
+    padding: 48px 36px;
+    margin-bottom: 36px;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.facilities-hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; width: 40%;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.facility-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    background: rgba(15, 26, 42, 0.65);
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(8px);
+}
+
+.category-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.cat-pill {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cat-pill:hover, .cat-pill.active {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+    color: #ffd700;
+    border-color: rgba(212, 175, 55, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+}
+
+.facility-search-box {
+    position: relative;
+    min-width: 260px;
+}
+
+.facility-search-box input {
+    background: rgba(10, 18, 30, 0.8);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 20px;
+    padding: 8px 16px 8px 38px;
+    font-size: 13px;
+    color: #fff;
+    width: 100%;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.facility-search-box input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+}
+
+.facility-search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 13px;
+}
+
+/* Subsection Header */
+.section-divider {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 40px 0 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.section-icon-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffd700;
+    font-size: 18px;
+}
+
+/* Facility Card */
+.facility-card {
+    background: rgba(15, 26, 42, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.facility-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(212, 175, 55, 0.5);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(212, 175, 55, 0.15);
+}
+
+.facility-img-wrap {
+    height: 210px;
+    position: relative;
+    overflow: hidden;
+    background: #0d1522;
+}
+
+.facility-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.facility-card:hover .facility-img-wrap img {
+    transform: scale(1.06);
+}
+
+.facility-badge-duration {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(10, 18, 30, 0.85);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.facility-badge-price {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(10, 18, 30, 0.9);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffd700;
+    font-family: 'Cinzel', serif;
+}
+
+.facility-body {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.facility-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.facility-rating {
+    color: #ffd700;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.facility-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    font-family: 'Outfit', sans-serif;
+}
+
+.facility-desc {
+    font-size: 13px;
+    color: #cbd5e1;
+    line-height: 1.55;
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.facility-highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+.f-tag {
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #94a3b8;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.facility-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-book-quick {
+    flex: 1;
+    background: linear-gradient(135deg, #d4af37, #aa820a);
+    color: #0d1522;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.btn-book-quick:hover {
+    background: linear-gradient(135deg, #ffd700, #c49a1f);
+    color: #000;
+    box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+}
+
+.btn-detail-link {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    color: #e2e8f0;
+    padding: 9px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-detail-link:hover {
+    background: rgba(212, 175, 55, 0.15);
+    border-color: rgba(212, 175, 55, 0.5);
+    color: #ffd700;
+}
+
+/* Booking Modal */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(6px);
+    z-index: 1050;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-dialog-box {
+    background: #0f1a2a;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header-luxury {
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(15, 26, 42, 0.9));
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-close-btn:hover {
+    color: #fff;
+}
+
+.modal-content-area {
+    padding: 24px;
+}
+
+.slot-pill-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.slot-pill-btn:hover, .slot-pill-btn.active {
+    background: rgba(212, 175, 55, 0.25);
+    border-color: #d4af37;
+    color: #ffd700;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
-    <div class="screen-topbar">
-        <div class="topbar-title">
-            <i class="fas fa-spa"></i> Experiences & Facilities
-        </div>
-        <div class="topbar-actions">
-            <a href="/cart" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
-                <i class="fas fa-shopping-cart"></i> Cart
-            </a>
+<div class="container" style="padding-top: 85px; padding-bottom: 70px;">
+    
+    <!-- Hero Banner -->
+    <div class="facilities-hero">
+        <div style="max-width: 680px; position: relative; z-index: 2;">
+            <span style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: #ffd700; font-weight: 700;">
+                <i class="fas fa-crown me-1"></i> The Royal Sanctuaries
+            </span>
+            <h1 style="font-size: 34px; font-weight: 700; color: #fff; margin: 8px 0 14px; font-family: 'Cinzel', serif;">
+                Spa, Wellness & Exclusive Experiences
+            </h1>
+            <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+                Indulge in holistic Ayurvedic therapies, temperature-controlled rooftop infinity hydrotherapy, 24/7 TechnoGym conditioning, sound bowl meditations, and bespoke executive grooming.
+            </p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="#section-spa" class="btn btn-primary" style="font-size: 13px; padding: 10px 20px;">
+                    <i class="fas fa-spa me-1"></i> Explore Spa Menu
+                </a>
+                <a href="/my-bookings" class="btn btn-secondary" style="font-size: 13px; padding: 10px 20px;">
+                    <i class="fas fa-calendar-check me-1"></i> My Activity & Bookings
+                </a>
+                <a href="/cart" class="btn btn-secondary" style="font-size: 13px; padding: 10px 20px;">
+                    <i class="fas fa-shopping-cart me-1"></i> Cart
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Facilities Grid -->
-    <div style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
-        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-            <div style="height: 200px; background: url('https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
-                <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
-                    ₹3,200 / session
+    <!-- Filter & Live Search Bar -->
+    <div class="facility-filter-bar">
+        <div class="category-pills">
+            <button class="cat-pill active" data-filter="all">
+                <i class="fas fa-th-large"></i> All Experiences ({{ facilities|length }})
+            </button>
+            <button class="cat-pill" data-filter="spa">
+                <i class="fas fa-spa"></i> Ayurvedic Spa
+            </button>
+            <button class="cat-pill" data-filter="pool">
+                <i class="fas fa-water"></i> Pool & Cabanas
+            </button>
+            <button class="cat-pill" data-filter="fitness">
+                <i class="fas fa-dumbbell"></i> Fitness & Sauna
+            </button>
+            <button class="cat-pill" data-filter="yoga">
+                <i class="fas fa-om"></i> Yoga & Sound
+            </button>
+            <button class="cat-pill" data-filter="salon">
+                <i class="fas fa-cut"></i> Salon & Grooming
+            </button>
+        </div>
+        <div class="facility-search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="facilitySearchInput" placeholder="Search treatments, pool, gym..." onkeyup="filterFacilities()">
+        </div>
+    </div>
+
+    <!-- Subsections & Grids -->
+    {% for sec in sections %}
+    <div class="facility-section-block" id="section-{{ sec.id }}" data-section-id="{{ sec.id }}">
+        <div class="section-divider">
+            <div class="section-title-wrap">
+                <div class="section-icon-badge">
+                    <i class="{{ sec.icon }}"></i>
+                </div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h2 style="font-size: 22px; font-weight: 700; color: #fff; margin: 0; font-family: 'Cinzel', serif;">
+                            {{ sec.title }}
+                        </h2>
+                        <span style="background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 12px; padding: 2px 10px; font-size: 11px; color: #ffd700; font-weight: 600;">
+                            {{ sec.badge }}
+                        </span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0 0;">
+                        {{ sec.subtitle }}
+                    </p>
                 </div>
             </div>
-            <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">Nur-e-Sultana Luxury Spa</h3>
-                    <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px;">
-                        Holistic wellness therapies, Moroccan bath, and authentic aromatherapy by certified specialists.
-                    </p>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-                        <i class="fas fa-clock" style="margin-right: 4px;"></i> Duration: 90 mins | Available Daily
-                    </div>
-                </div>
-                <a href="/facilities/fac_spa" class="btn btn-primary" style="text-align: center;">Book Slot</a>
+            <div style="font-size: 12px; color: var(--text-secondary); display: none;" class="d-md-block">
+                Floor {{ '3' if sec.id in ['spa', 'salon'] else ('14' if sec.id in ['pool', 'yoga'] else '4') }} &bull; Open Daily
             </div>
         </div>
 
-        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-            <div style="height: 200px; background: url('https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
-                <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
-                    ₹1,200 / session
-                </div>
-            </div>
-            <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">Rooftop Infinity Heated Pool</h3>
-                    <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px;">
-                        Panoramic city skyline view, private heated cabanas, sun loungers, and complimentary mocktails.
-                    </p>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-                        <i class="fas fa-clock" style="margin-right: 4px;"></i> Duration: 120 mins | Towels Provided
+        <!-- Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 24px; margin-bottom: 40px;">
+            {% for f in facilities if f.section_id == sec.id or (not f.section_id and sec.id == 'spa') %}
+            <div class="facility-card facility-item-node" 
+                 data-section="{{ f.section_id or sec.id }}" 
+                 data-name="{{ f.name|lower }}" 
+                 data-desc="{{ f.description|lower }}">
+                
+                <div class="facility-img-wrap">
+                    <img src="{{ f.image }}" alt="{{ f.name }}" loading="lazy">
+                    <div class="facility-badge-duration">
+                        <i class="far fa-clock"></i> {{ f.duration or '60 mins' }}
+                    </div>
+                    <div class="facility-badge-price">
+                        {% if f.price and f.price > 0 %}
+                            ₹{{ "{:,.0f}".format(f.price) }}
+                        {% else %}
+                            Complimentary
+                        {% endif %}
                     </div>
                 </div>
-                <a href="/facilities/fac_pool" class="btn btn-primary" style="text-align: center;">Book Slot</a>
+
+                <div class="facility-body">
+                    <div>
+                        <div class="facility-meta">
+                            <span class="facility-rating">
+                                <i class="fas fa-star"></i> {{ f.rating or 4.9 }}
+                            </span>
+                            <span>&bull;</span>
+                            <span>{{ f.reviews_count or 110 }}+ reviews</span>
+                            <span>&bull;</span>
+                            <span><i class="fas fa-map-marker-alt me-1"></i>{{ f.location or 'Floor 3' }}</span>
+                        </div>
+
+                        <h3 class="facility-title">{{ f.name }}</h3>
+                        <p class="facility-desc">{{ f.description }}</p>
+
+                        {% if f.benefits %}
+                        <div class="facility-highlights">
+                            {% for b in f.benefits[:2] %}
+                            <span class="f-tag"><i class="fas fa-check-circle me-1" style="color: #ffd700;"></i>{{ b }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="facility-actions">
+                        <button type="button" class="btn-book-quick" 
+                                onclick="openBookingModal('{{ f.id }}', '{{ f.name|replace("'", "\\'") }}', '{{ f.price }}', '{{ f.duration }}', '{{ f.image }}', '{{ f.slots|join(',') if f.slots else '' }}')">
+                            <i class="fas fa-calendar-plus"></i> Book Slot
+                        </button>
+                        <a href="/facilities/{{ f.id }}" class="btn-detail-link">
+                            <i class="fas fa-info-circle"></i> Details
+                        </a>
+                    </div>
+                </div>
             </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+
+<!-- Quick Slot Booking Modal -->
+<div class="modal-overlay" id="quickBookingModal">
+    <div class="modal-dialog-box">
+        <div class="modal-header-luxury">
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; color: #ffd700; letter-spacing: 1px;">Instant Reservation</span>
+                <h3 style="color: #fff; font-size: 18px; margin: 3px 0 0; font-family: 'Cinzel', serif;" id="modalFacTitle">Reserve Facility Slot</h3>
+            </div>
+            <button class="modal-close-btn" onclick="closeBookingModal()">&times;</button>
         </div>
 
-        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-            <div style="height: 200px; background: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
-                <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
-                    ₹800 / session
+        <div class="modal-content-area">
+            <!-- Summary Info Strip -->
+            <div style="display: flex; gap: 14px; background: rgba(255, 255, 255, 0.04); padding: 12px; border-radius: 10px; border: 1px solid rgba(212, 175, 55, 0.15); margin-bottom: 18px; align-items: center;">
+                <img id="modalFacThumb" src="" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid rgba(212, 175, 55, 0.3);">
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #fff; font-size: 14px;" id="modalFacName">Treatment Name</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);" id="modalFacDuration">Duration: 60 mins</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 16px; font-weight: 700; color: #ffd700; font-family: 'Cinzel', serif;" id="modalFacPrice">₹2,500</div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">per guest</div>
                 </div>
             </div>
-            <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                <div>
-                    <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">Fitness Arena & Sauna</h3>
-                    <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 14px;">
-                        Olympic grade strength and cardio machines, certified trainers, and post-workout eucalyptus sauna.
-                    </p>
-                    <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
-                        <i class="fas fa-clock" style="margin-right: 4px;"></i> Duration: 60 mins | Open 24 Hours
-                    </div>
+
+            <!-- Date Selector -->
+            <div class="form-group mb-3">
+                <label class="form-label required" style="font-size: 12px; color: #cbd5e1; font-weight: 600; margin-bottom: 6px; display: block;">
+                    <i class="far fa-calendar-alt me-1 text-warning"></i> Select Date
+                </label>
+                <input type="date" id="modalSlotDate" class="form-control" style="background: rgba(10,18,30,0.8); border: 1px solid rgba(212,175,55,0.3); color: #fff; border-radius: 8px; padding: 8px 12px;" required>
+            </div>
+
+            <!-- Slots Selector -->
+            <div class="form-group mb-3">
+                <label class="form-label required" style="font-size: 12px; color: #cbd5e1; font-weight: 600; margin-bottom: 6px; display: block;">
+                    <i class="far fa-clock me-1 text-warning"></i> Choose Available Time Slot
+                </label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="modalSlotsContainer">
+                    <!-- Pills injected dynamically -->
                 </div>
-                <a href="/facilities/fac_gym" class="btn btn-primary" style="text-align: center;">Book Slot</a>
+                <input type="hidden" id="modalSelectedSlot">
+                <input type="hidden" id="modalFacId">
+            </div>
+
+            <!-- Practitioner Preference -->
+            <div class="form-group mb-3">
+                <label class="form-label" style="font-size: 12px; color: #cbd5e1; font-weight: 600; margin-bottom: 6px; display: block;">
+                    <i class="fas fa-user-md me-1 text-warning"></i> Specialist Preference
+                </label>
+                <select id="modalTherapistPref" class="form-control" style="background: rgba(10,18,30,0.8); border: 1px solid rgba(212,175,55,0.3); color: #fff; border-radius: 8px; padding: 8px 12px;">
+                    <option value="Master Practitioner">First Available Certified Master Specialist</option>
+                    <option value="Female Practitioner">Female Specialist / Therapist</option>
+                    <option value="Male Practitioner">Male Specialist / Therapist</option>
+                </select>
+            </div>
+
+            <!-- Special Requests -->
+            <div class="form-group mb-4">
+                <label class="form-label" style="font-size: 12px; color: #cbd5e1; font-weight: 600; margin-bottom: 6px; display: block;">
+                    <i class="fas fa-comment-medical me-1 text-warning"></i> Health Notes / Special Instructions
+                </label>
+                <input type="text" id="modalSpecialNotes" class="form-control" placeholder="e.g. pressure preference, allergies, anniversary celebration" style="background: rgba(10,18,30,0.8); border: 1px solid rgba(212,175,55,0.3); color: #fff; border-radius: 8px; padding: 8px 12px; font-size: 12px;">
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: 10px;">
+                <button type="button" class="btn btn-primary" id="btnConfirmBooking" style="flex: 2; padding: 10px;" onclick="submitFacilityBooking()">
+                    <i class="fas fa-check-circle me-1"></i> Instant Confirm Reservation
+                </button>
+                <button type="button" class="btn btn-secondary" style="flex: 1; padding: 10px;" onclick="addSlotToCart()">
+                    <i class="fas fa-cart-plus me-1"></i> Add to Cart
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentFacilityItem = null;
+
+// Category Filter Tabs
+document.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+        document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        const filter = pill.dataset.filter;
+        
+        document.querySelectorAll('.facility-section-block').forEach(section => {
+            if (filter === 'all' || section.dataset.sectionId === filter) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+    });
+});
+
+// Live Search Filter
+function filterFacilities() {
+    const q = document.getElementById('facilitySearchInput').value.toLowerCase().trim();
+    document.querySelectorAll('.facility-item-node').forEach(card => {
+        const name = card.dataset.name || '';
+        const desc = card.dataset.desc || '';
+        if (!q || name.includes(q) || desc.includes(q)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Modal management
+function openBookingModal(id, name, price, duration, img, slotsStr) {
+    currentFacilityItem = { id, name, price, duration, img };
+    document.getElementById('modalFacId').value = id;
+    document.getElementById('modalFacTitle').innerText = name;
+    document.getElementById('modalFacName').innerText = name;
+    document.getElementById('modalFacDuration').innerText = 'Duration: ' + (duration || '60 mins');
+    document.getElementById('modalFacPrice').innerText = price && Number(price) > 0 ? '₹' + Number(price).toLocaleString() : 'Complimentary';
+    document.getElementById('modalFacThumb').src = img;
+
+    // Set default date
+    const dateInput = document.getElementById('modalSlotDate');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    if (!dateInput.value) dateInput.value = today;
+
+    // Render slots
+    const slots = slotsStr ? slotsStr.split(',') : ["09:00 AM", "11:30 AM", "02:00 PM", "04:30 PM", "07:00 PM"];
+    const container = document.getElementById('modalSlotsContainer');
+    container.innerHTML = '';
+    
+    slots.forEach((s, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'slot-pill-btn' + (idx === 0 ? ' active' : '');
+        btn.innerText = s.trim();
+        btn.onclick = () => {
+            document.querySelectorAll('.slot-pill-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('modalSelectedSlot').value = s.trim();
+        };
+        container.appendChild(btn);
+    });
+
+    document.getElementById('modalSelectedSlot').value = slots[0].trim();
+    document.getElementById('quickBookingModal').classList.add('active');
+}
+
+function closeBookingModal() {
+    document.getElementById('quickBookingModal').classList.remove('active');
+}
+
+// Close on backdrop click
+document.getElementById('quickBookingModal').addEventListener('click', (e) => {
+    if (e.target.id === 'quickBookingModal') closeBookingModal();
+});
+
+// Submit Instant Booking via API
+async function submitFacilityBooking() {
+    const btn = document.getElementById('btnConfirmBooking');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Reserving...';
+
+    const payload = {
+        facility_id: document.getElementById('modalFacId').value,
+        name: currentFacilityItem ? currentFacilityItem.name : 'Facility Session',
+        price: currentFacilityItem ? currentFacilityItem.price : 2500,
+        date: document.getElementById('modalSlotDate').value,
+        slot_time: document.getElementById('modalSelectedSlot').value,
+        therapist: document.getElementById('modalTherapistPref').value,
+        notes: document.getElementById('modalSpecialNotes').value
+    };
+
+    try {
+        const res = await fetch('/api/facilities/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Instant Confirm Reservation';
+
+        if (data.status === 'success' || data.success) {
+            closeBookingModal();
+            if (window.NotificationSystem) {
+                NotificationSystem.success(data.data ? data.data.message : 'Reservation confirmed successfully!', 'Slot Confirmed');
+            } else {
+                alert(data.data ? data.data.message : 'Reservation confirmed successfully!');
+            }
+            setTimeout(() => {
+                window.location.href = '/my-bookings';
+            }, 1200);
+        } else {
+            alert(data.message || 'Could not confirm booking. Please try again.');
+        }
+    } catch (err) {
+        console.error('Booking error:', err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Instant Confirm Reservation';
+        alert('Network error while booking. Please try again.');
+    }
+}
+
+// Add Slot to Cart
+function addSlotToCart() {
+    const item = {
+        type: 'facility',
+        ref_id: document.getElementById('modalFacId').value,
+        name: currentFacilityItem ? currentFacilityItem.name : 'Wellness Slot',
+        date: document.getElementById('modalSlotDate').value,
+        slot: document.getElementById('modalSelectedSlot').value,
+        unit_price: Number(currentFacilityItem ? currentFacilityItem.price : 2500),
+        qty: 1
+    };
+
+    const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+    cart.push(item);
+    localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+
+    closeBookingModal();
+
+    if (window.NotificationSystem) {
+        NotificationSystem.success(`${item.name} added to cart!`, 'Cart Updated');
+    } else {
+        alert(`${item.name} added to cart!`);
+    }
+
+    // Update cart badge if present
+    const cartBadge = document.querySelector('.cart-count-badge');
+    if (cartBadge) cartBadge.innerText = cart.length;
+}
+</script>
 {% endblock %}

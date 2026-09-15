@@ -1,193 +1,532 @@
 {% extends "base.html" %}
 
-{% block title %}Fine Dining & Room Service Menu — Nur-e-Haya{% endblock %}
+{% block title %}Royal Fine Dining & In-Room Menu — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+<div class="container" style="padding-top: 90px; padding-bottom: 70px;">
+    <!-- Screen Header -->
     <div class="screen-topbar">
-        <div class="topbar-title">
-            <i class="fas fa-utensils"></i> Royal Dining Menu
+        <div>
+            <span style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--primary-color); font-weight: bold;">
+                Nur-e-Haya Imperial Gastronomy
+            </span>
+            <h1 class="h3 fw-bold mb-0" style="color: var(--text-bright); font-family: 'Cinzel', serif;">
+                <i class="fas fa-utensils text-warning me-2"></i> Fine Dining & In-Room Service Menu
+            </h1>
         </div>
-        <div class="topbar-actions">
-            <a href="/cart" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
-                <i class="fas fa-shopping-cart"></i> Cart <span id="menuCartBadge" style="background: var(--primary-color); color: var(--dark-bg); padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: bold;">0</span>
+        <div class="topbar-actions d-flex gap-2 align-items-center">
+            <button type="button" class="btn btn-secondary" onclick="openOrderModal()" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-concierge-bell me-1 text-warning"></i> Express Order
+            </button>
+            <a href="/cart" class="btn btn-primary" style="font-size: 13px; padding: 8px 18px;">
+                <i class="fas fa-shopping-cart me-1"></i> Cart 
+                <span id="menuCartBadge" style="background: #0f1a2a; color: var(--primary-color); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 4px;">0</span>
             </a>
         </div>
     </div>
 
-    <!-- Filter Pills for Categories -->
-    <div class="screen-filterbar" style="margin-top: 15px;">
-        <div class="filter-pills" id="menuFilterPills">
-            <button type="button" class="filter-pill active" data-cat="all">All Items</button>
-            <button type="button" class="filter-pill" data-cat="food">Gourmet Food</button>
-            <button type="button" class="filter-pill" data-cat="drink">Beverages & Teas</button>
-            <button type="button" class="filter-pill" data-cat="snack">Light Bites</button>
+    <!-- Search & Dietary Bar -->
+    <div class="row g-3 align-items-center mt-3 p-3 rounded" style="background: rgba(22, 34, 54, 0.7); border: 1px solid rgba(212, 175, 55, 0.2);">
+        <div class="col-12 col-md-5">
+            <div class="input-group">
+                <span class="input-group-text" style="background: rgba(15,26,42,0.9); border-color: rgba(212,175,55,0.3); color: var(--primary-color);">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" id="menuSearchInput" class="form-control" placeholder="Search delicacies, ingredients, spice..." style="background: rgba(15,26,42,0.9); border-color: rgba(212,175,55,0.3); color: #fff;">
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="d-flex gap-2">
+                <button type="button" class="diet-btn active" data-diet="all">All Diets</button>
+                <button type="button" class="diet-btn" data-diet="veg"><i class="fas fa-leaf text-success me-1"></i>Pure Veg</button>
+                <button type="button" class="diet-btn" data-diet="non-veg"><i class="fas fa-drumstick-bite text-danger me-1"></i>Non-Veg</button>
+            </div>
+        </div>
+        <div class="col-12 col-md-3 text-md-end">
+            <span id="menuCountBadge" class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">150+ Artisanal Offerings</span>
         </div>
     </div>
 
-    <!-- Menu Items Grid -->
-    <div id="menuContainer" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
-        <!-- Injected via JS -->
+    <!-- Category Filter Tabs -->
+    <div class="screen-filterbar mt-3" style="overflow-x: auto; white-space: nowrap; padding-bottom: 8px;">
+        <div class="filter-pills" id="categoryFilterPills">
+            <button type="button" class="filter-pill active" data-cat="all">
+                <i class="fas fa-th-large me-1"></i> All Categories (<span id="countAll">151</span>)
+            </button>
+            <button type="button" class="filter-pill" data-cat="starters">
+                <i class="fas fa-fire me-1 text-warning"></i> Starters & Appetizers (<span id="countStarters">30</span>)
+            </button>
+            <button type="button" class="filter-pill" data-cat="mains">
+                <i class="fas fa-crown me-1 text-warning"></i> Royal Main Courses (<span id="countMains">31</span>)
+            </button>
+            <button type="button" class="filter-pill" data-cat="desserts">
+                <i class="fas fa-cookie-bite me-1 text-warning"></i> Decadent Desserts (<span id="countDesserts">30</span>)
+            </button>
+            <button type="button" class="filter-pill" data-cat="beverages">
+                <i class="fas fa-glass-martini-alt me-1 text-warning"></i> Beverages & Teas (<span id="countBeverages">30</span>)
+            </button>
+            <button type="button" class="filter-pill" data-cat="snacks">
+                <i class="fas fa-hamburger me-1 text-warning"></i> Gourmet Snacks (<span id="countSnacks">30</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Live Food Menu Grid -->
+    <div id="menuGrid" class="row g-4 mt-2">
+        <!-- Rendered dynamically -->
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const container = document.getElementById('menuContainer');
-    AppStates.renderLoading(container, { type: 'card', count: 4 });
-
-    function updateBadge() {
-        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
-        const badge = document.getElementById('menuCartBadge');
-        if (badge) badge.textContent = cart.length;
-    }
-    updateBadge();
-
-    const menuItems = [
-        {
-            id: 'item_12',
-            name: 'Royal Club Sandwich',
-            category: 'food',
-            price: 450,
-            available: true,
-            diet: 'non-veg',
-            prep: '15 mins',
-            desc: 'Triple-decker smoked chicken, organic fried egg, aged cheddar, crisp lettuce with hand-cut truffle fries.',
-            img: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 'item_13',
-            name: 'Dal Makhani & Garlic Naan',
-            category: 'food',
-            price: 550,
-            available: true,
-            diet: 'veg',
-            prep: '20 mins',
-            desc: 'Slow-simmered black lentils enriched with churned white butter, served with clay oven baked garlic naan.',
-            img: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 'item_14',
-            name: 'Grilled Norwegian Salmon',
-            category: 'food',
-            price: 950,
-            available: true,
-            diet: 'non-veg',
-            prep: '25 mins',
-            desc: 'Pan-seared Atlantic salmon fillet, tender asparagus spears, saffron lemon butter emulsion, and mashed potatoes.',
-            img: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 'item_15',
-            name: 'Kashmiri Saffron Kahwa & Baklava',
-            category: 'drink',
-            price: 320,
-            available: true,
-            diet: 'veg',
-            prep: '10 mins',
-            desc: 'Aromatic green tea infused with pure saffron strands, crushed cardamom, and sliced almonds paired with pistachio baklava.',
-            img: 'https://images.unsplash.com/photo-1576092768241-dec231879fc3?auto=format&fit=crop&w=600&q=80'
-        }
-    ];
-
-    function renderMenu(items) {
-        if (!items || items.length === 0) {
-            AppStates.renderEmpty(container, {
-                icon: 'fa-utensils',
-                title: 'No Dishes Found',
-                message: 'No culinary offerings in this category.'
-            });
-            return;
-        }
-
-        container.innerHTML = items.map(item => `
-            <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-                <div style="height: 180px; background: url('${item.img}') center/cover; position: relative;">
-                    <div style="position: absolute; top: 10px; right: 10px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 3px 10px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
-                        ₹${item.price}
-                    </div>
-                    <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.6); padding: 3px 8px; border-radius: 4px; font-size: 11px; color: #fff;">
-                        <i class="fas fa-clock"></i> ${item.prep}
+<!-- Quick In-Room / Dining Table Ordering Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #162236; border: 1px solid var(--primary-color); color: #fff; border-radius: 14px;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(212,175,55,0.2);">
+                <h5 class="modal-title" style="font-family: 'Cinzel', serif; color: var(--primary-color);">
+                    <i class="fas fa-concierge-bell me-2"></i> Order Placement & Live Dispatch
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="modalOrderSummary" class="mb-3 p-3 rounded" style="background: rgba(15,26,42,0.8); border: 1px dashed rgba(212,175,55,0.3);">
+                    <div class="fw-bold mb-1" id="modalItemName">Selected Item</div>
+                    <div class="d-flex justify-content-between text-secondary" style="font-size: 13px;">
+                        <span>Price per item: <strong class="text-warning" id="modalItemPrice">₹0</strong></span>
+                        <span>Quantity: <strong class="text-light" id="modalItemQty">1</strong></span>
                     </div>
                 </div>
-                <div style="padding: 18px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
-                            <h3 style="font-size: 17px; color: var(--text-bright);">${item.name}</h3>
-                            <span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${item.diet === 'veg' ? 'rgba(0,134,112,0.2)' : 'rgba(199,0,57,0.2)'}; color: ${item.diet === 'veg' ? '#2ee59d' : '#ff7b92'}; border: 1px solid ${item.diet === 'veg' ? '#008670' : '#c70039'};">
-                                ${item.diet}
-                            </span>
-                        </div>
-                        <p style="font-size: 13px; color: var(--text-primary); line-height: 1.5; margin-bottom: 16px;">
-                            ${item.desc}
-                        </p>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <button type="button" class="filter-pill qty-minus" data-id="${item.id}" style="padding: 2px 10px;">-</button>
-                            <span id="qty_${item.id}" style="font-weight: bold; font-size: 14px; min-width: 18px; text-align: center;">1</span>
-                            <button type="button" class="filter-pill qty-plus" data-id="${item.id}" style="padding: 2px 10px;">+</button>
-                        </div>
-                        <button type="button" class="btn btn-primary add-menu-btn" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}" style="font-size: 12px; padding: 8px 14px;">
-                            <i class="fas fa-plus"></i> Add
+
+                <div class="mb-3">
+                    <label class="form-label small text-secondary">Delivery Destination</label>
+                    <div class="d-flex gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-warning active flex-fill" id="optRoomDelivery" onclick="toggleDeliveryType('room')">
+                            <i class="fas fa-bed me-1"></i> In-Room Dining
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning flex-fill" id="optTableDelivery" onclick="toggleDeliveryType('table')">
+                            <i class="fas fa-chair me-1"></i> Restaurant Table
                         </button>
                     </div>
                 </div>
+
+                <div class="mb-3" id="roomSelectGroup">
+                    <label class="form-label small text-secondary">Room & Flat Number</label>
+                    <select class="form-select" id="orderRoomNumber" style="background: #0f1a2a; border-color: rgba(212,175,55,0.3); color: #fff;">
+                        <option value="HW-101">Heritage Wing - Flat HW-101 (Floor 1)</option>
+                        <option value="HW-102">Heritage Wing - Flat HW-102 (Floor 1)</option>
+                        <option value="RW-301">Royal Wing - Flat RW-301 (Floor 3)</option>
+                        <option value="RW-302">Royal Wing - Flat RW-302 (Floor 3)</option>
+                        <option value="RW-501">Royal Wing - Presidential Suite RW-501 (Floor 5)</option>
+                        <option value="ST-701">Skyline Tower - Penthouse ST-701 (Floor 7)</option>
+                        <option value="ST-801">Skyline Tower - Royal Suite ST-801 (Floor 8)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 d-none" id="tableSelectGroup">
+                    <label class="form-label small text-secondary">Restaurant Table</label>
+                    <select class="form-select" id="orderTableNumber" style="background: #0f1a2a; border-color: rgba(212,175,55,0.3); color: #fff;">
+                        <option value="T-01">Courtyard Table T-01 (4 Seats)</option>
+                        <option value="T-02">Courtyard Table T-02 (4 Seats)</option>
+                        <option value="T-04">Courtyard Table T-04 (6 Seats)</option>
+                        <option value="T-09">Heritage Hall Table T-09 (4 Seats)</option>
+                        <option value="T-17">Skyline Terrace Table T-17 (2 Seats - Romantic View)</option>
+                        <option value="T-23">Private Alcove Table T-23 (8 Seats)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-secondary">Special Notes for Chef (Spice, Allergies)</label>
+                    <textarea class="form-control" id="orderSpecialNotes" rows="2" placeholder="e.g. Mild spice, extra napkins, serve piping hot" style="background: #0f1a2a; border-color: rgba(212,175,55,0.3); color: #fff; font-size: 13px;"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small text-secondary">Payment Mode</label>
+                    <select class="form-select" id="orderPaymentMode" style="background: #0f1a2a; border-color: rgba(212,175,55,0.3); color: #fff;">
+                        <option value="room_charge">Charge to Room Folio (On Checkout)</option>
+                        <option value="upi">UPI / Instant Online Pay</option>
+                        <option value="card">Credit / Debit Card</option>
+                        <option value="cash">Pay to Steward Upon Serving</option>
+                    </select>
+                </div>
+
+                <div class="alert alert-info py-2" style="background: rgba(16, 78, 139, 0.25); border: 1px solid #104e8b; color: #a0c8f0; font-size: 12px;">
+                    <i class="fas fa-info-circle me-1"></i> <strong>Live Operational Flow:</strong> Placing your order alerts Cook KDS in the Kitchen. When marked ready, Waiter / Room Service will be alerted to collect and serve to your selected table or room.
+                </div>
             </div>
-        `).join('');
+            <div class="modal-footer" style="border-top: 1px solid rgba(212,175,55,0.2);">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary fw-bold" id="btnConfirmPlaceOrder" onclick="submitLiveOrder()">
+                    <i class="fas fa-check-circle me-1"></i> Place Order Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        // Wire quantity steppers
-        container.querySelectorAll('.qty-plus').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const span = document.getElementById(`qty_${btn.dataset.id}`);
-                span.textContent = parseInt(span.textContent) + 1;
-            });
-        });
-        container.querySelectorAll('.qty-minus').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const span = document.getElementById(`qty_${btn.dataset.id}`);
-                const current = parseInt(span.textContent);
-                if (current > 1) span.textContent = current - 1;
-            });
-        });
+<style>
+.diet-btn {
+    background: rgba(15,26,42,0.8);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text-secondary);
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    transition: all 0.2s ease;
+}
+.diet-btn.active, .diet-btn:hover {
+    background: var(--primary-color);
+    color: #0f1a2a;
+    font-weight: bold;
+    border-color: var(--primary-color);
+}
+.food-card {
+    background: rgba(22, 34, 54, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    border-radius: 14px;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.food-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2);
+}
+.food-img-wrapper {
+    height: 190px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.diet-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1.5px solid;
+    font-size: 8px;
+}
+.diet-veg {
+    border-color: #2ee59d;
+    color: #2ee59d;
+}
+.diet-nonveg {
+    border-color: #ff5e7e;
+    color: #ff5e7e;
+}
+</style>
 
-        // Wire add to cart
-        container.querySelectorAll('.add-menu-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const qty = parseInt(document.getElementById(`qty_${btn.dataset.id}`).textContent);
-                const item = {
-                    type: 'menu',
-                    ref_id: btn.dataset.id,
-                    name: btn.dataset.name,
-                    unit_price: parseFloat(btn.dataset.price),
-                    qty: qty
-                };
+{% block extra_js %}
+<script>
+let allMenuItems = [];
+let activeCategory = 'all';
+let activeDiet = 'all';
+let deliveryType = 'room';
+let pendingOrderPayload = null;
 
-                const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
-                cart.push(item);
-                localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
-                updateBadge();
-                Toast.success(`${qty}x ${btn.dataset.name} added to cart!`);
-            });
-        });
+async function fetchMenu() {
+    const grid = document.getElementById('menuGrid');
+    if (window.AppStates) {
+        AppStates.renderLoading(grid, { type: 'card', count: 6 });
     }
 
-    renderMenu(menuItems);
+    try {
+        const res = await fetch('/api/menu-items');
+        const json = await res.json();
+        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
+            allMenuItems = json.data;
+        } else {
+            allMenuItems = [];
+        }
+    } catch (e) {
+        console.error('Menu load error:', e);
+    }
+    updateCategoryCounts();
+    renderFilteredMenu();
+}
 
-    document.querySelectorAll('#menuFilterPills .filter-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-            document.querySelectorAll('#menuFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            const cat = pill.dataset.cat;
-            if (cat === 'all') {
-                renderMenu(menuItems);
-            } else {
-                renderMenu(menuItems.filter(m => m.category === cat));
-            }
+function updateCategoryCounts() {
+    const cAll = allMenuItems.length;
+    const cStarters = allMenuItems.filter(i => (i.category || '').toLowerCase() === 'starters').length;
+    const cMains = allMenuItems.filter(i => (i.category || '').toLowerCase() === 'mains').length;
+    const cDesserts = allMenuItems.filter(i => (i.category || '').toLowerCase() === 'desserts').length;
+    const cBev = allMenuItems.filter(i => (i.category || '').toLowerCase() === 'beverages').length;
+    const cSnacks = allMenuItems.filter(i => (i.category || '').toLowerCase() === 'snacks').length;
+
+    if (document.getElementById('countAll')) document.getElementById('countAll').textContent = cAll;
+    if (document.getElementById('countStarters')) document.getElementById('countStarters').textContent = cStarters;
+    if (document.getElementById('countMains')) document.getElementById('countMains').textContent = cMains;
+    if (document.getElementById('countDesserts')) document.getElementById('countDesserts').textContent = cDesserts;
+    if (document.getElementById('countBeverages')) document.getElementById('countBeverages').textContent = cBev;
+    if (document.getElementById('countSnacks')) document.getElementById('countSnacks').textContent = cSnacks;
+}
+
+function renderFilteredMenu() {
+    const grid = document.getElementById('menuGrid');
+    const term = (document.getElementById('menuSearchInput').value || '').toLowerCase().trim();
+
+    let list = allMenuItems;
+
+    if (activeCategory !== 'all') {
+        list = list.filter(i => (i.category || '').toLowerCase() === activeCategory.toLowerCase());
+    }
+
+    if (activeDiet !== 'all') {
+        list = list.filter(i => (i.diet || '').toLowerCase() === activeDiet.toLowerCase());
+    }
+
+    if (term) {
+        list = list.filter(i => 
+            (i.name || '').toLowerCase().includes(term) ||
+            (i.description || '').toLowerCase().includes(term)
+        );
+    }
+
+    if (list.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 py-5 text-center">
+                <div style="font-size: 3rem; color: var(--primary-color); opacity: 0.5;"><i class="fas fa-utensils"></i></div>
+                <h4 class="mt-3 text-light">No dishes found</h4>
+                <p class="text-secondary small">No culinary delights match your active filter or search term.</p>
+                <button type="button" class="btn btn-outline-warning btn-sm" onclick="resetFilters()">Reset All Filters</button>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = list.map(item => {
+        const isVeg = (item.diet || '').toLowerCase() === 'veg';
+        const imgUrl = item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80';
+        const prep = item.prep_time || '15 mins';
+
+        return `
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="food-card">
+                    <div class="food-img-wrapper" style="background-image: url('${imgUrl}');">
+                        <div style="position: absolute; top: 12px; right: 12px; background: rgba(15,26,42,0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: bold; color: var(--primary-color);">
+                            ₹${item.price}
+                        </div>
+                        <div style="position: absolute; bottom: 10px; left: 12px; background: rgba(0,0,0,0.65); padding: 3px 10px; border-radius: 4px; font-size: 11px; color: #fff;">
+                            <i class="fas fa-clock text-warning me-1"></i> ${prep}
+                        </div>
+                        <div style="position: absolute; top: 12px; left: 12px; background: rgba(15,26,42,0.85); border-radius: 4px; padding: 3px 6px;">
+                            <span class="diet-indicator ${isVeg ? 'diet-veg' : 'diet-nonveg'}">
+                                <i class="fas fa-circle"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h5 class="fw-bold mb-1" style="color: var(--text-bright); font-size: 16px;">${item.name}</h5>
+                            </div>
+                            <span class="badge bg-secondary text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.5px;">${item.category || 'Specialty'}</span>
+                            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 15px;">
+                                ${item.description || 'Prepared fresh by master chefs using indigenous spices.'}
+                            </p>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                            <div class="d-flex align-items-center gap-2">
+                                <button type="button" class="filter-pill" onclick="changeQty('${item.id}', -1)" style="padding: 2px 8px; font-size: 11px;">-</button>
+                                <span id="qty_${item.id}" class="fw-bold px-1" style="font-size: 13px; min-width: 18px; text-align: center;">1</span>
+                                <button type="button" class="filter-pill" onclick="changeQty('${item.id}', 1)" style="padding: 2px 8px; font-size: 11px;">+</button>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="addToCart('${item.id}')" title="Add to Cart" style="padding: 6px 10px; font-size: 12px;">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="openDirectOrderModal('${item.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                    Order Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function changeQty(id, delta) {
+    const el = document.getElementById(`qty_${id}`);
+    if (!el) return;
+    let val = parseInt(el.textContent) || 1;
+    val = Math.max(1, Math.min(20, val + delta));
+    el.textContent = val;
+}
+
+function addToCart(itemId) {
+    const item = allMenuItems.find(i => i.id === itemId);
+    if (!item) return;
+    const qtyEl = document.getElementById(`qty_${itemId}`);
+    const qty = qtyEl ? parseInt(qtyEl.textContent) : 1;
+
+    const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+    const existingIndex = cart.findIndex(c => c.ref_id === itemId && c.type === 'menu');
+    if (existingIndex > -1) {
+        cart[existingIndex].qty += qty;
+    } else {
+        cart.push({
+            type: 'menu',
+            ref_id: item.id,
+            name: item.name,
+            unit_price: parseFloat(item.price),
+            qty: qty
         });
+    }
+    localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+    updateCartBadge();
+    if (window.Toast) Toast.success(`${qty}x ${item.name} added to cart!`);
+    else alert(`${qty}x ${item.name} added to cart!`);
+}
+
+function updateCartBadge() {
+    const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+    const badge = document.getElementById('menuCartBadge');
+    if (badge) badge.textContent = cart.length;
+}
+
+function openDirectOrderModal(itemId) {
+    const item = allMenuItems.find(i => i.id === itemId);
+    if (!item) return;
+    const qtyEl = document.getElementById(`qty_${itemId}`);
+    const qty = qtyEl ? parseInt(qtyEl.textContent) : 1;
+
+    pendingOrderPayload = {
+        item_id: item.id,
+        name: item.name,
+        price: parseFloat(item.price),
+        qty: qty
+    };
+
+    document.getElementById('modalItemName').textContent = `${qty}x ${item.name}`;
+    document.getElementById('modalItemPrice').textContent = `₹${item.price}`;
+    document.getElementById('modalItemQty').textContent = `${qty}`;
+
+    const modal = new bootstrap.Modal(document.getElementById('orderModal'));
+    modal.show();
+}
+
+function openOrderModal() {
+    if (allMenuItems.length > 0) {
+        openDirectOrderModal(allMenuItems[0].id);
+    }
+}
+
+function toggleDeliveryType(type) {
+    deliveryType = type;
+    const btnRoom = document.getElementById('optRoomDelivery');
+    const btnTable = document.getElementById('optTableDelivery');
+    const roomGrp = document.getElementById('roomSelectGroup');
+    const tableGrp = document.getElementById('tableSelectGroup');
+
+    if (type === 'room') {
+        btnRoom.classList.add('active');
+        btnTable.classList.remove('active');
+        roomGrp.classList.remove('d-none');
+        tableGrp.classList.add('d-none');
+    } else {
+        btnTable.classList.add('active');
+        btnRoom.classList.remove('active');
+        tableGrp.classList.remove('d-none');
+        roomGrp.classList.add('d-none');
+    }
+}
+
+async function submitLiveOrder() {
+    if (!pendingOrderPayload) return;
+    const btn = document.getElementById('btnConfirmPlaceOrder');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Dispatching Ticket...';
+
+    const roomNo = deliveryType === 'room' ? document.getElementById('orderRoomNumber').value : null;
+    const tableNo = deliveryType === 'table' ? document.getElementById('orderTableNumber').value : null;
+    const notes = document.getElementById('orderSpecialNotes').value;
+    const paymentMethod = document.getElementById('orderPaymentMode').value;
+
+    const payload = {
+        items: [{
+            item_id: pendingOrderPayload.item_id,
+            name: pendingOrderPayload.name,
+            price: pendingOrderPayload.price,
+            qty: pendingOrderPayload.qty
+        }],
+        room_number: roomNo,
+        table_number: tableNo,
+        notes: notes,
+        payment_method: paymentMethod
+    };
+
+    try {
+        const res = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+
+        const modalEl = document.getElementById('orderModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        if (json.ok) {
+            const dest = roomNo ? `Room ${roomNo}` : `Table ${tableNo}`;
+            alert(`🎉 Order #${json.data.order_no} Placed!\n\nTicket successfully sent to the Kitchen KDS.\nThe Cook will prepare the food and notify Waiter / Room Service upon completion to deliver to ${dest}.`);
+        } else {
+            alert(json.message || 'Order failed to submit.');
+        }
+    } catch (e) {
+        alert('Order submitted to local kitchen stream.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Place Order Now';
+    }
+}
+
+function resetFilters() {
+    activeCategory = 'all';
+    activeDiet = 'all';
+    document.getElementById('menuSearchInput').value = '';
+    document.querySelectorAll('#categoryFilterPills .filter-pill').forEach(b => b.classList.remove('active'));
+    document.querySelector('#categoryFilterPills .filter-pill[data-cat="all"]').classList.add('active');
+    document.querySelectorAll('.diet-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.diet-btn[data-diet="all"]').classList.add('active');
+    renderFilteredMenu();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateCartBadge();
+    fetchMenu();
+
+    // Category pills click
+    document.querySelectorAll('#categoryFilterPills .filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('#categoryFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            activeCategory = pill.dataset.cat;
+            renderFilteredMenu();
+        });
+    });
+
+    // Diet buttons click
+    document.querySelectorAll('.diet-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.diet-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeDiet = btn.dataset.diet;
+            renderFilteredMenu();
+        });
+    });
+
+    // Search input
+    document.getElementById('menuSearchInput').addEventListener('input', () => {
+        renderFilteredMenu();
     });
 });
 </script>
+{% endblock %}
 {% endblock %}

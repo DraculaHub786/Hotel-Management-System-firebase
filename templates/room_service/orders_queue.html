@@ -164,59 +164,112 @@ function renderOrders() {
     filtered.forEach(order => {
         const col = document.createElement('div');
         col.className = 'col-12 col-md-6 col-xl-4';
+        const oid = order.id || order.order_no || order.order_id;
 
         let badgeStatus = '';
         if (order.status === 'delivered') badgeStatus = '<span class="badge bg-success text-white rounded-pill px-2 py-1">Delivered</span>';
         else if (order.status === 'delivering') badgeStatus = '<span class="badge bg-primary text-white rounded-pill px-2 py-1"><i class="fas fa-walking me-1"></i>Delivering</span>';
-        else if (order.status === 'ready') badgeStatus = '<span class="badge bg-warning text-dark rounded-pill px-2 py-1"><i class="fas fa-bell me-1"></i>Ready</span>';
-        else if (order.status === 'preparing') badgeStatus = '<span class="badge bg-info text-dark rounded-pill px-2 py-1"><i class="fas fa-fire me-1"></i>Preparing</span>';
+        else if (order.status === 'ready') badgeStatus = '<span class="badge bg-warning text-dark rounded-pill px-2 py-1 animate-pulse"><i class="fas fa-bell me-1"></i>Plated & Ready</span>';
+        else if (order.status === 'preparing') badgeStatus = '<span class="badge bg-info text-dark rounded-pill px-2 py-1"><i class="fas fa-fire me-1"></i>In Cook</span>';
         else badgeStatus = '<span class="badge bg-secondary text-white rounded-pill px-2 py-1">Received</span>';
+
+        const destBadge = order.table_number
+            ? `<span class="badge bg-primary text-white fw-bold px-2 py-1 rounded me-1" style="font-size: 13px;"><i class="fas fa-chair me-1"></i>Table ${order.table_number}</span>`
+            : `<span class="badge bg-warning text-dark fw-bold px-2 py-1 rounded me-1" style="font-size: 13px;"><i class="fas fa-bed me-1"></i>Room ${order.room_number || '204'}</span>`;
 
         const itemsListHtml = (order.items || []).map(i => `
             <div class="d-flex justify-content-between align-items-center py-1" style="font-size: 13px; color: var(--text-primary);">
                 <span>${i.qty}x ${i.name}</span>
-                <span class="fw-bold">₹${i.price * i.qty}</span>
+                <span class="fw-bold">₹${(i.price || 0) * (i.qty || 1)}</span>
             </div>
         `).join('');
 
+        let quickActionHtml = '';
+        if (order.status === 'ready') {
+            quickActionHtml = `
+                <button class="btn btn-sm btn-warning w-100 fw-bold text-dark mt-2" onclick="advanceOrderStatus('${oid}', 'delivering', false)">
+                    <i class="fas fa-walking me-1"></i> Pick Up from Pass & Deliver
+                </button>
+            `;
+        } else if (order.status === 'delivering') {
+            quickActionHtml = `
+                <button class="btn btn-sm btn-success w-100 fw-bold mt-2" onclick="advanceOrderStatus('${oid}', 'delivered', ${order.require_otp ? 'true' : 'false'})">
+                    <i class="fas fa-check-double me-1"></i> Confirm Served / Delivered
+                </button>
+            `;
+        }
+
         col.innerHTML = `
-            <div class="order-card">
+            <div class="order-card ${order.status === 'ready' ? 'border-warning' : ''}">
                 <div class="d-flex justify-content-between align-items-start mb-3 pb-2 border-bottom" style="border-color: rgba(212,175,55,0.2) !important;">
                     <div>
-                        <span class="badge bg-warning text-dark fw-bold px-2 py-1 rounded me-1" style="font-size: 12px;">Room ${order.room_number || '204'}</span>
+                        ${destBadge}
                         <h6 class="fw-bold m-0 mt-1" style="color: var(--text-bright);">${order.guest_name || 'Guest'}</h6>
                     </div>
                     <div class="text-end">
                         ${badgeStatus}
-                        <div class="small mt-1" style="color: var(--text-secondary); font-size: 11px;">#${order.order_id}</div>
+                        <div class="small mt-1" style="color: var(--text-secondary); font-size: 11px;">#${order.order_no || oid}</div>
                     </div>
                 </div>
 
                 <div class="flex-grow-1 mb-3">
                     <div class="mb-2">${itemsListHtml}</div>
-                    ${order.delivery_notes ? `
+                    ${order.delivery_notes || order.notes ? `
                         <div class="p-2 rounded mt-2" style="background: rgba(15,26,42,0.8); border: 1px dashed rgba(212,175,55,0.2); font-size: 12px; color: var(--text-secondary);">
-                            <i class="fas fa-comment-dots text-warning me-1"></i> ${order.delivery_notes}
+                            <i class="fas fa-comment-dots text-warning me-1"></i> ${order.delivery_notes || order.notes}
                         </div>
                     ` : ''}
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
-                    <div>
-                        <span style="font-size: 11px; color: var(--text-secondary);">Total</span>
-                        <div class="fw-bold" style="color: var(--primary-color); font-size: 16px;">₹${order.total || 0}</div>
+                <div class="pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span style="font-size: 11px; color: var(--text-secondary);">Total</span>
+                            <div class="fw-bold" style="color: var(--primary-color); font-size: 16px;">₹${order.total || 0}</div>
+                        </div>
+                        <div class="d-flex gap-2 align-items-center">
+                            ${order.require_otp ? '<span class="badge bg-danger text-white d-flex align-items-center" title="Requires Guest OTP"><i class="fas fa-shield-alt me-1"></i>OTP</span>' : ''}
+                            <a href="/staff/room-service/orders/${oid}" class="btn btn-sm btn-secondary" style="font-size: 12px; padding: 4px 10px;">
+                                Details
+                            </a>
+                        </div>
                     </div>
-                    <div class="d-flex gap-2">
-                        ${order.require_otp ? '<span class="badge bg-danger text-white d-flex align-items-center" title="Requires Guest OTP"><i class="fas fa-shield-alt"></i></span>' : ''}
-                        <a href="/staff/room-service/orders/${order.order_id}" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 6px 14px;">
-                            Manage <i class="fas fa-chevron-right ms-1" style="font-size: 10px;"></i>
-                        </a>
-                    </div>
+                    ${quickActionHtml}
                 </div>
             </div>
         `;
         grid.appendChild(col);
     });
+}
+
+async function advanceOrderStatus(orderId, nextStatus, requireOtp) {
+    let payload = { status: nextStatus };
+    if (nextStatus === 'delivered' && requireOtp) {
+        const otp = prompt('High-value delivery: Please enter the 6-digit Guest OTP (Default: 1234):', '1234');
+        if (!otp) return;
+        payload.otp = otp;
+        payload.require_otp = true;
+    }
+
+    try {
+        const res = await fetch(`/api/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.ok) {
+            const ord = allOrders.find(o => o.id === orderId || o.order_no === orderId || o.order_id === orderId);
+            if (ord) ord.status = nextStatus;
+            renderOrders();
+            if (window.Toast) Toast.success(`Order ${orderId} updated to ${nextStatus}`);
+        } else {
+            alert(json.message || 'Failed to update order status');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error updating order status');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', fetchOrders);

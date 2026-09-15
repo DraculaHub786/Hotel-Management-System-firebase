@@ -1,109 +1,375 @@
 {% extends "base.html" %}
 
-{% block title %}{{ facility.name if facility else "Facility Detail" }} — Nur-e-Haya{% endblock %}
+{% block title %}{{ facility.name }} — Spa & Facilities — Nur-e-Haya{% endblock %}
+
+{% block extra_css %}
+<style>
+.facility-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.detail-card {
+    background: rgba(15, 26, 42, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 16px;
+    padding: 26px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.benefit-pill-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    color: #e2e8f0;
+}
+
+.slot-choice-pill {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: #cbd5e1;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.slot-choice-pill:hover, .slot-choice-pill.active {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.1));
+    border-color: #ffd700;
+    color: #ffd700;
+    font-weight: 600;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.related-card {
+    background: rgba(15, 26, 42, 0.8);
+    border: 1px solid rgba(212, 175, 55, 0.18);
+    border-radius: 12px;
+    overflow: hidden;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+}
+
+.related-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(212, 175, 55, 0.45);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <a href="/facilities" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
-            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> All Facilities
-        </a>
-        <a href="/cart" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
-            <i class="fas fa-shopping-cart"></i> Cart
-        </a>
+<div class="container" style="padding-top: 85px; padding-bottom: 70px;">
+    
+    <!-- Top Navigation Bar -->
+    <div class="facility-detail-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="/facilities" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-arrow-left me-1"></i> All Facilities & Experiences
+            </a>
+            <span style="color: var(--text-secondary); font-size: 13px;">/</span>
+            <span style="color: #ffd700; font-size: 13px; font-weight: 500;">{{ facility.category or 'Wellness' }}</span>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <a href="/my-bookings" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-calendar-check me-1"></i> My Bookings
+            </a>
+            <a href="/cart" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-shopping-cart me-1"></i> View Cart
+            </a>
+        </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+    <!-- Main Detail Grid -->
+    <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 32px;" class="facility-detail-grid">
+        
+        <!-- Left Column: Media & Content -->
         <div>
-            <img src="{{ facility.image or 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80' }}" 
-                 style="width: 100%; height: 360px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.25);"
-                 alt="{{ facility.name }}">
-            <div class="card" style="margin-top: 20px;">
-                <h3 style="color: var(--text-bright); margin-bottom: 8px;">Experience Overview</h3>
-                <p style="color: var(--text-primary); font-size: 14px; line-height: 1.6;">
-                    {{ facility.description or "Immerse yourself in world-class amenities designed for ultimate relaxation, rejuvenation, and comfort during your stay at Nur-e-Haya." }}
+            <!-- Hero Image Frame -->
+            <div style="position: relative; border-radius: 16px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.3); height: 420px; box-shadow: 0 12px 35px rgba(0,0,0,0.5);">
+                <img src="{{ facility.image or 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80' }}" 
+                     alt="{{ facility.name }}" 
+                     style="width: 100%; height: 100%; object-fit: cover;">
+                
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(10, 18, 30, 0.95), transparent 85%); padding: 30px 24px 20px;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <span style="background: rgba(212, 175, 55, 0.2); border: 1px solid rgba(212, 175, 55, 0.4); color: #ffd700; border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 600;">
+                            <i class="fas fa-crown me-1"></i> {{ facility.category or 'Wellness Sanctuary' }}
+                        </span>
+                        <span style="background: rgba(15, 26, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 11px;">
+                            <i class="far fa-clock me-1"></i> {{ facility.duration or '60 mins' }}
+                        </span>
+                        <span style="background: rgba(15, 26, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; border-radius: 20px; padding: 4px 12px; font-size: 11px;">
+                            <i class="fas fa-map-marker-alt me-1"></i> {{ facility.location or 'Floor 3, East Wing' }}
+                        </span>
+                    </div>
+                    <h1 style="font-size: 26px; font-weight: 700; color: #fff; margin: 0; font-family: 'Cinzel', serif;">
+                        {{ facility.name }}
+                    </h1>
+                </div>
+            </div>
+
+            <!-- Overview Card -->
+            <div class="detail-card" style="margin-top: 24px;">
+                <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px; font-family: 'Cinzel', serif; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-feather-alt text-warning"></i> Philosophy & Experience
+                </h3>
+                <p style="color: #cbd5e1; font-size: 14px; line-height: 1.7; margin-bottom: 20px;">
+                    {{ facility.description }}
                 </p>
+
+                {% if facility.benefits %}
+                <h4 style="color: #ffd700; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; font-weight: 600;">
+                    Key Therapeutic Benefits
+                </h4>
+                <div style="margin-bottom: 20px;">
+                    {% for b in facility.benefits %}
+                    <div class="benefit-pill-item">
+                        <i class="fas fa-check-circle text-warning mt-1" style="font-size: 14px;"></i>
+                        <span>{{ b }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if facility.inclusions %}
+                <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 12px; padding: 16px; margin-top: 20px;">
+                    <div style="font-weight: 600; color: #ffd700; font-size: 13px; margin-bottom: 6px;">
+                        <i class="fas fa-gift me-1"></i> Complimentary Inclusions
+                    </div>
+                    <p style="color: #cbd5e1; font-size: 13px; line-height: 1.5; margin: 0;">
+                        {{ facility.inclusions }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Etiquette & Guidelines -->
+            <div class="detail-card" style="margin-top: 24px;">
+                <h3 style="color: #fff; font-size: 16px; margin-bottom: 12px; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-info-circle text-warning me-1"></i> Guest Etiquette & Preparation
+                </h3>
+                <ul style="color: #94a3b8; font-size: 13px; line-height: 1.7; padding-left: 20px; margin: 0;">
+                    <li>Please arrive 15 minutes prior to your reserved slot to enjoy warm herbal tea and complete your wellness questionnaire.</li>
+                    <li>Plush waffle robes, slippers, and private digital lockers are provided inside each sanctuary suite.</li>
+                    <li>Complimentary cancellation or rescheduling is available up to 4 hours prior to appointment time.</li>
+                    <li>Please notify our master practitioner of any sensitivities, hypertension, or pregnancy prior to the session.</li>
+                </ul>
             </div>
         </div>
 
-        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-                <span style="font-size: 12px; text-transform: uppercase; color: var(--primary-color);">Wellness & Recreation</span>
-                <h1 style="font-size: 24px; color: var(--text-bright); margin: 6px 0 10px;">{{ facility.name or "Luxury Facility" }}</h1>
-                <div style="font-size: 22px; font-weight: bold; color: var(--primary-color); font-family: 'Cinzel', serif; margin-bottom: 20px;">
-                    ₹{{ facility.price or 1500 }} <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Raleway', sans-serif;">/ slot</span>
+        <!-- Right Column: Booking Box -->
+        <div>
+            <div class="detail-card" style="position: sticky; top: 100px;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 16px;">
+                    <div>
+                        <span style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px;">Session Rate</span>
+                        <div style="font-size: 28px; font-weight: 700; color: #ffd700; font-family: 'Cinzel', serif;">
+                            {% if facility.price and facility.price > 0 %}
+                                ₹{{ "{:,.0f}".format(facility.price) }}
+                            {% else %}
+                                Complimentary
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 4px 10px; font-size: 12px; color: #fff;">
+                            <i class="far fa-clock me-1 text-warning"></i> {{ facility.duration or '60 mins' }}
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Date Picker -->
-                <div class="form-group">
-                    <label class="form-label required" for="slotDate">Select Date</label>
-                    <input type="date" id="slotDate" class="form-control" required>
+                <div class="form-group mb-3">
+                    <label class="form-label required" style="font-size: 13px; color: #cbd5e1; font-weight: 600; margin-bottom: 8px; display: block;">
+                        <i class="far fa-calendar-alt text-warning me-1"></i> Select Experience Date
+                    </label>
+                    <input type="date" id="detailDateInput" class="form-control" style="background: rgba(10, 18, 30, 0.85); border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 10px 14px; border-radius: 10px;" required>
                 </div>
 
-                <!-- Slot Picker pills -->
-                <div class="form-group">
-                    <label class="form-label required">Select Time Slot</label>
-                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 6px;" id="slotPillsContainer">
-                        {% for s in (facility.slots or ["10:00 AM", "12:00 PM", "02:30 PM", "04:30 PM", "07:00 PM"]) %}
-                        <button type="button" class="filter-pill slot-choice" data-slot="{{ s }}">{{ s }}</button>
+                <!-- Slot Picker -->
+                <div class="form-group mb-3">
+                    <label class="form-label required" style="font-size: 13px; color: #cbd5e1; font-weight: 600; margin-bottom: 8px; display: block;">
+                        <i class="far fa-clock text-warning me-1"></i> Choose Preferred Time Slot
+                    </label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="detailSlotsContainer">
+                        {% for s in (facility.slots or ["08:30 AM", "11:00 AM", "01:30 PM", "04:00 PM", "06:30 PM", "08:30 PM"]) %}
+                        <button type="button" class="slot-choice-pill {% if loop.first %}active{% endif %}" data-slot="{{ s }}">
+                            {{ s }}
+                        </button>
                         {% endfor %}
                     </div>
+                    <input type="hidden" id="detailSelectedSlot" value="{{ (facility.slots[0] if facility.slots else '10:30 AM') }}">
+                </div>
+
+                <!-- Specialist Preference -->
+                <div class="form-group mb-3">
+                    <label class="form-label" style="font-size: 13px; color: #cbd5e1; font-weight: 600; margin-bottom: 8px; display: block;">
+                        <i class="fas fa-user-md text-warning me-1"></i> Therapist Preference
+                    </label>
+                    <select id="detailTherapistSelect" class="form-control" style="background: rgba(10, 18, 30, 0.85); border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 10px 14px; border-radius: 10px;">
+                        <option value="Master Practitioner">First Available Certified Master Specialist</option>
+                        <option value="Female Practitioner">Female Specialist / Therapist</option>
+                        <option value="Male Practitioner">Male Specialist / Therapist</option>
+                    </select>
+                </div>
+
+                <!-- Special Notes -->
+                <div class="form-group mb-4">
+                    <label class="form-label" style="font-size: 13px; color: #cbd5e1; font-weight: 600; margin-bottom: 8px; display: block;">
+                        <i class="fas fa-comment-medical text-warning me-1"></i> Custom Instructions
+                    </label>
+                    <input type="text" id="detailNotesInput" class="form-control" placeholder="Pressure intensity, allergies, or special requirements" style="background: rgba(10, 18, 30, 0.85); border: 1px solid rgba(212, 175, 55, 0.3); color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 13px;">
+                </div>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button type="button" class="btn btn-primary" id="btnDetailInstantBook" style="padding: 12px; font-size: 14px;" onclick="submitDetailBooking()">
+                        <i class="fas fa-check-circle me-1"></i> Instant Confirm Reservation
+                    </button>
+                    <button type="button" class="btn btn-secondary" style="padding: 12px; font-size: 14px;" onclick="addDetailToCart()">
+                        <i class="fas fa-cart-plus me-1"></i> Add Experience to Cart
+                    </button>
+                </div>
+
+                <div style="margin-top: 18px; text-align: center; font-size: 11px; color: var(--text-secondary);">
+                    <i class="fas fa-shield-alt text-warning me-1"></i> 100% Guaranteed Slot Confirmation &bull; In-Room Billing Available
                 </div>
             </div>
+        </div>
 
-            <button type="button" class="btn btn-primary" id="btnBookSlot" style="width: 100%; margin-top: 20px;" disabled>
-                <i class="fas fa-calendar-check" style="margin-right: 6px;"></i> Add Slot to Cart
-            </button>
+    </div>
+
+    <!-- Related Experiences in Same Section -->
+    {% if related %}
+    <div style="margin-top: 60px;">
+        <h3 style="font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 20px; font-family: 'Cinzel', serif;">
+            Other Experiences in {{ facility.category }}
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+            {% for r in related %}
+            <a href="/facilities/{{ r.id }}" class="related-card">
+                <img src="{{ r.image }}" style="height: 160px; object-fit: cover; width: 100%;" alt="{{ r.name }}">
+                <div style="padding: 16px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">{{ r.duration }}</div>
+                        <div style="font-weight: 600; color: #fff; font-size: 14px; margin-bottom: 8px;">{{ r.name }}</div>
+                    </div>
+                    <div style="font-size: 15px; font-weight: 700; color: #ffd700; font-family: 'Cinzel', serif;">
+                        {% if r.price and r.price > 0 %}₹{{ "{:,.0f}".format(r.price) }}{% else %}Complimentary{% endif %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
         </div>
     </div>
+    {% endif %}
+
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const slotDateInput = document.getElementById('slotDate');
-    const slotPills = document.querySelectorAll('.slot-choice');
-    const btnBook = document.getElementById('btnBookSlot');
-    let selectedSlot = null;
+    const dateInput = document.getElementById('detailDateInput');
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+    dateInput.value = today;
 
-    slotDateInput.min = new Date().toISOString().split('T')[0];
-    slotDateInput.value = slotDateInput.min;
-
-    slotPills.forEach(pill => {
+    // Slot pill selectors
+    document.querySelectorAll('.slot-choice-pill').forEach(pill => {
         pill.addEventListener('click', () => {
-            slotPills.forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.slot-choice-pill').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
-            selectedSlot = pill.dataset.slot;
-            checkReady();
+            document.getElementById('detailSelectedSlot').value = pill.dataset.slot;
         });
     });
+});
 
-    slotDateInput.addEventListener('change', checkReady);
+async function submitDetailBooking() {
+    const btn = document.getElementById('btnDetailInstantBook');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Reserving...';
 
-    function checkReady() {
-        btnBook.disabled = !(slotDateInput.value && selectedSlot);
+    const payload = {
+        facility_id: '{{ facility.id }}',
+        name: '{{ facility.name|replace("'", "\\'") }}',
+        price: Number('{{ facility.price or 2500 }}'),
+        date: document.getElementById('detailDateInput').value,
+        slot_time: document.getElementById('detailSelectedSlot').value,
+        therapist: document.getElementById('detailTherapistSelect').value,
+        notes: document.getElementById('detailNotesInput').value
+    };
+
+    try {
+        const res = await fetch('/api/facilities/book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Instant Confirm Reservation';
+
+        if (data.status === 'success' || data.success) {
+            if (window.NotificationSystem) {
+                NotificationSystem.success(data.data ? data.data.message : 'Reservation confirmed!', 'Slot Reserved');
+            } else {
+                alert(data.data ? data.data.message : 'Reservation confirmed!');
+            }
+            setTimeout(() => {
+                window.location.href = '/my-bookings';
+            }, 1200);
+        } else {
+            alert(data.message || 'Error confirming reservation. Please try again.');
+        }
+    } catch (err) {
+        console.error('Booking error:', err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-circle me-1"></i> Instant Confirm Reservation';
+        alert('Network connection error. Please try again.');
+    }
+}
+
+function addDetailToCart() {
+    const item = {
+        type: 'facility',
+        ref_id: '{{ facility.id }}',
+        name: '{{ facility.name|replace("'", "\\'") }}',
+        date: document.getElementById('detailDateInput').value,
+        slot: document.getElementById('detailSelectedSlot').value,
+        unit_price: Number('{{ facility.price or 2500 }}'),
+        qty: 1
+    };
+
+    const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+    cart.push(item);
+    localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+
+    if (window.NotificationSystem) {
+        NotificationSystem.success(`${item.name} added to cart!`, 'Cart Updated');
+    } else {
+        alert(`${item.name} added to cart!`);
     }
 
-    btnBook.addEventListener('click', () => {
-        const item = {
-            type: 'facility',
-            ref_id: '{{ facility.id or facility_id }}',
-            name: '{{ facility.name or "Facility Slot" }}',
-            date: slotDateInput.value,
-            slot: selectedSlot,
-            unit_price: Number('{{ facility.price or 1500 }}'),
-            qty: 1
-        };
-
-        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
-        cart.push(item);
-        localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
-        Toast.success('Facility slot added to cart!');
-        setTimeout(() => {
-            window.location.href = '/cart';
-        }, 500);
-    });
-});
+    const cartBadge = document.querySelector('.cart-count-badge');
+    if (cartBadge) cartBadge.innerText = cart.length;
+}
 </script>
 {% endblock %}

@@ -1,0 +1,596 @@
+{% extends "base.html" %}
+
+{% block title %}Interactive Tape Chart & Room Matrix — Nur-e-Haya Front Office{% endblock %}
+
+{% block extra_css %}
+<style>
+.tape-chart-container {
+    padding-top: 80px;
+    padding-bottom: 60px;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.tape-matrix-card {
+    background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+    border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(20px);
+}
+
+.tape-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.tape-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+}
+
+.legend-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-primary);
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.tape-scroll-wrapper {
+    overflow-x: auto;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 8px;
+    background: rgba(15, 26, 42, 0.6);
+}
+
+.tape-table {
+    width: 100%;
+    min-width: 1200px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.tape-table th, .tape-table td {
+    border: 1px solid rgba(212, 175, 55, 0.12);
+    padding: 8px 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.tape-table th {
+    background: rgba(22, 34, 54, 0.95);
+    color: var(--primary-color, #d4af37);
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.room-col-header {
+    width: 140px;
+    min-width: 140px;
+    text-align: left !important;
+    position: sticky;
+    left: 0;
+    background: rgba(22, 34, 54, 0.98) !important;
+    z-index: 11;
+}
+
+.room-col-cell {
+    position: sticky;
+    left: 0;
+    background: rgba(22, 34, 54, 0.95) !important;
+    z-index: 9;
+    text-align: left !important;
+    font-weight: 600;
+}
+
+.tape-cell {
+    min-width: 80px;
+    height: 48px;
+    position: relative;
+    padding: 2px !important;
+}
+
+.booking-strip {
+    position: absolute;
+    top: 6px;
+    bottom: 6px;
+    left: 4px;
+    right: 4px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.booking-strip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    z-index: 5;
+}
+
+.strip-confirmed {
+    background: linear-gradient(135deg, rgba(16, 78, 139, 0.9), rgba(22, 101, 192, 0.9));
+    color: #e3f2fd;
+    border-left: 3px solid #64b5f6;
+}
+
+.strip-checked-in {
+    background: linear-gradient(135deg, rgba(0, 134, 112, 0.9), rgba(0, 180, 140, 0.9));
+    color: #e8f5e9;
+    border-left: 3px solid #81c784;
+}
+
+.strip-cleaning {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.9), rgba(255, 167, 38, 0.9));
+    color: #fff8e1;
+    border-left: 3px solid #ffb74d;
+}
+
+.strip-maintenance {
+    background: linear-gradient(135deg, rgba(199, 0, 57, 0.9), rgba(229, 57, 53, 0.9));
+    color: #ffebee;
+    border-left: 3px solid #e57373;
+}
+
+/* Side Drawer Component */
+.tape-drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.tape-drawer-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+.tape-drawer {
+    position: fixed;
+    top: 0;
+    right: -450px;
+    width: 100%;
+    max-width: 440px;
+    height: 100%;
+    background: #131d2e;
+    border-left: 1px solid rgba(212, 175, 55, 0.3);
+    box-shadow: -10px 0 35px rgba(0, 0, 0, 0.8);
+    z-index: 2001;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.tape-drawer.open {
+    right: 0;
+}
+
+.drawer-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.drawer-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.drawer-footer {
+    padding: 18px 24px;
+    border-top: 1px solid rgba(212, 175, 55, 0.2);
+    display: flex;
+    gap: 10px;
+    background: rgba(15, 26, 42, 0.9);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid tape-chart-container px-lg-4">
+    <!-- Topbar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1 text-gold" style="font-family: 'Cinzel', serif;">
+                <i class="fas fa-calendar-alt text-warning me-2"></i> Room Matrix & Tape Chart
+            </h1>
+            <p class="text-secondary small mb-0">14-Day Visual Occupancy Grid & Reservation Allocations</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/staff/front-desk/rooms" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                <i class="fas fa-th-large me-1"></i> Card Grid
+            </a>
+            <a href="/staff/front-desk" class="btn btn-sm btn-outline-warning rounded-pill px-3">
+                <i class="fas fa-plane-arrival me-1"></i> Arrivals/Departures
+            </a>
+            <a href="/frontdesk/walkin" class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-3">
+                <i class="fas fa-user-plus me-1"></i> + New Walk-in
+            </a>
+        </div>
+    </div>
+
+    <div class="tape-matrix-card">
+        <!-- Filter & Control Bar -->
+        <div class="tape-filter-bar">
+            <!-- Date Navigator -->
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-sm btn-outline-warning" id="btnPrevWeek" title="Previous 7 Days">
+                    <i class="fas fa-chevron-left"></i> -7d
+                </button>
+                <button type="button" class="btn btn-sm btn-warning text-dark fw-bold" id="btnToday">
+                    Today
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning" id="btnNextWeek" title="Next 7 Days">
+                    +7d <i class="fas fa-chevron-right"></i>
+                </button>
+                <span class="ms-2 small text-light fw-bold" id="lblDateRange">Loading window...</span>
+            </div>
+
+            <!-- Legend -->
+            <div class="tape-legend">
+                <div class="legend-pill">
+                    <span class="legend-dot" style="background: #2ee59d;"></span> Available
+                </div>
+                <div class="legend-pill">
+                    <span class="legend-dot" style="background: #4285F4;"></span> In-House (Occupied)
+                </div>
+                <div class="legend-pill">
+                    <span class="legend-dot" style="background: #64b5f6;"></span> Confirmed Booking
+                </div>
+                <div class="legend-pill">
+                    <span class="legend-dot" style="background: #ff8c00;"></span> Cleaning Turnover
+                </div>
+                <div class="legend-pill">
+                    <span class="legend-dot" style="background: #c70039;"></span> Maintenance Block
+                </div>
+            </div>
+        </div>
+
+        <!-- Matrix Table View -->
+        <div class="tape-scroll-wrapper" id="matrixContainer">
+            <div class="text-center py-5">
+                <div class="spinner-border text-warning" role="status"></div>
+                <div class="small text-secondary mt-2">Loading reservation matrix...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Side Drawer Inspection Overlay -->
+<div class="tape-drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="tape-drawer" id="sideDrawer">
+    <div class="drawer-header">
+        <div>
+            <span class="small text-warning text-uppercase" id="drwCategory">Deluxe Suite</span>
+            <h4 class="mb-0 text-white" id="drwRoomTitle">Room 204</h4>
+        </div>
+        <button type="button" class="btn-close btn-close-white" onclick="closeDrawer()" aria-label="Close"></button>
+    </div>
+    <div class="drawer-body" id="drwBody">
+        <!-- Injected dynamically via JS -->
+    </div>
+    <div class="drawer-footer" id="drwFooter">
+        <!-- Dynamic Action Buttons -->
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentStartDate = new Date().toISOString().split('T')[0];
+let cachedMatrix = null;
+
+async function loadTapeChart(startDateStr) {
+    const container = document.getElementById('matrixContainer');
+    container.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-warning" role="status"></div>
+            <div class="small text-secondary mt-2">Synchronizing 14-day room schedule...</div>
+        </div>
+    `;
+
+    try {
+        const resp = await fetch(`/api/front-desk/tape-chart?start_date=${startDateStr}`);
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.message || 'Failed to fetch tape chart');
+        
+        cachedMatrix = json.data;
+        renderMatrix(cachedMatrix);
+    } catch (err) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-exclamation-triangle text-danger fs-3 mb-2"></i>
+                <div class="text-white">${err.message}</div>
+                <button class="btn btn-sm btn-outline-warning mt-3" onclick="loadTapeChart('${startDateStr}')">Retry</button>
+            </div>
+        `;
+    }
+}
+
+function renderMatrix(data) {
+    const { dates, rooms, bookings } = data;
+    const container = document.getElementById('matrixContainer');
+
+    if (dates && dates.length > 0) {
+        document.getElementById('lblDateRange').textContent = `${dates[0]}  —  ${dates[dates.length - 1]}`;
+    }
+
+    let html = `<table class="tape-table"><thead><tr><th class="room-col-header">Room / Type</th>`;
+    
+    dates.forEach(d => {
+        const dt = new Date(d);
+        const dayName = dt.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = dt.getDate();
+        const isToday = (d === new Date().toISOString().split('T')[0]);
+        html += `<th style="${isToday ? 'background: rgba(212, 175, 55, 0.25) !important;' : ''}">
+            <div>${dayName}</div>
+            <div class="fs-6">${dayNum}</div>
+        </th>`;
+    });
+    html += `</tr></thead><tbody>`;
+
+    rooms.forEach(rm => {
+        const rnum = String(rm.number || rm.id);
+        const rtype = rm.type || 'Standard';
+        const rstatus = rm.status || 'available';
+
+        let badgeColor = '#2ee59d';
+        if (rstatus === 'occupied') badgeColor = '#4285F4';
+        else if (rstatus === 'cleaning') badgeColor = '#ff8c00';
+        else if (rstatus === 'maintenance') badgeColor = '#c70039';
+
+        html += `<tr>
+            <td class="room-col-cell">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <div class="text-white fw-bold">Room ${rnum}</div>
+                        <div class="small text-secondary text-capitalize">${rtype}</div>
+                    </div>
+                    <span class="badge rounded-pill" style="background: ${badgeColor}; font-size: 10px;">${rstatus}</span>
+                </div>
+            </td>`;
+
+        dates.forEach(d => {
+            const b = bookings.find(bkg => {
+                const bRoom = String(bkg.room_number);
+                const cin = (bkg.check_in || '').slice(0, 10);
+                const cout = (bkg.check_out || '').slice(0, 10);
+                return bRoom === rnum && d >= cin && d <= cout;
+            });
+
+            if (b) {
+                let stripClass = 'strip-confirmed';
+                if (b.status === 'checked_in') stripClass = 'strip-checked-in';
+                else if (b.status === 'cleaning') stripClass = 'strip-cleaning';
+
+                html += `<td class="tape-cell">
+                    <div class="booking-strip ${stripClass}" onclick="openDrawer('${rm.id || rnum}', '${b.id}')" title="${b.guest_name || 'Guest'} (${b.status})">
+                        <span><i class="fas fa-user small me-1"></i> ${b.guest_name || 'Guest'}</span>
+                    </div>
+                </td>`;
+            } else {
+                html += `<td class="tape-cell" onclick="openDrawer('${rm.id || rnum}')" style="cursor: pointer;">
+                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted opacity-25">
+                        <i class="fas fa-plus small"></i>
+                    </div>
+                </td>`;
+            }
+        });
+
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+async function openDrawer(roomId, bookingId) {
+    const overlay = document.getElementById('drawerOverlay');
+    const drawer = document.getElementById('sideDrawer');
+    const body = document.getElementById('drwBody');
+    const footer = document.getElementById('drwFooter');
+
+    overlay.classList.add('active');
+    drawer.classList.add('open');
+
+    body.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-warning" role="status"></div>
+            <div class="small text-secondary mt-2">Loading room & folio context...</div>
+        </div>
+    `;
+    footer.innerHTML = '';
+
+    try {
+        const resp = await fetch(`/api/front-desk/rooms/${roomId}/drawer`);
+        const json = await resp.json();
+        if (!json.ok) throw new Error(json.message || 'Error loading drawer');
+
+        const { room, active_booking, active_housekeeping } = json.data;
+        document.getElementById('drwCategory').textContent = `${room.type || 'Deluxe'} • Floor ${room.floor || 1}`;
+        document.getElementById('drwRoomTitle').textContent = `Room ${room.number || roomId}`;
+
+        let content = `
+            <div class="card bg-dark bg-opacity-50 border border-secondary mb-3 p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small text-secondary">Room Status</span>
+                    <span class="badge text-uppercase ${room.status === 'available' ? 'bg-success' : room.status === 'occupied' ? 'bg-primary' : room.status === 'cleaning' ? 'bg-warning text-dark' : 'bg-danger'}">${room.status}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-secondary">Base Rate</span>
+                    <span class="text-gold fw-bold">₹${room.price_per_night || room.price || 3500} / night</span>
+                </div>
+            </div>
+        `;
+
+        if (active_booking) {
+            content += `
+                <div class="card bg-dark bg-opacity-50 border border-warning mb-3 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-warning fw-bold"><i class="fas fa-user-check me-1"></i> Active Reservation</span>
+                        <span class="badge bg-info text-dark text-uppercase">${active_booking.status}</span>
+                    </div>
+                    <div class="mb-1"><strong class="text-white">${active_booking.guest_name || 'Valued Guest'}</strong></div>
+                    <div class="small text-secondary mb-2">${active_booking.user_email || 'No email on record'}</div>
+                    <div class="row g-2 small border-top border-secondary pt-2">
+                        <div class="col-6">
+                            <span class="text-secondary">Check-In:</span>
+                            <div class="text-white">${active_booking.check_in || 'N/A'}</div>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-secondary">Check-Out:</span>
+                            <div class="text-white">${active_booking.check_out || 'N/A'}</div>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <span class="text-secondary">Total Folio:</span>
+                            <span class="text-gold fw-bold ms-1">₹${active_booking.total_price || active_booking.total || 0}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        if (active_housekeeping) {
+            content += `
+                <div class="card bg-dark bg-opacity-50 border border-info mb-3 p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-info small fw-bold"><i class="fas fa-broom me-1"></i> Housekeeping Task</span>
+                        <span class="badge bg-warning text-dark">${active_housekeeping.status}</span>
+                    </div>
+                    <div class="small text-white">${active_housekeeping.description || active_housekeeping.type}</div>
+                </div>
+            `;
+        }
+
+        body.innerHTML = content;
+
+        let actions = '';
+        if (room.status === 'occupied' && active_booking) {
+            actions += `<button type="button" class="btn btn-danger w-100" onclick="performCheckout('${active_booking.id}')">
+                <i class="fas fa-sign-out-alt me-1"></i> Check-Out & Turnover
+            </button>`;
+        } else if (room.status === 'cleaning') {
+            actions += `<button type="button" class="btn btn-success w-100" onclick="markRoomClean('${room.id}')">
+                <i class="fas fa-check-circle me-1"></i> Mark Available (Clean)
+            </button>`;
+        } else if (room.status === 'available') {
+            actions += `<a href="/frontdesk/walkin?room=${room.number}" class="btn btn-warning text-dark fw-bold w-100">
+                <i class="fas fa-key me-1"></i> Check-in Walk-in Guest
+            </a>`;
+        }
+        footer.innerHTML = actions;
+
+    } catch (err) {
+        body.innerHTML = `<div class="text-danger small">${err.message}</div>`;
+    }
+}
+
+function closeDrawer() {
+    document.getElementById('drawerOverlay').classList.remove('active');
+    document.getElementById('sideDrawer').classList.remove('open');
+}
+
+async function performCheckout(bookingId) {
+    if (!confirm('Confirm check-out for this guest? Room will be routed to turnover cleaning.')) return;
+    try {
+        const resp = await fetch('/api/front-desk/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ booking_id: bookingId })
+        });
+        const json = await resp.json();
+        if (json.ok) {
+            alert(json.data.message || 'Checked out successfully');
+            closeDrawer();
+            loadTapeChart(currentStartDate);
+        } else {
+            alert(json.message);
+        }
+    } catch (err) {
+        alert('Check-out failed');
+    }
+}
+
+async function markRoomClean(roomId) {
+    try {
+        const resp = await fetch('/api/front-desk/mark-clean', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room_id: roomId })
+        });
+        const json = await resp.json();
+        if (json.ok) {
+            alert('Room marked clean and available');
+            closeDrawer();
+            loadTapeChart(currentStartDate);
+        } else {
+            alert(json.message);
+        }
+    } catch (err) {
+        alert('Action failed');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadTapeChart(currentStartDate);
+
+    document.getElementById('btnToday').addEventListener('click', () => {
+        currentStartDate = new Date().toISOString().split('T')[0];
+        loadTapeChart(currentStartDate);
+    });
+
+    document.getElementById('btnPrevWeek').addEventListener('click', () => {
+        const d = new Date(currentStartDate);
+        d.setDate(d.getDate() - 7);
+        currentStartDate = d.toISOString().split('T')[0];
+        loadTapeChart(currentStartDate);
+    });
+
+    document.getElementById('btnNextWeek').addEventListener('click', () => {
+        const d = new Date(currentStartDate);
+        d.setDate(d.getDate() + 7);
+        currentStartDate = d.toISOString().split('T')[0];
+        loadTapeChart(currentStartDate);
+    });
+});
+</script>
+{% endblock %}

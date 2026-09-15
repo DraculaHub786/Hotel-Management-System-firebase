@@ -1,55 +1,324 @@
 {% extends "base.html" %}
 
-{% block title %}Restaurant Table Layout & Seating — Waiter Desk{% endblock %}
+{% block title %}Restaurant Table Layout & Seating — Waiter & Steward Desk{% endblock %}
 
 {% block content %}
-<div class="app-shell">
-  {% include "components/sidebar.html" %}
-  <div class="app-main">
-    {% include "components/topbar.html" %}
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding-top: 20px;">
+    <!-- Topbar per Section A.2 / G.1 -->
+    <div class="screen-topbar">
+        <div class="topbar-title">
+            <i class="fas fa-chair text-warning"></i>
+            <span>Dining Room Layout & Table Turnover</span>
+            <span class="badge bg-warning text-dark rounded-pill ms-2" id="tableStatsBadge" style="font-size: 12px; font-family: 'Raleway', sans-serif;">26 Tables</span>
+        </div>
+        <div class="topbar-actions d-flex gap-2">
+            <button type="button" class="btn btn-secondary" onclick="fetchTables()" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-sync-alt me-1"></i> Refresh Layout
+            </button>
+            <a href="/staff/kitchen" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-fire me-1 text-warning"></i> Kitchen KDS
+            </a>
+            <a href="/staff/room-service" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-concierge-bell me-1"></i> Waiter Pass & Orders
+            </a>
+        </div>
+    </div>
 
-    <main class="app-content">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 class="h3 fw-bold mb-1">Restaurant Table Layout & Seating (SCR-31)</h1>
-          <p class="text-secondary small mb-0">Live dining room layout for waitstaff and hosts.</p>
+    <!-- Filterbar & Status Summary -->
+    <div class="screen-filterbar d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="filter-pills" id="tableFilterPills">
+            <button type="button" class="filter-pill active" data-filter="all">All Zones</button>
+            <button type="button" class="filter-pill" data-filter="available">
+                <i class="fas fa-circle text-success me-1" style="font-size: 9px;"></i> Available (<span id="countAvail">0</span>)
+            </button>
+            <button type="button" class="filter-pill" data-filter="occupied">
+                <i class="fas fa-circle text-primary me-1" style="font-size: 9px;"></i> Occupied (<span id="countOccupied">0</span>)
+            </button>
+            <button type="button" class="filter-pill" data-filter="bill_pending">
+                <i class="fas fa-circle text-warning me-1" style="font-size: 9px;"></i> Bill Pending (<span id="countBill">0</span>)
+            </button>
+            <button type="button" class="filter-pill" data-filter="busing">
+                <i class="fas fa-circle text-danger me-1" style="font-size: 9px;"></i> Needs Cleaning (<span id="countBusing">0</span>)
+            </button>
         </div>
-        <div class="d-flex gap-2">
-          <span class="badge-pill status-available"><i class="fas fa-circle"></i> Available</span>
-          <span class="badge-pill status-occupied"><i class="fas fa-circle"></i> Occupied</span>
-          <span class="badge-pill status-ready"><i class="fas fa-circle"></i> Billed</span>
+        <div class="small text-secondary">
+            <i class="fas fa-info-circle text-warning me-1"></i> <strong>Turnover Flow:</strong> Available &rarr; Occupied &rarr; Bill Pending &rarr; Busing (Clean) &rarr; Available
         </div>
-      </div>
+    </div>
 
-      <div class="row g-4">
-        {% for tbl in tables %}
-        <div class="col-6 col-md-4 col-lg-3">
-          <div class="nh-card text-center p-4 nh-card-hover" style="cursor: pointer;" onclick="manageTable('{{ tbl.table_no }}', '{{ tbl.status }}')">
-            <div class="stat-icon-wrapper mx-auto mb-2 {% if tbl.status == 'available' %}stat-icon-green{% elif tbl.status == 'occupied' %}stat-icon-blue{% else %}stat-icon-yellow{% endif %}" style="width: 54px; height: 54px; font-size: 1.4rem;">
-              <i class="fas fa-chair"></i>
-            </div>
-            <h4 class="fw-bold fs-5 mb-1">Table {{ tbl.table_no }}</h4>
-            <p class="text-secondary small mb-2">{{ tbl.seats or 4 }} Guests Capacity</p>
-            <span class="badge-pill status-{{ tbl.status }}">{{ tbl.status }}</span>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </main>
-  </div>
+    <!-- Zone Filter Pills -->
+    <div class="d-flex gap-2 mt-2 mb-3 overflow-auto pb-1">
+        <button type="button" class="btn btn-sm btn-outline-secondary active zone-btn" data-zone="all">All Zones</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary zone-btn" data-zone="Zone A: Royal Courtyard">Zone A: Royal Courtyard</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary zone-btn" data-zone="Zone B: Heritage Dining Hall">Zone B: Heritage Dining Hall</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary zone-btn" data-zone="Zone C: Skyline Terrace">Zone C: Skyline Terrace</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary zone-btn" data-zone="Zone D: Private Alcove">Zone D: Private Alcove</button>
+    </div>
+
+    <!-- Table Cards Grid -->
+    <div class="row g-3" id="tablesContainer">
+        <!-- Rendered via JS -->
+    </div>
 </div>
 
-<script>
-function manageTable(tableNo, currentStatus) {
-  window.showModal({
-    title: `Table ${tableNo} Status`,
-    message: `Current state: ${currentStatus}. Change state for dining service?`,
-    confirmText: currentStatus === 'available' ? 'Mark Occupied' : 'Mark Available / Clean',
-    onConfirm: () => {
-      window.showToast(`Table ${tableNo} status updated.`, 'success');
-      setTimeout(() => location.reload(), 800);
-    }
-  });
+<!-- Table Action Modal -->
+<div class="modal fade" id="tableActionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #162236; border: 1px solid var(--primary-color); color: #fff; border-radius: 12px;">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(212,175,55,0.2);">
+                <h5 class="modal-title" id="tableModalTitle" style="color: var(--primary-color); font-family: 'Cinzel', serif;">Table Action</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="tableModalBody">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table-card {
+    background: rgba(22, 34, 54, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    border-radius: 12px;
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.35);
+    transition: all 0.2s ease;
 }
+.table-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary-color);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.25);
+}
+.table-card.available {
+    border-left: 5px solid #008670;
+}
+.table-card.occupied {
+    border-left: 5px solid #104e8b;
+}
+.table-card.bill_pending {
+    border-left: 5px solid #ff8c00;
+}
+.table-card.busing {
+    border-left: 5px solid #c70039;
+    background: rgba(35, 20, 28, 0.85);
+}
+.zone-btn.active {
+    background: var(--primary-color) !important;
+    color: #0f1a2a !important;
+    font-weight: bold;
+    border-color: var(--primary-color) !important;
+}
+</style>
+
+{% block extra_js %}
+<script>
+let allTables = [];
+let statusFilter = 'all';
+let zoneFilter = 'all';
+
+async function fetchTables() {
+    const container = document.getElementById('tablesContainer');
+    if (window.AppStates) {
+        AppStates.renderLoading(container, { type: 'card', count: 8 });
+    }
+
+    try {
+        const res = await fetch('/api/dining/tables');
+        const json = await res.json();
+        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
+            allTables = json.data;
+        } else {
+            allTables = [];
+        }
+    } catch (e) {
+        console.error('Table fetch error:', e);
+    }
+    updateTableCounts();
+    renderTables();
+}
+
+function updateTableCounts() {
+    const cAvail = allTables.filter(t => t.status === 'available').length;
+    const cOccupied = allTables.filter(t => t.status === 'occupied').length;
+    const cBill = allTables.filter(t => t.status === 'bill_pending').length;
+    const cBusing = allTables.filter(t => t.status === 'busing').length;
+
+    document.getElementById('tableStatsBadge').textContent = `${allTables.length} Tables`;
+    document.getElementById('countAvail').textContent = cAvail;
+    document.getElementById('countOccupied').textContent = cOccupied;
+    document.getElementById('countBill').textContent = cBill;
+    document.getElementById('countBusing').textContent = cBusing;
+}
+
+function renderTables() {
+    const container = document.getElementById('tablesContainer');
+    let list = allTables;
+
+    if (statusFilter !== 'all') {
+        list = list.filter(t => t.status === statusFilter);
+    }
+
+    if (zoneFilter !== 'all') {
+        list = list.filter(t => (t.zone || '').toLowerCase().includes(zoneFilter.toLowerCase().split(':')[0]));
+    }
+
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 py-5 text-center">
+                <div style="font-size: 3rem; color: var(--primary-color); opacity: 0.5;"><i class="fas fa-chair"></i></div>
+                <h4 class="mt-3 text-light">No Tables Match Filter</h4>
+                <p class="text-secondary small">No tables in this status or zone right now.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = list.map(tbl => {
+        const status = tbl.status || 'available';
+        let statusBadge = '';
+        let actionBtn = '';
+
+        if (status === 'available') {
+            statusBadge = '<span class="badge bg-success text-white">Available</span>';
+            actionBtn = `
+                <button class="btn btn-sm btn-outline-primary w-100" onclick="seatWalkin('${tbl.id}', '${tbl.table_no}')">
+                    <i class="fas fa-user-plus me-1"></i> Seat Guests
+                </button>
+            `;
+        } else if (status === 'occupied') {
+            statusBadge = '<span class="badge bg-primary text-white">Dining In-Progress</span>';
+            actionBtn = `
+                <button class="btn btn-sm btn-outline-warning w-100" onclick="setTableStatus('${tbl.id}', 'bill_pending', 'Bill Requested')">
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Request Bill
+                </button>
+            `;
+        } else if (status === 'bill_pending') {
+            statusBadge = '<span class="badge bg-warning text-dark fw-bold">Bill Pending</span>';
+            actionBtn = `
+                <button class="btn btn-sm btn-warning w-100 fw-bold text-dark" onclick="setTableStatus('${tbl.id}', 'busing', 'Guest Departed')">
+                    <i class="fas fa-receipt me-1"></i> Settle & Mark Busing
+                </button>
+            `;
+        } else if (status === 'busing') {
+            statusBadge = '<span class="badge bg-danger text-white"><i class="fas fa-broom me-1"></i>Needs Turnover Clean</span>';
+            actionBtn = `
+                <button class="btn btn-sm btn-success w-100 fw-bold" onclick="setTableStatus('${tbl.id}', 'available', 'Cleaned & Reset')">
+                    <i class="fas fa-check-circle me-1"></i> Mark Clean & Sanitized
+                </button>
+            `;
+        }
+
+        return `
+            <div class="col-12 col-sm-6 col-md-4 col-xl-3">
+                <div class="table-card ${status}">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-secondary" style="font-size: 10px;">${tbl.zone || 'Dining Area'}</span>
+                                <h4 class="fw-bold mt-1 mb-0" style="color: var(--text-bright); font-size: 18px;">
+                                    Table ${tbl.table_no}
+                                </h4>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <div class="small text-secondary mb-3">
+                            <i class="fas fa-users me-1 text-warning"></i> Capacity: <strong>${tbl.seats || 4} Guests</strong>
+                        </div>
+                        ${tbl.guest_name ? `
+                            <div class="p-2 mb-3 rounded" style="background: rgba(15,26,42,0.8); border: 1px dashed rgba(212,175,55,0.25); font-size: 12px;">
+                                <div class="text-secondary small">Seated Guest:</div>
+                                <div class="fw-bold text-light">${tbl.guest_name}</div>
+                                ${tbl.order_id ? `<div class="text-warning small mt-1">Order #${tbl.order_id}</div>` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                        ${actionBtn}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function setTableStatus(tableId, newStatus, actionName) {
+    try {
+        const res = await fetch(`/api/dining/tables/${tableId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            const tbl = allTables.find(t => t.id === tableId || t.table_no === tableId);
+            if (tbl) {
+                tbl.status = newStatus;
+                if (newStatus === 'available') {
+                    tbl.guest_name = '';
+                    tbl.order_id = '';
+                }
+            }
+            updateTableCounts();
+            renderTables();
+            if (window.Toast) Toast.success(`Table updated: ${actionName}`);
+        } else {
+            alert(json.message || 'Failed to update table status');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Network error updating table status');
+    }
+}
+
+function seatWalkin(tableId, tableNo) {
+    const guestName = prompt(`Enter Guest Name for Table ${tableNo}:`, 'Walk-in Guest');
+    if (!guestName) return;
+
+    fetch(`/api/dining/tables/${tableId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'occupied', guest_name: guestName })
+    }).then(res => res.json()).then(json => {
+        if (json.ok) {
+            const tbl = allTables.find(t => t.id === tableId || t.table_no === tableId);
+            if (tbl) {
+                tbl.status = 'occupied';
+                tbl.guest_name = guestName;
+            }
+            updateTableCounts();
+            renderTables();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchTables();
+
+    // Status filter pills
+    document.querySelectorAll('#tableFilterPills .filter-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('#tableFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            statusFilter = pill.dataset.filter;
+            renderTables();
+        });
+    });
+
+    // Zone filter buttons
+    document.querySelectorAll('.zone-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.zone-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            zoneFilter = btn.dataset.zone;
+            renderTables();
+        });
+    });
+});
 </script>
+{% endblock %}
 {% endblock %}

@@ -1,8 +1,9 @@
+import logging
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from app.firebase_db import (
     users_col, rooms_col, bookings_col, orders_col, notifications_col,
-    audit_logs_col, settings_col
+    audit_logs_col, settings_col, chat_history_col, concierge_requests_col
 )
 from app.auth.decorators import login_required
 from app.auth.routes import get_role_redirect
@@ -10,6 +11,7 @@ from api_utils import api_success, api_error
 from chatbot import get_bot_response
 
 core_bp = Blueprint('core', __name__)
+logger = logging.getLogger(__name__)
 
 @core_bp.route('/dashboard')
 @login_required
@@ -38,6 +40,8 @@ def dashboard():
         return redirect(url_for('payments.ledger'))
     elif role == 'security':
         return redirect('/staff/security')
+    elif role == 'waiter' or staff_role == 'waiter':
+        return redirect('/dining/tables')
         
     # Standard guest / member dashboard
     return render_template('dashboard.html')
@@ -152,7 +156,7 @@ def help_view():
 @core_bp.route('/api/chatbot', methods=['POST'])
 def chatbot_api():
     data = request.get_json() or {}
-    user_message = data.get('message', '')
+    user_message = data.get('message', '').strip()
     user_email = session.get('user_email', 'guest@nur-e-haya.com')
     
     if not user_message:
@@ -163,5 +167,116 @@ def chatbot_api():
         "success": True,
         "response": res.get("response", "I am here to assist you with your stay at Nur-e-Haya."),
         "intent": res.get("intent", "general"),
-        "suggestions": res.get("suggestions", ["Room Booking", "Dining Menu", "Housekeeping", "Check-in Times"])
+        "confidence": res.get("confidence", 0.92),
+        "suggestions": res.get("suggestions", ["Spa & Massages", "Pool Timings", "Room Booking", "Dining Menu"])
+    })
+
+@core_bp.route('/api/chatbot/message', methods=['POST'])
+def chatbot_message():
+    """Dashboard chatbot messaging endpoint"""
+    data = request.get_json() or {}
+    user_message = data.get('message', '').strip()
+    user_email = session.get('user_email', 'guest@nur-e-haya.com')
+    
+    if not user_message:
+        return api_error(message="Message cannot be empty", status=400)
+        
+    res = get_bot_response(user_message, user_email)
+    bot_reply = res.get("response", "I am here to assist you with your stay at Nur-e-Haya.")
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    
+    # Store to chat history collection for persistent conversations
+    try:
+        chat_history_col().add({
+            "user_email": user_email,
+            "user_message": user_message,
+            "bot_response": bot_reply,
+            "intent": res.get("intent", "general"),
+            "confidence": res.get("confidence", 0.92),
+            "timestamp": now_iso,
+            "created_at": now_iso
+        })
+    except Exception as e:
+        logger.warning(f"Could not persist chat history: {e}")
+        
+    return jsonify({
+        "success": True,
+        "response": bot_reply,
+        "intent": res.get("intent", "general"),
+        "confidence": res.get("confidence", 0.92),
+        "suggestions": res.get("suggestions", ["Spa Treatments", "Pool Timings", "Room Rates", "Dining Menu"]),
+        "timestamp": now_iso
+    })
+
+@core_bp.route('/api/chatbot/suggestions', methods=['GET'])
+def chatbot_suggestions():
+    """Returns curated starter prompts covering all facilities and services"""
+    return jsonify({
+        "success": True,
+        "suggestions": [
+            "What are your Spa treatments and rates?",
+            "What are the heated rooftop pool timings?",
+            "How do I book a room at Nur-e-Haya?",
+            "What are check-in and check-out times?",
+            "What are your dining & room service options?",
+            "Tell me about the fitness center & sauna"
+        ]
+    })
+
+@core_bp.route('/api/chatbot/history', methods=['GET'])
+def chatbot_history():
+    """Returns recent chat history for the active user"""
+    user_email = session.get('user_email', 'guest@nur-e-haya.com')
+    history = []
+    try:
+        docs = chat_history_col().where('user_email', '==', user_email).stream()
+        for doc in docs:
+            d = doc.to_dict()
+            history.append({
+                "user_message": d.get("user_message", ""),
+                "bot_response": d.get("bot_response", ""),
+                "timestamp": d.get("timestamp", "")
+            })
+        # Sort descending by timestamp, take last 15
+        history.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        history = history[:15]
+    except Exception as e:
+        logger.warning(f"Could not load chat history: {e}")
+        
+    return jsonify({
+        "success": True,
+        "history": history
+    })
+
+@core_bp.route('/api/chatbot/transfer', methods=['POST'])
+def chatbot_transfer():
+    """Handles guest escalation to live human concierge agent"""
+    data = request.get_json() or {}
+    user_email = session.get('user_email', 'guest@nur-e-haya.com')
+    reason = data.get('reason', 'User requested human assistance')
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    
+    try:
+        concierge_requests_col().add({
+            "guest_email": user_email,
+            "request_type": "Human Support Escalation",
+            "notes": reason,
+            "status": "pending",
+            "priority": "high",
+            "created_at": now_iso
+        })
+        notifications_col().add({
+            "title": "Concierge Chat Escalation",
+            "message": f"Guest {user_email} requested live concierge assistance.",
+            "role": "concierge",
+            "priority": "high",
+            "unread": True,
+            "created_at": now_iso
+        })
+    except Exception as e:
+        logger.warning(f"Error logging concierge transfer: {e}")
+        
+    return jsonify({
+        "success": True,
+        "message": "Transfer request submitted to concierge."
     })

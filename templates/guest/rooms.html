@@ -1,160 +1,285 @@
 {% extends "base.html" %}
 
-{% block title %}Luxury Rooms & Suites — Nur-e-Haya{% endblock %}
+{% block title %}Luxury Rooms & Royal Suites — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 50px;">
-    <!-- Topbar per Section A.2 / C.1 -->
+<div class="container" style="padding-top: 90px; padding-bottom: 70px;">
+    <!-- Screen Header -->
     <div class="screen-topbar">
-        <div class="topbar-title">
-            <i class="fas fa-bed"></i> Luxury Accommodations
+        <div>
+            <span style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--primary-color); font-weight: bold;">
+                Palatial Living & Suites
+            </span>
+            <h1 class="h3 fw-bold mb-0" style="color: var(--text-bright); font-family: 'Cinzel', serif;">
+                <i class="fas fa-bed text-warning me-2"></i> Accommodations & Wings
+            </h1>
         </div>
-        <div class="topbar-actions">
+        <div class="topbar-actions d-flex gap-2 align-items-center">
             <div class="screen-search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="roomSearchInput" placeholder="Search by room type, number...">
+                <input type="text" id="roomSearchInput" placeholder="Search by wing, flat, suite...">
             </div>
-            <a href="/cart" class="btn btn-secondary" style="display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fas fa-shopping-cart"></i> Cart <span id="cartCountBadge" style="background: var(--primary-color); color: var(--dark-bg); padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: bold;">0</span>
+            <a href="/cart" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fas fa-shopping-cart"></i> Cart 
+                <span id="cartCountBadge" style="background: #0f1a2a; color: var(--primary-color); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">0</span>
             </a>
         </div>
     </div>
 
-    <!-- Filterbar per Section A.2 -->
-    <div class="screen-filterbar" style="margin-top: 15px;">
-        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Filter by Type:</span>
+    <!-- Filter Pills for Wings and Types -->
+    <div class="screen-filterbar mt-3" style="overflow-x: auto; white-space: nowrap; padding-bottom: 8px;">
+        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif; margin-right: 8px;">Wing & Tier:</span>
         <div class="filter-pills" id="roomFilterPills">
-            <button type="button" class="filter-pill active" data-filter="all">All Rooms</button>
-            <button type="button" class="filter-pill" data-filter="Single">Single</button>
-            <button type="button" class="filter-pill" data-filter="Double">Double</button>
-            <button type="button" class="filter-pill" data-filter="Suite">Suites</button>
-            <button type="button" class="filter-pill" data-filter="Luxury">Luxury</button>
-            <button type="button" class="filter-pill" data-filter="Family">Family</button>
+            <button type="button" class="filter-pill active" data-filter="all">All Wings & Suites</button>
+            <button type="button" class="filter-pill" data-filter="Heritage Wing">
+                <i class="fas fa-landmark me-1 text-warning"></i> Heritage Wing (HW)
+            </button>
+            <button type="button" class="filter-pill" data-filter="Royal Wing">
+                <i class="fas fa-crown me-1 text-warning"></i> Royal Wing (RW)
+            </button>
+            <button type="button" class="filter-pill" data-filter="Skyline Tower">
+                <i class="fas fa-building me-1 text-warning"></i> Skyline Tower (ST)
+            </button>
+            <button type="button" class="filter-pill" data-filter="Suite">
+                <i class="fas fa-gem me-1 text-warning"></i> Penthouses & Suites
+            </button>
         </div>
     </div>
 
-    <!-- Rooms Container -->
-    <div id="roomsContainer" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
-        <!-- Loading skeletons injected by AppStates.renderLoading -->
+    <!-- Rooms Grid -->
+    <div id="roomsContainer" class="row g-4 mt-2">
+        <!-- Injected via JS -->
     </div>
 </div>
-{% endblock %}
+
+<style>
+.room-card {
+    background: rgba(22, 34, 54, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.22);
+    border-radius: 14px;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.35);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.room-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
+}
+.room-image-box {
+    height: 220px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.room-flat-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(15, 26, 42, 0.9);
+    border: 1px solid rgba(212,175,55,0.4);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+}
+.room-price-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(15, 26, 42, 0.9);
+    border: 1px solid var(--primary-color);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+.amenity-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--text-primary);
+}
+</style>
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
+let allRooms = [];
+let activeFilter = 'all';
+
+async function loadRooms() {
     const container = document.getElementById('roomsContainer');
-    AppStates.renderLoading(container, { type: 'card', count: 6 });
-
-    // Update cart badge
-    function updateCartBadge() {
-        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
-        const badge = document.getElementById('cartCountBadge');
-        if (badge) badge.textContent = cart.length;
+    if (window.AppStates) {
+        AppStates.renderLoading(container, { type: 'card', count: 6 });
     }
-    updateCartBadge();
 
-    let allRooms = [];
+    try {
+        const res = await fetch('/api/rooms');
+        const json = await res.json();
+        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
+            allRooms = json.data;
+        } else {
+            allRooms = [];
+        }
+    } catch (e) {
+        console.error('Failed to load rooms:', e);
+    }
+    renderRooms();
+}
 
-    async function loadRooms() {
-        try {
-            const rooms = await AppAPI.get('/api/rooms');
-            allRooms = rooms || [];
-            renderRooms(allRooms);
-        } catch (err) {
-            AppStates.renderError(container, {
-                message: 'Failed to retrieve available rooms.',
-                onRetry: loadRooms
-            });
+function renderRooms() {
+    const container = document.getElementById('roomsContainer');
+    const term = (document.getElementById('roomSearchInput').value || '').toLowerCase().trim();
+
+    let list = allRooms;
+
+    if (activeFilter !== 'all') {
+        if (activeFilter === 'Suite') {
+            list = list.filter(r => (r.type || '').toLowerCase().includes('suite') || (r.type || '').toLowerCase().includes('penthouse'));
+        } else {
+            list = list.filter(r => (r.wing || '').toLowerCase() === activeFilter.toLowerCase());
         }
     }
 
-    function renderRooms(rooms) {
-        if (!rooms || rooms.length === 0) {
-            AppStates.renderEmpty(container, {
-                icon: 'fa-bed',
-                title: 'No Rooms Found',
-                message: 'No accommodations match your filter criteria at this moment.'
-            });
-            return;
+    if (term) {
+        list = list.filter(r => 
+            (r.name || '').toLowerCase().includes(term) ||
+            (r.type || '').toLowerCase().includes(term) ||
+            (r.number || '').toString().toLowerCase().includes(term) ||
+            (r.flat_no || '').toLowerCase().includes(term) ||
+            (r.wing || '').toLowerCase().includes(term)
+        );
+    }
+
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 py-5 text-center">
+                <div style="font-size: 3rem; color: var(--primary-color); opacity: 0.5;"><i class="fas fa-bed"></i></div>
+                <h4 class="mt-3 text-light">No Accommodations Found</h4>
+                <p class="text-secondary small">No rooms or suites match your selected wing or search criteria.</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = list.map(room => {
+        const imgUrl = room.image_url || room.image || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80';
+        const flatCode = room.flat_no || `Flat ${room.number}`;
+        const wing = room.wing || 'Imperial Wing';
+        const floor = room.floor ? `${room.floor}${room.floor === 1 ? 'st' : room.floor === 2 ? 'nd' : room.floor === 3 ? 'rd' : 'th'} Floor` : 'Elevated Floor';
+        const amenities = room.amenities || ['High-Speed WiFi', 'Climate Control AC', 'Smart 4K TV', 'Ensuite Jacuzzi'];
+        const view = room.view || 'Royal Courtyard View';
+
+        let statusBadge = '<span class="badge bg-success text-white" style="font-size: 11px;">Available</span>';
+        if (room.status === 'occupied') {
+            statusBadge = '<span class="badge bg-danger text-white" style="font-size: 11px;">Occupied</span>';
+        } else if (room.status === 'cleaning') {
+            statusBadge = '<span class="badge bg-warning text-dark" style="font-size: 11px;">Sanitizing</span>';
         }
 
-        container.innerHTML = rooms.map(room => `
-            <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-                <div style="height: 200px; background: url('https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80') center/cover; position: relative;">
-                    <div style="position: absolute; top: 12px; right: 12px; background: rgba(15, 26, 42, 0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: bold; color: var(--primary-color);">
-                        ₹${room.price} / night
-                    </div>
-                    <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(0, 0, 0, 0.7); border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #fff;">
-                        Room ${room.number}
-                    </div>
-                </div>
-                <div style="padding: 20px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 6px;">${room.type} Room</h3>
-                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
-                            <i class="fas fa-user-friends" style="margin-right: 4px;"></i> Max Guests: ${room.max_guests || 2}
-                        </p>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px;">
-                            ${(room.amenities || ['WiFi', 'AC', 'TV']).map(a => `<span style="background: rgba(255,255,255,0.06); border-radius: 12px; padding: 2px 8px; font-size: 11px; color: var(--text-primary);">${a}</span>`).join('')}
+        return `
+            <div class="col-12 col-md-6 col-lg-4">
+                <div class="room-card">
+                    <div class="room-image-box" style="background-image: url('${imgUrl}');">
+                        <div class="room-price-badge">
+                            ₹${room.price} <span style="font-size: 11px; font-weight: normal; color: #fff;">/ night</span>
+                        </div>
+                        <div class="room-flat-badge">
+                            <i class="fas fa-door-closed text-warning me-1"></i> ${flatCode}
+                        </div>
+                        <div style="position: absolute; top: 12px; left: 12px;">
+                            ${statusBadge}
                         </div>
                     </div>
-                    <div style="display: flex; gap: 10px;">
-                        <a href="/rooms/${room.id}" class="btn btn-secondary" style="flex: 1; text-align: center; font-size: 12px; padding: 10px;">Details</a>
-                        <button type="button" class="btn btn-primary add-cart-btn" data-id="${room.id}" data-name="${room.type} Room ${room.number}" data-price="${room.price}" style="flex: 1; font-size: 12px; padding: 10px;">
-                            <i class="fas fa-cart-plus"></i> Book
-                        </button>
+                    <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-secondary" style="font-size: 10px; letter-spacing: 0.5px;">${wing} · ${floor}</span>
+                                <span class="small text-secondary"><i class="fas fa-users me-1"></i> Max ${room.max_guests || 2}</span>
+                            </div>
+                            <h5 class="fw-bold mb-1" style="color: var(--text-bright); font-size: 17px;">
+                                ${room.name || `${room.type} Room`}
+                            </h5>
+                            <p class="small mb-2" style="color: var(--primary-color); font-size: 12px;">
+                                <i class="fas fa-eye me-1"></i> ${view}
+                            </p>
+                            <div class="d-flex flex-wrap gap-1 mb-3">
+                                ${amenities.slice(0, 4).map(a => `<span class="amenity-chip">${a}</span>`).join('')}
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                            <a href="/rooms/${room.id}" class="btn btn-secondary flex-fill text-center" style="font-size: 12px; padding: 8px 12px;">
+                                Details
+                            </a>
+                            <button type="button" class="btn btn-primary flex-fill fw-bold" onclick="bookRoomDirectly('${room.id}', '${room.name || room.type}', ${room.price}, '${room.number}')" style="font-size: 12px; padding: 8px 12px;">
+                                <i class="fas fa-cart-plus me-1"></i> Reserve
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        `).join('');
+        `;
+    }).join('');
+}
 
-        // Attach book/cart handlers
-        container.querySelectorAll('.add-cart-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const item = {
-                    type: 'room',
-                    ref_id: btn.dataset.id,
-                    name: btn.dataset.name,
-                    unit_price: parseFloat(btn.dataset.price),
-                    check_in: new Date().toISOString().split('T')[0],
-                    check_out: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
-                    qty: 1
-                };
+function bookRoomDirectly(id, name, price, number) {
+    const checkIn = new Date().toISOString().split('T')[0];
+    const checkOut = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
 
-                const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
-                cart.push(item);
-                localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
-                updateCartBadge();
-                Toast.success(`${btn.dataset.name} added to cart!`);
-            });
-        });
+    const item = {
+        type: 'room',
+        ref_id: id,
+        name: `${name} (Room ${number})`,
+        unit_price: parseFloat(price),
+        check_in: checkIn,
+        check_out: checkOut,
+        qty: 1
+    };
+
+    const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+    cart.push(item);
+    localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+    updateCartBadge();
+
+    if (window.Toast) {
+        Toast.success(`${name} added to cart! Check-in: ${checkIn}`);
+    } else {
+        alert(`${name} (Room ${number}) added to cart! Proceed to checkout.`);
     }
+}
+
+function updateCartBadge() {
+    const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+    const badge = document.getElementById('cartCountBadge');
+    if (badge) badge.textContent = cart.length;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateCartBadge();
+    loadRooms();
 
     // Filter pills
     document.querySelectorAll('#roomFilterPills .filter-pill').forEach(pill => {
         pill.addEventListener('click', () => {
             document.querySelectorAll('#roomFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
-            const filter = pill.dataset.filter;
-            if (filter === 'all') {
-                renderRooms(allRooms);
-            } else {
-                renderRooms(allRooms.filter(r => r.type && r.type.toLowerCase() === filter.toLowerCase()));
-            }
+            activeFilter = pill.dataset.filter;
+            renderRooms();
         });
     });
 
     // Search input
-    document.getElementById('roomSearchInput').addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase().trim();
-        renderRooms(allRooms.filter(r => 
-            (r.type && r.type.toLowerCase().includes(term)) || 
-            (r.number && r.number.toString().includes(term))
-        ));
+    document.getElementById('roomSearchInput').addEventListener('input', () => {
+        renderRooms();
     });
-
-    loadRooms();
 });
 </script>
+{% endblock %}
 {% endblock %}

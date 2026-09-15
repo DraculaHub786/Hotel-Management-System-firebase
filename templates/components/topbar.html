@@ -17,9 +17,41 @@
     </a>
     {% endif %}
 
-    <a href="/notifications" class="btn-nh btn-nh-outline btn-nh-sm" title="Notifications">
-      <i class="fas fa-bell"></i>
-    </a>
+    <!-- Staff Shift Clock In/Out Widget per Section M -->
+    {% if session.get('user_role') not in ['guest', 'user', 'member', None] %}
+    <div class="d-flex align-items-center gap-2 border border-warning border-opacity-25 px-2 py-1 rounded-pill" style="background: rgba(212, 175, 55, 0.08);">
+      <span class="badge bg-success rounded-pill" id="shiftBadge" style="font-size: 10px;">ON DUTY</span>
+      <button type="button" class="btn btn-xs btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="toggleStaffShift(this)">
+        Clock Out
+      </button>
+    </div>
+    {% endif %}
+
+    <!-- Notification Bell with Dropdown per Section M -->
+    <div class="dropdown">
+      <button class="btn-nh btn-nh-outline btn-nh-sm position-relative" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle" style="width: 8px; height: 8px;"></span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-2" style="width: 320px; background: #131d2e; border: 1px solid rgba(212,175,55,0.25) !important; border-radius: 12px;">
+        <li class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom border-secondary mb-2">
+          <span class="fw-bold text-gold small" style="font-family: 'Cinzel', serif;">Notifications</span>
+          <a href="/notifications" class="small text-secondary text-decoration-none">View All</a>
+        </li>
+        <li>
+          <div class="p-2 small text-light border-bottom border-secondary border-opacity-25">
+            <div class="fw-semibold text-warning"><i class="fas fa-info-circle me-1"></i> System Online</div>
+            <div class="text-secondary" style="font-size: 11px;">Nur-e-Haya PMS services operating normally.</div>
+          </div>
+        </li>
+        <li>
+          <div class="p-2 small text-light">
+            <div class="fw-semibold text-info"><i class="fas fa-shield-alt me-1"></i> Shift Logged</div>
+            <div class="text-secondary" style="font-size: 11px;">Operational session synchronized to cloud ledger.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
 
     <a href="/help" class="btn-nh btn-nh-outline btn-nh-sm" title="Help Center">
       <i class="fas fa-question-circle"></i>
@@ -40,4 +72,36 @@
       </ul>
     </div>
   </div>
+
+  <script>
+  async function toggleStaffShift(btn) {
+    const badge = document.getElementById('shiftBadge');
+    const isClockingOut = (btn.textContent.trim() === 'Clock Out');
+    const action = isClockingOut ? 'out' : 'in';
+
+    try {
+      const resp = await fetch('/api/staff/shift/clock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      const json = await resp.json();
+      if (json.ok) {
+        if (isClockingOut) {
+          badge.textContent = 'OFF DUTY';
+          badge.className = 'badge bg-secondary rounded-pill';
+          btn.textContent = 'Clock In';
+          if (window.Toast) Toast.info('Clocked out of active shift.');
+        } else {
+          badge.textContent = 'ON DUTY';
+          badge.className = 'badge bg-success rounded-pill';
+          btn.textContent = 'Clock Out';
+          if (window.Toast) Toast.success('Clocked in to active shift.');
+        }
+      }
+    } catch(e) {
+      if (window.Toast) Toast.error('Shift toggle failed.');
+    }
+  }
+  </script>
 </header>

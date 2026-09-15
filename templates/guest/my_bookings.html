@@ -1,6 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}My Bookings & Orders — Nur-e-Haya{% endblock %}
+{% block title %}My Bookings & Activity — Nur-e-Haya{% endblock %}
+
+{% block extra_css %}
+<style>
+    .activity-tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        padding-bottom: 12px;
+    }
+    .activity-tab-btn {
+        background: rgba(22, 34, 54, 0.6);
+        border: 1px solid rgba(212, 175, 55, 0.2);
+        color: var(--text-secondary);
+        padding: 10px 22px;
+        border-radius: 8px;
+        font-family: 'Cinzel', serif;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .activity-tab-btn.active {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.25), rgba(212, 175, 55, 0.08));
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+    }
+    .activity-tab-btn .tab-count {
+        background: rgba(212, 175, 55, 0.2);
+        color: var(--primary-color);
+        padding: 2px 7px;
+        border-radius: 10px;
+        font-size: 11px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="container" style="padding-top: 90px; padding-bottom: 60px;">
@@ -10,15 +50,34 @@
             <i class="fas fa-history"></i> My Bookings & Activity
         </div>
         <div class="topbar-actions">
-            <a href="/rooms" class="btn btn-primary" style="font-size: 12px; padding: 8px 14px;">
-                <i class="fas fa-plus"></i> New Reservation
+            <a href="/rooms" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
+                <i class="fas fa-bed"></i> Book a Room
+            </a>
+            <a href="/menu" class="btn btn-primary" style="font-size: 12px; padding: 8px 14px;">
+                <i class="fas fa-utensils"></i> Order Food
             </a>
         </div>
     </div>
 
-    <!-- Filterbar -->
-    <div class="screen-filterbar" style="margin-top: 15px;">
-        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Status:</span>
+    <!-- Activity Tabs: Bookings vs Dining Orders vs Spa & Facilities -->
+    <div class="activity-tabs" style="margin-top: 20px;">
+        <button type="button" class="activity-tab-btn active" id="tabBtnBookings" onclick="switchActivityTab('bookings')">
+            <i class="fas fa-hotel"></i> Room & Suite Reservations
+            <span class="tab-count" id="countBookings">0</span>
+        </button>
+        <button type="button" class="activity-tab-btn" id="tabBtnOrders" onclick="switchActivityTab('orders')">
+            <i class="fas fa-concierge-bell"></i> Dining & Food Orders
+            <span class="tab-count" id="countOrders">0</span>
+        </button>
+        <button type="button" class="activity-tab-btn" id="tabBtnFacilities" onclick="switchActivityTab('facilities')">
+            <i class="fas fa-spa"></i> Spa & Wellness Sessions
+            <span class="tab-count" id="countFacilities">0</span>
+        </button>
+    </div>
+
+    <!-- Filterbar for Bookings -->
+    <div class="screen-filterbar" id="bookingsFilterbar" style="margin-bottom: 20px;">
+        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Filter Status:</span>
         <div class="filter-pills" id="bookingFilterPills">
             <button type="button" class="filter-pill active" data-filter="all">All</button>
             <button type="button" class="filter-pill" data-filter="confirmed">Confirmed</button>
@@ -28,9 +87,49 @@
         </div>
     </div>
 
-    <!-- Content Table Container -->
-    <div id="bookingsListArea" style="margin-top: 25px;">
-        <!-- Injected via JS -->
+    <!-- Content Area -->
+    <div id="activityContentArea">
+        {% if bookings %}
+        <div class="card" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--border-radius-lg); overflow: hidden;">
+            <div style="overflow-x: auto;">
+                <table class="table" style="color: var(--text-primary); margin-bottom: 0;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid var(--border-color); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary);">
+                            <th style="padding: 14px 18px;">Booking Reference</th>
+                            <th style="padding: 14px 18px;">Room / Suite</th>
+                            <th style="padding: 14px 18px;">Stay Dates</th>
+                            <th style="padding: 14px 18px;">Guests</th>
+                            <th style="padding: 14px 18px;">Total</th>
+                            <th style="padding: 14px 18px;">Status</th>
+                            <th style="padding: 14px 18px; text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 14px 18px;">
+                                <strong style="color: var(--primary-color); font-family: monospace; font-size: 14px;">{{ b.booking_no or b.confirmation_code or b.id }}</strong>
+                            </td>
+                            <td style="padding: 14px 18px;">
+                                <div style="font-weight: 500;">{{ b.room_name or (b.items[0].name if b.items and b.items[0] else ('Room ' ~ b.room_number if b.room_number else 'Luxury Suite')) }}</div>
+                            </td>
+                            <td style="padding: 14px 18px; font-size: 13px;">
+                                <div><i class="far fa-calendar-alt" style="color: var(--primary-color); width: 16px;"></i> In: {{ b.check_in }}</div>
+                                <div><i class="far fa-calendar-check" style="color: var(--text-secondary); width: 16px;"></i> Out: {{ b.check_out }}</div>
+                            </td>
+                            <td style="padding: 14px 18px;">{{ b.guests or 1 }} Guests</td>
+                            <td style="padding: 14px 18px;"><strong style="color: var(--primary-color);">₹{{ "{:,.2f}".format(b.total_price or b.total or 0) }}</strong></td>
+                            <td style="padding: 14px 18px;"><span class="badge bg-success">{{ b.status|title }}</span></td>
+                            <td style="padding: 14px 18px; text-align: right;">
+                                <a href="/confirmation/{{ b.id }}" class="btn btn-secondary" style="font-size: 11px; padding: 5px 10px;">Pass / QR</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -38,46 +137,78 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
-    const area = document.getElementById('bookingsListArea');
+    const area = document.getElementById('activityContentArea');
+    const countBookingsEl = document.getElementById('countBookings');
+    const countOrdersEl = document.getElementById('countOrders');
+    const countFacilitiesEl = document.getElementById('countFacilities');
+    const bookingsFilterbar = document.getElementById('bookingsFilterbar');
+
+    let currentTab = 'bookings';
+    let allBookings = [];
+    let allOrders = [];
+    let allFacilities = [];
+
     AppStates.renderLoading(area, { type: 'table', count: 4 });
 
-    let allBookings = [];
-
-    async function fetchBookings() {
+    async function loadData() {
         try {
-            const res = await fetch('/api/user/bookings');
-            if (res.ok) {
-                const data = await res.json();
-                allBookings = data.data || [];
-            } else {
-                // Demo fallback if API empty
-                allBookings = [
-                    {
-                        id: 'bk_5521',
-                        confirmation_code: 'HTL-5521-AX',
-                        name: 'Deluxe Room 204',
-                        check_in: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0],
-                        check_out: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
-                        status: 'confirmed',
-                        total_paid: 8815
-                    },
-                    {
-                        id: 'bk_4129',
-                        confirmation_code: 'HTL-4129-BC',
-                        name: 'Nur-e-Sultana Luxury Spa',
-                        check_in: new Date(Date.now() - 86400000 * 4).toISOString().split('T')[0],
-                        check_out: new Date(Date.now() - 86400000 * 4).toISOString().split('T')[0],
-                        status: 'checked_out',
-                        total_paid: 3200
-                    }
-                ];
+            // 1. Fetch Bookings
+            const bRes = await fetch('/api/user/bookings');
+            if (bRes.ok) {
+                const bJson = await bRes.json();
+                allBookings = bJson.data || [];
             }
-            renderBookings(allBookings);
-        } catch (e) {
+
+            // 2. Fetch Orders
+            const oRes = await fetch('/api/user/orders');
+            if (oRes.ok) {
+                const oJson = await oRes.json();
+                allOrders = oJson.data || [];
+            } else {
+                const oFallback = await fetch('/api/orders');
+                if (oFallback.ok) {
+                    const fJson = await oFallback.json();
+                    allOrders = fJson.data || [];
+                }
+            }
+
+            // 3. Fetch Spa & Facilities Bookings
+            const fRes = await fetch('/api/user/facilities');
+            if (fRes.ok) {
+                const fJson = await fRes.json();
+                allFacilities = fJson.data || [];
+            }
+
+            countBookingsEl.textContent = allBookings.length;
+            countOrdersEl.textContent = allOrders.length;
+            if (countFacilitiesEl) countFacilitiesEl.textContent = allFacilities.length;
+
+            renderCurrentTab();
+        } catch (err) {
             AppStates.renderError(area, {
-                message: 'Failed to load booking history.',
-                onRetry: fetchBookings
+                message: 'Failed to load your account history.',
+                onRetry: loadData
             });
+        }
+    }
+
+    window.switchActivityTab = (tab) => {
+        currentTab = tab;
+        document.getElementById('tabBtnBookings').classList.toggle('active', tab === 'bookings');
+        document.getElementById('tabBtnOrders').classList.toggle('active', tab === 'orders');
+        const facBtn = document.getElementById('tabBtnFacilities');
+        if (facBtn) facBtn.classList.toggle('active', tab === 'facilities');
+        bookingsFilterbar.style.display = (tab === 'bookings') ? 'flex' : 'none';
+        renderCurrentTab();
+    };
+
+    function renderCurrentTab() {
+        if (currentTab === 'bookings') {
+            renderBookings(allBookings);
+        } else if (currentTab === 'orders') {
+            renderOrders(allOrders);
+        } else {
+            renderFacilities(allFacilities);
         }
     }
 
@@ -85,9 +216,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!bookings || bookings.length === 0) {
             AppStates.renderEmpty(area, {
                 icon: 'fa-calendar-times',
-                title: 'No bookings found',
-                message: 'You have no bookings matching the selected status filter.',
-                actionText: 'Reserve a room',
+                title: 'No Reservations Found',
+                message: 'You have no room reservations matching the selected filter.',
+                actionText: 'Browse Rooms & Suites',
                 onAction: () => { window.location.href = '/rooms'; }
             });
             return;
@@ -95,10 +226,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const rows = bookings.map(b => {
             const isConfirmed = b.status === 'confirmed';
-            
-            // Check-in > 24h away check per Section C.9
-            const checkInDate = new Date(b.check_in);
-            const canCancel = isConfirmed && (checkInDate - new Date() > 86400000);
+            const checkInDate = new Date(b.check_in || Date.now());
+            const canCancel = isConfirmed && ((checkInDate - new Date()) > 86400000);
 
             let statusBadge = '';
             if (b.status === 'confirmed') statusBadge = '<span style="background: rgba(0,134,112,0.2); color: #2ee59d; border: 1px solid #008670; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Confirmed</span>';
@@ -106,23 +235,30 @@ document.addEventListener('DOMContentLoaded', async () => {
             else if (b.status === 'checked_out') statusBadge = '<span style="background: rgba(255,255,255,0.1); color: #ccc; border: 1px solid #555; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Checked Out</span>';
             else statusBadge = '<span style="background: rgba(199,0,57,0.2); color: #ff7b92; border: 1px solid #c70039; padding: 3px 10px; border-radius: 12px; font-size: 11px;">Cancelled</span>';
 
+            const totalAmt = b.total_price || b.total_paid || b.total || 0;
+            const refCode = b.booking_no || b.confirmation_code || b.id;
+            const roomDesc = b.name || (b.items && b.items[0] ? b.items[0].name : (b.room_number ? 'Room ' + b.room_number : 'Luxury Accommodation'));
+
             return `
                 <tr>
                     <td>
-                        <strong style="color: var(--primary-color); font-family: monospace; font-size: 14px;">${b.confirmation_code || b.id}</strong>
-                        <div style="font-size: 11px; color: var(--text-secondary);">${b.id}</div>
+                        <strong style="color: var(--primary-color); font-family: monospace; font-size: 14px;">${refCode}</strong>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${b.id || ''}</div>
                     </td>
                     <td>
-                        <strong style="color: var(--text-bright);">${b.name || (b.items && b.items[0] ? b.items[0].name : 'Accommodation')}</strong>
+                        <strong style="color: var(--text-bright);">${roomDesc}</strong>
+                        ${b.room_number ? `<div style="font-size: 11px; color: var(--text-secondary);">Room Flat: ${b.room_number}</div>` : ''}
                     </td>
                     <td style="font-size: 13px; color: var(--text-primary);">
-                        ${b.check_in} &rarr; ${b.check_out}
+                        ${b.check_in || 'N/A'} &rarr; ${b.check_out || 'N/A'}
                     </td>
                     <td>${statusBadge}</td>
-                    <td style="font-weight: bold; color: var(--primary-color);">₹${b.total_paid}</td>
+                    <td style="font-weight: bold; color: var(--primary-color); font-size: 14px;">₹${Number(totalAmt).toLocaleString()}</td>
                     <td style="text-align: right;">
                         <div style="display: inline-flex; gap: 8px;">
-                            <a href="/my-bookings/${b.id}" class="btn btn-secondary" style="font-size: 11px; padding: 5px 12px;">View</a>
+                            <a href="/my-bookings/${b.id || b.booking_no}" class="btn btn-secondary" style="font-size: 11px; padding: 5px 12px;">
+                                Manage & Services
+                            </a>
                             ${canCancel ? `
                                 <button type="button" class="btn btn-danger" onclick="cancelBooking('${b.id}')" style="font-size: 11px; padding: 5px 12px;">
                                     Cancel
@@ -140,16 +276,153 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <thead>
                         <tr>
                             <th>Booking Ref</th>
-                            <th>Accommodation / Facility</th>
-                            <th>Stay Dates</th>
+                            <th>Accommodation / Wing</th>
+                            <th>Dates of Stay</th>
                             <th>Status</th>
                             <th>Total Paid</th>
                             <th style="text-align: right;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${rows}
-                    </tbody>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderOrders(orders) {
+        if (!orders || orders.length === 0) {
+            AppStates.renderEmpty(area, {
+                icon: 'fa-utensils',
+                title: 'No Dining Orders Found',
+                message: 'You have not placed any room service or restaurant dining orders yet.',
+                actionText: 'Explore Fine Dining Menu',
+                onAction: () => { window.location.href = '/menu'; }
+            });
+            return;
+        }
+
+        const rows = orders.map(o => {
+            let statusBadge = '';
+            const st = (o.status || 'received').toLowerCase();
+            if (st === 'received') statusBadge = '<span style="background: rgba(212,175,55,0.15); color: #d4af37; border: 1px solid rgba(212,175,55,0.4); padding: 3px 10px; border-radius: 12px; font-size: 11px;"><i class="fas fa-receipt me-1"></i> Received by Kitchen</span>';
+            else if (st === 'preparing') statusBadge = '<span style="background: rgba(255,152,0,0.15); color: #ff9800; border: 1px solid rgba(255,152,0,0.4); padding: 3px 10px; border-radius: 12px; font-size: 11px;"><i class="fas fa-fire me-1"></i> Cooking</span>';
+            else if (st === 'ready') statusBadge = '<span style="background: rgba(33,150,243,0.15); color: #2196f3; border: 1px solid rgba(33,150,243,0.4); padding: 3px 10px; border-radius: 12px; font-size: 11px;"><i class="fas fa-bell me-1"></i> Plated & Ready</span>';
+            else if (st === 'delivering') statusBadge = '<span style="background: rgba(156,39,176,0.15); color: #ba68c8; border: 1px solid rgba(156,39,176,0.4); padding: 3px 10px; border-radius: 12px; font-size: 11px;"><i class="fas fa-walking me-1"></i> On the Way</span>';
+            else if (st === 'delivered' || st === 'paid') statusBadge = '<span style="background: rgba(0,134,112,0.2); color: #2ee59d; border: 1px solid #008670; padding: 3px 10px; border-radius: 12px; font-size: 11px;"><i class="fas fa-check-circle me-1"></i> Delivered & Served</span>';
+            else statusBadge = `<span class="badge bg-secondary">${st.toUpperCase()}</span>`;
+
+            const itemsSummary = (o.items || []).map(it => `${it.qty}x ${it.name}`).join(', ') || 'Gourmet Course';
+            const destination = o.room_number ? `Room ${o.room_number}` : (o.table_number ? `Table ${o.table_number}` : 'In-Room / Dine-In');
+            const total = o.total || o.subtotal || 0;
+            const timeStr = o.created_at ? new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent';
+
+            return `
+                <tr>
+                    <td>
+                        <strong style="color: var(--primary-color); font-family: monospace; font-size: 14px;">${o.order_no || o.id}</strong>
+                        <div style="font-size: 11px; color: var(--text-secondary);">${timeStr}</div>
+                    </td>
+                    <td>
+                        <strong style="color: var(--text-bright);">${destination}</strong>
+                        <div style="font-size: 12px; color: var(--text-secondary); max-width: 380px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                            ${itemsSummary}
+                        </div>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td style="font-weight: bold; color: var(--primary-color); font-size: 14px;">₹${Number(total).toLocaleString()}</td>
+                    <td style="text-align: right;">
+                        <a href="/menu" class="btn btn-secondary" style="font-size: 11px; padding: 5px 12px;">
+                            <i class="fas fa-redo me-1"></i> Reorder
+                        </a>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        area.innerHTML = `
+            <div class="screen-content">
+                <table class="app-table">
+                    <thead>
+                        <tr>
+                            <th>Order No</th>
+                            <th>Destination & Items</th>
+                            <th>Kitchen / Service Status</th>
+                            <th>Total Amount</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
+    function renderFacilities(facilities) {
+        if (!facilities || facilities.length === 0) {
+            AppStates.renderEmpty(area, {
+                icon: 'fa-spa',
+                title: 'No Spa & Wellness Sessions Booked',
+                message: 'You have not reserved any spa therapies, heated pool cabanas, or personal training sessions yet.',
+                actionText: 'Explore Spa & Facilities',
+                onAction: () => { window.location.href = '/facilities'; }
+            });
+            return;
+        }
+
+        const rows = facilities.map(f => {
+            const price = f.price || f.unit_price || 0;
+            const refNo = f.booking_no || f.id || 'SPA-SLOT';
+            const title = f.facility_name || f.treatment || f.name || 'Wellness Session';
+            const category = f.category || 'Spa & Wellness';
+            const dateStr = f.date || 'Today';
+            const slotStr = f.slot_time || f.time_slot || f.slot || 'Reserved Slot';
+            const practitioner = f.therapist || 'Certified Master Specialist';
+
+            return `
+                <tr>
+                    <td>
+                        <strong style="color: var(--primary-color); font-family: monospace; font-size: 14px;">${refNo}</strong>
+                        <div style="font-size: 11px; color: var(--text-secondary);"><i class="fas fa-tag me-1"></i>${category}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: #fff; font-size: 14px;">${title}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);"><i class="fas fa-user-md me-1 text-warning"></i>${practitioner}</div>
+                    </td>
+                    <td>
+                        <div style="font-size: 13px; color: #e2e8f0;"><i class="far fa-calendar-alt me-1 text-warning"></i>${dateStr}</div>
+                        <div style="font-size: 12px; color: #ffd700; font-weight: 500;"><i class="far fa-clock me-1"></i>${slotStr}</div>
+                    </td>
+                    <td>
+                        <span style="background: rgba(46, 229, 157, 0.15); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); border-radius: 12px; padding: 3px 10px; font-size: 11px;">
+                            <i class="fas fa-check-circle me-1"></i> Confirmed Slot
+                        </span>
+                    </td>
+                    <td style="font-weight: bold; color: var(--primary-color); font-size: 14px;">
+                        ${price > 0 ? '₹' + Number(price).toLocaleString() : 'Complimentary'}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="/facilities" class="btn btn-secondary" style="font-size: 11px; padding: 5px 12px;">
+                            <i class="fas fa-plus me-1"></i> Book Another
+                        </a>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        area.innerHTML = `
+            <div class="screen-content">
+                <table class="app-table">
+                    <thead>
+                        <tr>
+                            <th>Reservation Ref</th>
+                            <th>Wellness Treatment / Facility</th>
+                            <th>Reserved Date & Slot</th>
+                            <th>Booking Status</th>
+                            <th>Amount</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
                 </table>
             </div>
         `;
@@ -161,7 +434,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             await AppAPI.post(`/api/bookings/${id}/cancel`);
             Toast.success('Booking cancelled successfully.');
-            // Refresh
             const item = allBookings.find(b => b.id === id);
             if (item) item.status = 'cancelled';
             renderBookings(allBookings);
@@ -170,7 +442,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // Filter tabs
+    // Filter tabs for bookings
     document.querySelectorAll('#bookingFilterPills .filter-pill').forEach(pill => {
         pill.addEventListener('click', () => {
             document.querySelectorAll('#bookingFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
@@ -184,7 +456,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    fetchBookings();
+    loadData();
 });
 </script>
 {% endblock %}

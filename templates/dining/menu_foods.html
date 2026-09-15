@@ -25,23 +25,28 @@
       <div class="row g-4">
         {% for itm in items %}
         <div class="col-md-6 col-lg-4">
-          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between">
-            <div>
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <h4 class="fw-bold fs-6 mb-0">{{ itm.name }}</h4>
-                {% if itm.is_veg %}
-                <span class="badge-pill priority-low text-success border border-success" style="font-size: 0.7rem;"><i class="fas fa-circle fs-6"></i> Veg</span>
-                {% else %}
-                <span class="badge-pill priority-urgent" style="font-size: 0.7rem;"><i class="fas fa-play" style="transform: rotate(-90deg); font-size: 0.6rem;"></i> Non-Veg</span>
-                {% endif %}
-              </div>
-              <p class="text-secondary small mb-3">{{ itm.description or "Prepared fresh with locally sourced ingredients." }}</p>
+          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between p-0 overflow-hidden" style="border: 1px solid rgba(212,175,55,0.25);">
+            <div style="height: 180px; background: url('{{ itm.image_url or itm.img or "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80" }}') center/cover; position: relative;">
+              <span class="badge position-absolute top-0 end-0 m-2 px-2 py-1 fw-bold text-warning" style="background: rgba(15,26,42,0.85); border: 1px solid var(--primary-color);">₹{{ itm.price }}</span>
             </div>
-            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-              <span class="fw-bold fs-5 text-primary">₹{{ itm.price }}</span>
-              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="addToCart('{{ itm.id }}', '{{ itm.name }}', {{ itm.price }})">
-                <i class="fas fa-plus me-1"></i> Add
-              </button>
+            <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+              <div>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <h4 class="fw-bold fs-6 mb-0">{{ itm.name }}</h4>
+                  {% if itm.is_veg or itm.diet == 'veg' %}
+                  <span class="badge-pill priority-low text-success border border-success" style="font-size: 0.7rem;"><i class="fas fa-circle fs-6"></i> Veg</span>
+                  {% else %}
+                  <span class="badge-pill priority-urgent" style="font-size: 0.7rem;"><i class="fas fa-drumstick-bite"></i> Non-Veg</span>
+                  {% endif %}
+                </div>
+                <p class="text-secondary small mb-3">{{ itm.description or "Prepared fresh with locally sourced ingredients." }}</p>
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                <span class="fw-bold fs-5 text-primary">₹{{ itm.price }}</span>
+                <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="addToCart('{{ itm.id }}', '{{ itm.name }}', {{ itm.price }})">
+                  <i class="fas fa-plus me-1"></i> Add
+                </button>
+              </div>
             </div>
           </div>
         </div>

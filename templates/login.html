@@ -347,11 +347,19 @@
             </div>
             <div class="d-flex flex-wrap gap-1">
                 <button type="button" class="demo-chip" onclick="fillDemo('guest')"><i class="fas fa-user"></i> Guest</button>
-                <button type="button" class="demo-chip" onclick="fillDemo('admin')"><i class="fas fa-user-shield"></i> Admin</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('member')"><i class="fas fa-crown"></i> VIP Member</button>
                 <button type="button" class="demo-chip" onclick="fillDemo('frontdesk')"><i class="fas fa-concierge-bell"></i> Front Desk</button>
                 <button type="button" class="demo-chip" onclick="fillDemo('housekeeping')"><i class="fas fa-broom"></i> Housekeeping</button>
-                <button type="button" class="demo-chip" onclick="fillDemo('kitchen')"><i class="fas fa-utensils"></i> Kitchen</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('kitchen')"><i class="fas fa-utensils"></i> Kitchen/Chef</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('waiter')"><i class="fas fa-clipboard-list"></i> Waiter Desk</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('laundry')"><i class="fas fa-tshirt"></i> Laundry</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('maintenance')"><i class="fas fa-tools"></i> Engineer</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('security')"><i class="fas fa-shield-alt"></i> Security</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('concierge')"><i class="fas fa-bell"></i> Concierge</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('accountant')"><i class="fas fa-file-invoice-dollar"></i> Accounts</button>
                 <button type="button" class="demo-chip" onclick="fillDemo('manager')"><i class="fas fa-briefcase"></i> Manager</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('admin')"><i class="fas fa-user-shield"></i> Admin</button>
+                <button type="button" class="demo-chip" onclick="fillDemo('superadmin')"><i class="fas fa-lock"></i> Super Admin</button>
             </div>
         </div>
 
@@ -444,11 +452,19 @@
 <script>
 const demoAccounts = {
     guest: { email: 'user@nur-e-haya.com', pass: 'Hotel@123', portal: 'guest', title: 'Guest Traveler' },
-    admin: { email: 'admin@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'System Administrator' },
+    member: { email: 'member@nur-e-haya.com', pass: 'Hotel@123', portal: 'guest', title: 'VIP Club Member' },
     frontdesk: { email: 'frontdesk@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Front Desk Officer' },
     housekeeping: { email: 'cleaning@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Housekeeping Lead' },
     kitchen: { email: 'chef@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Head Chef' },
-    manager: { email: 'manager@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'General Manager' }
+    waiter: { email: 'waiter@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Captain Waiter' },
+    laundry: { email: 'laundry@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Laundry Specialist' },
+    maintenance: { email: 'maintenance@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Chief Engineer' },
+    security: { email: 'security@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Chief Security Officer' },
+    concierge: { email: 'concierge@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Chief Concierge' },
+    accountant: { email: 'accountant@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Senior Accountant' },
+    manager: { email: 'manager@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'General Manager' },
+    admin: { email: 'admin@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'System Administrator' },
+    superadmin: { email: 'superadmin@nur-e-haya.com', pass: 'Hotel@123', portal: 'staff', title: 'Super Administrator' }
 };
 
 function selectPortal(type) {

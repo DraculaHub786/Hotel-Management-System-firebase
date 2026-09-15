@@ -1,35 +1,147 @@
 import time
+import random
 import logging
 from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from app.firebase_db import (
     banquet_bookings_col, catering_packages_col, spa_bookings_col,
-    pool_bookings_col, gym_bookings_col, facilities_col
+    pool_bookings_col, gym_bookings_col, facilities_col, notifications_col
 )
 from app.auth.decorators import login_required, role_required
 from api_utils import api_success, api_error, permission_denied
+from app.events.facilities_data import FACILITIES_DATA, FACILITY_SECTIONS
 
 logger = logging.getLogger(__name__)
 
 events_bp = Blueprint('events', __name__)
 
-# Facilities & Wellness (C.8 Spec)
+# Facilities & Wellness Catalog
 @events_bp.route('/facilities', methods=['GET'])
 def facilities_catalog():
-    facs = [d.to_dict() for d in facilities_col().stream()]
-    if not facs:
-        facs = [
-            {"id": "spa", "name": "The Royal Ayur Spa", "category": "Wellness", "price": 2500, "image": "/static/images/luxury-room.jpg", "description": "Holistic treatments, herbal sauna, and steam bath."},
-            {"id": "pool", "name": "Infinity Sky Pool", "category": "Recreation", "price": 0, "image": "/static/images/suite-room.webp", "description": "Temperature controlled panoramic rooftop pool."},
-            {"id": "gym", "name": "FitLife Gymnasium", "category": "Fitness", "price": 0, "image": "/static/images/double-room.webp", "description": "High-tech cardio, strength, and personal trainer zone."}
-        ]
-    return render_template('guest/facilities.html', facilities=facs)
+    try:
+        facs = [d.to_dict() for d in facilities_col().stream()]
+    except Exception as e:
+        logger.warning(f"Error reading facilities: {e}")
+        facs = []
+
+    if not facs or len(facs) < 10:
+        facs = FACILITIES_DATA
+
+    # Ensure each item has an id
+    for f in facs:
+        if not f.get('id'):
+            f['id'] = f.get('name', 'fac').lower().replace(' ', '_')
+
+    return render_template(
+        'guest/facilities.html',
+        facilities=facs,
+        sections=FACILITY_SECTIONS
+    )
 
 @events_bp.route('/facilities/<facility_id>', methods=['GET'])
 def facility_detail(facility_id):
-    doc = facilities_col().document(str(facility_id)).get()
-    fdata = doc.to_dict() if doc.exists else {"name": "Spa & Wellness", "category": "Wellness", "price": 2500}
-    return render_template('guest/facility_detail.html', facility=fdata)
+    fdata = None
+    try:
+        doc = facilities_col().document(str(facility_id)).get()
+        if doc.exists:
+            fdata = doc.to_dict()
+    except Exception as e:
+        logger.warning(f"Error fetching facility doc: {e}")
+
+    if not fdata:
+        for f in FACILITIES_DATA:
+            if f['id'] == facility_id:
+                fdata = f
+                break
+
+    if not fdata:
+        fdata = FACILITIES_DATA[0]
+
+    # Get related items in the same section
+    related = [f for f in FACILITIES_DATA if f.get('section_id') == fdata.get('section_id') and f.get('id') != fdata.get('id')][:3]
+
+    return render_template('guest/facility_detail.html', facility=fdata, related=related)
+
+@events_bp.route('/api/facilities/book', methods=['POST'])
+def api_book_facility_slot():
+    """Direct API for reserving a spa or wellness facility slot"""
+    data = request.get_json() or {}
+    facility_id = data.get('facility_id') or data.get('ref_id')
+    slot_date = data.get('date') or datetime.utcnow().strftime("%Y-%m-%d")
+    slot_time = data.get('slot_time') or data.get('slot') or "10:30 AM"
+    therapist = data.get('therapist', 'Master Practitioner')
+    user_email = session.get('user_email', data.get('email', 'guest@nur-e-haya.com'))
+    guest_name = session.get('user_name', data.get('name', 'Valued Guest'))
+    room_number = session.get('room_number', data.get('room_number', '201'))
+
+    # Locate facility metadata
+    target_fac = None
+    for f in FACILITIES_DATA:
+        if f['id'] == facility_id:
+            target_fac = f
+            break
+    if not target_fac:
+        target_fac = {
+            "id": facility_id or "fac_custom",
+            "name": data.get('name', 'Spa & Wellness Session'),
+            "category": "Ayurvedic Spa & Wellness",
+            "price": float(data.get('unit_price', data.get('price', 2500))),
+            "duration": "60 mins"
+        }
+
+    booking_no = f"SPA-{random.randint(1000, 9999)}"
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    
+    booking_record = {
+        "booking_no": booking_no,
+        "facility_id": target_fac.get("id"),
+        "facility_name": target_fac.get("name"),
+        "treatment": target_fac.get("name"),
+        "category": target_fac.get("category", "Ayurvedic Spa & Wellness"),
+        "user_email": user_email,
+        "guest_name": guest_name,
+        "room_number": str(room_number),
+        "date": slot_date,
+        "slot_time": slot_time,
+        "time_slot": slot_time,
+        "price": float(target_fac.get("price", 2500)),
+        "status": "confirmed",
+        "payment_status": "confirmed",
+        "therapist": therapist,
+        "notes": data.get("notes", ""),
+        "created_at": now_iso
+    }
+
+    # Store according to facility category
+    sec_id = target_fac.get('section_id', 'spa')
+    if sec_id == 'pool':
+        bref = pool_bookings_col().add(booking_record)
+    elif sec_id == 'fitness':
+        bref = gym_bookings_col().add(booking_record)
+    else:
+        bref = spa_bookings_col().add(booking_record)
+
+    # Trigger staff notification
+    try:
+        notifications_col().add({
+            "title": f"New Facility Reservation: {target_fac.get('name')}",
+            "message": f"Guest {guest_name} reserved {target_fac.get('name')} for {slot_date} at {slot_time}.",
+            "role": "concierge",
+            "priority": "medium",
+            "unread": True,
+            "created_at": now_iso
+        })
+    except Exception as e:
+        logger.warning(f"Could not log facility notification: {e}")
+
+    return api_success({
+        "booking_id": bref[1].id if bref else booking_no,
+        "booking_no": booking_no,
+        "message": f"Successfully confirmed reservation for {target_fac.get('name')} on {slot_date} at {slot_time}!",
+        "facility_name": target_fac.get("name"),
+        "slot_date": slot_date,
+        "slot_time": slot_time
+    })
 
 # SCR-59: Banquet / Hall Booking
 @events_bp.route('/events/banquets', methods=['GET', 'POST'])

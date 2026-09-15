@@ -10,6 +10,184 @@ os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 logger = logging.getLogger(__name__)
 
+import time
+import random
+import copy
+from datetime import datetime
+
+class MockDocumentSnapshot:
+    def __init__(self, doc_id, data, exists, reference):
+        self.id = str(doc_id)
+        self._data = copy.deepcopy(data) if data is not None else {}
+        self.exists = exists
+        self.reference = reference
+
+    def to_dict(self):
+        return copy.deepcopy(self._data) if self.exists else None
+
+class MockDocumentReference:
+    def __init__(self, collection, doc_id):
+        self._collection = collection
+        self.id = str(doc_id)
+
+    def get(self):
+        exists = self.id in self._collection._docs
+        data = self._collection._docs.get(self.id)
+        return MockDocumentSnapshot(self.id, data, exists, self)
+
+    def set(self, data, merge=False):
+        d = copy.deepcopy(data)
+        if merge and self.id in self._collection._docs:
+            self._collection._docs[self.id].update(d)
+        else:
+            self._collection._docs[self.id] = d
+
+    def update(self, data):
+        if self.id not in self._collection._docs:
+            self._collection._docs[self.id] = {}
+        self._collection._docs[self.id].update(copy.deepcopy(data))
+
+    def delete(self):
+        self._collection._docs.pop(self.id, None)
+
+class MockQuery:
+    def __init__(self, collection, filters=None, limit_num=None, order_field=None, order_desc=False):
+        self._collection = collection
+        self._filters = filters or []
+        self._limit_num = limit_num
+        self._order_field = order_field
+        self._order_desc = order_desc
+
+    def where(self, field_path=None, op_string=None, value=None, filter=None):
+        new_filters = list(self._filters)
+        if field_path is not None and op_string is not None:
+            new_filters.append((field_path, op_string, value))
+        elif filter is not None:
+            new_filters.append((getattr(filter, 'field_path', ''), getattr(filter, 'op_string', '=='), getattr(filter, 'value', None)))
+        return MockQuery(self._collection, new_filters, self._limit_num, self._order_field, self._order_desc)
+
+    def limit(self, n):
+        return MockQuery(self._collection, self._filters, n, self._order_field, self._order_desc)
+
+    def order_by(self, field, direction=None):
+        desc = (direction == 'DESCENDING' or str(direction).lower() == 'desc')
+        return MockQuery(self._collection, self._filters, self._limit_num, field, desc)
+
+    def _matches(self, doc_data):
+        for field, op, val in self._filters:
+            actual = doc_data.get(field)
+            if op == '==':
+                if actual != val and str(actual) != str(val):
+                    return False
+            elif op == '!=':
+                if actual == val or str(actual) == str(val):
+                    return False
+            elif op == 'in':
+                if val is None or actual not in val:
+                    return False
+            elif op == '>=':
+                if actual is None or actual < val:
+                    return False
+            elif op == '<=':
+                if actual is None or actual > val:
+                    return False
+            elif op == '>':
+                if actual is None or actual <= val:
+                    return False
+            elif op == '<':
+                if actual is None or actual >= val:
+                    return False
+        return True
+
+    def get(self):
+        return list(self.stream())
+
+    def stream(self):
+        results = []
+        for doc_id, data in list(self._collection._docs.items()):
+            if self._matches(data):
+                results.append(MockDocumentSnapshot(doc_id, data, True, MockDocumentReference(self._collection, doc_id)))
+        if self._order_field:
+            results.sort(key=lambda s: s.to_dict().get(self._order_field, '') or '', reverse=self._order_desc)
+        if self._limit_num is not None:
+            results = results[:self._limit_num]
+        return iter(results)
+
+class MockCollectionReference(MockQuery):
+    def __init__(self, name, db=None):
+        self.name = name
+        self._docs = {}
+        self._db = db
+        self._client = db
+        super().__init__(self)
+
+    def document(self, doc_id=None):
+        if not doc_id:
+            doc_id = f"doc_{int(time.time() * 1000)}_{random.randint(100, 999)}"
+        return MockDocumentReference(self, str(doc_id))
+
+    def add(self, data):
+        doc_id = f"doc_{int(time.time() * 1000)}_{random.randint(100, 999)}"
+        ref = self.document(doc_id)
+        ref.set(data)
+        now_ts = datetime.utcnow()
+        return (now_ts, ref)
+
+class InMemoryFirestore:
+    def __init__(self):
+        self._collections = {}
+        self._init_defaults()
+
+    def collection(self, name):
+        if name not in self._collections:
+            self._collections[name] = MockCollectionReference(name, db=self)
+        return self._collections[name]
+
+    def _init_defaults(self):
+        # Default settings
+        self.collection('settings').document('general').set({
+            "hotel_name": "Nur-e-Haya Luxury Palace",
+            "currency": "INR",
+            "phone": "+91 98765 43210",
+            "email": "concierge@nur-e-haya.com",
+            "rzp_key_secret": "sec_live_999",
+            "stripe_secret_key": "sk_live_999",
+            "tax_rate": 18
+        })
+
+        # Default promo codes
+        promos = [
+            {"code": "ROYAL50", "discount_percent": 50, "is_active": True},
+            {"code": "WELCOME10", "discount_percent": 10, "is_active": True},
+            {"code": "MEMBER20", "discount_percent": 20, "is_active": True},
+        ]
+        p_col = self.collection('promo_codes')
+        for p in promos:
+            p_col.document(p['code']).set(p)
+
+        # Default facilities
+        facs = [
+            {"name": "Royal Ayur Spa", "category": "Wellness", "price": 2500, "status": "active"},
+            {"name": "Infinity Pool", "category": "Recreation", "price": 1000, "status": "active"},
+        ]
+        f_col = self.collection('facilities')
+        for i, f in enumerate(facs, 1):
+            f_col.document(f"fac_{i}").set(f)
+
+        # Seed 150+ menu items, 40+ rooms, 24 tables via data_seeder
+        try:
+            from data_seeder import seed_all_data
+            seed_all_data(db_client=self)
+        except Exception as e:
+            logger.warning(f"Error seeding mock database: {e}")
+
+        # Seed standard users for all roles
+        try:
+            from app.auth.routes import init_seed_users
+            init_seed_users()
+        except Exception as e:
+            logger.warning(f"Error seeding default users: {e}")
+
 _db = None
 
 def get_db():
@@ -47,7 +225,7 @@ def get_db():
             logger.error(f"❌ Production Firebase initialization failed: {str(e)}")
             raise
         logger.warning(f"⚠️ Firebase initialization skipped/mocked in non-production mode: {str(e)}")
-        _db = MagicMock(name='mock_firestore_db')
+        _db = InMemoryFirestore()
         
     return _db
 
@@ -98,3 +276,4 @@ def mini_bar_orders_col(): return get_collection('mini_bar_orders')
 def invites_col(): return get_collection('invites')
 def password_resets_col(): return get_collection('password_resets')
 def logs_col(): return get_collection('logs')
+def chat_history_col(): return get_collection('chat_history')

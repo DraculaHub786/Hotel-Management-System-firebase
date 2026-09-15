@@ -1,20 +1,37 @@
-# Environment variables
+# Environment variables & Local Config
 .env
 .env.local
 .env.*.local
+*.env
 
-# Firebase credentials
+# Firebase & Cloud Credentials / Secrets
 firebase-credentials.json
+firebase-credentials*.json
+serviceAccountKey*.json
+*credentials*.json
+client_secrets*.json
+*.pem
+*.key
+*.cert
+*.crt
 
-# Python
+# Python & Bytecode
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+*.pyd
+
+# Virtual Environments
 env/
 venv/
 ENV/
+.venv/
+env*/
+venv*/
+
+# Build & Packaging
 build/
 develop-eggs/
 dist/
@@ -31,14 +48,40 @@ wheels/
 .installed.cfg
 *.egg
 
-# IDE
+# Testing & Code Coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.pytest_cache
+
+# Flask & App runtime
+instance/
+.webassets-cache
+data/
+*.log
+
+# IDE & Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
+*.sublime-project
+*.sublime-workspace
 
-# Local data
-data/
-*.log
+# OS Artifacts & Temp files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.bak
+*.orig
+scratch/

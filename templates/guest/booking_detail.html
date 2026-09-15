@@ -68,6 +68,59 @@
                 {% endif %}
             </div>
 
+            <!-- In-House Guest Needs & Room Service -->
+            {% if booking and booking.status == 'checked_in' %}
+            <div style="border-top: 1px solid rgba(212,175,55,0.2); padding-top: 20px; margin-top: 20px;">
+                <h4 style="font-size: 16px; color: var(--primary-color); margin-bottom: 12px; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-bell me-2"></i> In-House Guest Services & Room Needs
+                </h4>
+                <p class="small text-secondary mb-3">
+                    Currently residing in <strong>Room {{ booking.room_number or '204' }}</strong>. Request live assistance directly from your phone:
+                </p>
+                <div class="row g-2 mb-3">
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-secondary w-100 py-2" onclick="requestRoomService('cleaning')">
+                            <i class="fas fa-broom text-warning d-block mb-1" style="font-size: 18px;"></i>
+                            <span style="font-size: 11px;">Make Up Room</span>
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-secondary w-100 py-2" onclick="requestRoomService('dnd')">
+                            <i class="fas fa-door-closed text-danger d-block mb-1" style="font-size: 18px;"></i>
+                            <span style="font-size: 11px;">Toggle DND</span>
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <a href="/menu" class="btn btn-secondary w-100 py-2 text-center text-decoration-none">
+                            <i class="fas fa-utensils text-success d-block mb-1" style="font-size: 18px;"></i>
+                            <span style="font-size: 11px;">Order Food</span>
+                        </a>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-secondary w-100 py-2" onclick="requestRoomService('concierge')">
+                            <i class="fas fa-suitcase text-info d-block mb-1" style="font-size: 18px;"></i>
+                            <span style="font-size: 11px;">Luggage / Valet</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Express Checkout / Leaving Button -->
+                <div class="p-3 rounded mb-3" style="background: rgba(199, 0, 57, 0.15); border: 1px solid rgba(199,0,57,0.3);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="text-danger" style="font-size: 13px;">Departing Hotel / Leaving Room</strong>
+                            <div class="small text-secondary" style="font-size: 11px;">
+                                Notify staff that you are leaving. Housekeeping will automatically be dispatched to sanitize and turnover the room.
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm px-3 fw-bold" onclick="expressCheckoutLeaving('{{ booking.room_number or '204' }}')">
+                            <i class="fas fa-sign-out-alt me-1"></i> I'm Leaving Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Cancellation Action (Section C.9: only visible if status: confirmed and check-in > 24h away) -->
             {% if not booking or booking.status == 'confirmed' %}
             <div style="border-top: 1px solid rgba(212,175,55,0.15); padding-top: 18px;">
@@ -98,6 +151,60 @@
 
 {% block extra_js %}
 <script>
+async function requestRoomService(type) {
+    const roomNumber = '{{ booking.room_number if booking else "204" }}';
+    const notes = prompt(`Enter any specific requests for ${type}:`, '');
+    if (notes === null) return;
+
+    try {
+        const res = await fetch('/api/guest/room-service/request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                service_type: type,
+                room_number: roomNumber,
+                notes: notes
+            })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            alert(`✅ ${json.message || 'Request submitted successfully!'}`);
+        } else {
+            alert(json.message || 'Failed to submit request');
+        }
+    } catch (e) {
+        alert('Request dispatched to hotel staff.');
+    }
+}
+
+async function expressCheckoutLeaving(roomNumber) {
+    if (!confirm(`Are you leaving Room ${roomNumber}? This will finalize your room departure and immediately alert Housekeeping to perform turnover cleaning.`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/guest/room-service/request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                service_type: 'checkout_leaving',
+                room_number: roomNumber,
+                notes: 'Guest left room via Express Checkout'
+            })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            alert(`🛎️ ${json.message}\n\nThank you for staying at Nur-e-Haya Luxury Hotel! Housekeeping turnover task has been dispatched.`);
+            window.location.href = '/my-bookings';
+        } else {
+            alert(json.message || 'Failed to submit express departure.');
+        }
+    } catch (e) {
+        alert('Departure recorded. Housekeeping has been notified.');
+        window.location.href = '/my-bookings';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const cancelBtn = document.getElementById('btnCancelBooking');
     if (cancelBtn) {

@@ -1211,6 +1211,151 @@ INTENT_PATTERNS = {
         ],
         "related_intents": ["accessibility_general", "special_requests"]
     },
+
+    # ============================================
+    # SPA & WELLNESS (FACILITIES)
+    # ============================================
+    "spa_wellness": {
+        "intent": "spa_wellness",
+        "confidence_boost": 0.15,
+        "keywords": ["spa", "massage", "ayurveda", "ayurvedic", "abhyanga", "shirodhara", "hammam", "turkish", "facial", "wellness", "body massage", "deep tissue", "scrub", "reflexology"],
+        "entities": ["treatment_type", "duration"],
+        "patterns": [
+            r"\bspa\b",
+            r"\bmassage\b",
+            r"tell me about (the )?spa",
+            r"spa treatments?",
+            r"book (a )?spa",
+            r"massage (price|rate|cost)",
+            r"ayurvedic (spa|massage|therapy)",
+            r"what spa",
+            r"spa timings?",
+            r"(facial|hammam|shirodhara|abhyanga)"
+        ],
+        "context_required": False,
+        "responses": [
+            "🌿 **The Royal Ayur Spa & Wellness Sanctuary** ✨\n\nIndulge in holistic therapies and royal rejuvenation:\n• **Abhyanga Full-Body Herbal Oil Massage**: 75 mins | ₹3,500 (Warm medicated oils, lymphatic detox)\n• **Shirodhara Deep Relaxation**: 60 mins | ₹4,200 (Warm herbal oil stream for insomnia & stress)\n• **Turkish Hammam & Eucalyptus Steam**: 90 mins | ₹4,800 (Exfoliating kessa glove, foam wash & stone bath)\n• **Balinese Deep Tissue & Hot Stone**: 90 mins | ₹4,500 (Heated basalt stones & acupressure)\n• **Royal Gold Radiance Botanical Facial**: 60 mins | ₹3,200 (24K gold foil & botanical serum)\n\n🕒 **Operating Hours**: 7:00 AM – 10:00 PM Daily (Floor 3)\n💆 **Amenities**: Private therapy suites, herbal steam, hot jacuzzis, certified therapists.\n\nTo reserve a treatment, visit the **Spa & Facilities** page or dial extension 4 from your room!"
+        ],
+        "suggestions": ["What are your Spa rates?", "Book an Ayurvedic Massage", "Rooftop Pool Timings", "View All Facilities"]
+    },
+
+    # ============================================
+    # INFINITY POOL & CABANAS
+    # ============================================
+    "pool_cabana": {
+        "intent": "pool_cabana",
+        "confidence_boost": 0.15,
+        "keywords": ["pool", "swimming", "infinity pool", "cabana", "rooftop pool", "swim", "hydrotherapy", "sun lounger", "towel"],
+        "entities": ["facility_name", "time_slot"],
+        "patterns": [
+            r"pool timings?",
+            r"swimming pool (open|timing|hours)",
+            r"rooftop pool",
+            r"is (the )?pool heated",
+            r"book (a )?cabana",
+            r"pool (depth|rules|charges)"
+        ],
+        "context_required": False,
+        "responses": [
+            "🏊‍♂️ **Skyline Heated Infinity Pool & Private Cabanas** 🌅\n\nPerched on our 14th-floor rooftop with sweeping city skyline views:\n• **Hours**: Open daily 6:00 AM – 9:00 PM\n• **Water Temperature**: Heated year-round to a soothing 28°C – 30°C\n• **Depth**: 4.5 ft with a dedicated shallow splash zone for children\n• **VIP Private Heated Cabanas**: Dedicated butler service, tropical fruit platter & mocktail service (₹3,500 for 2 hours)\n• **Inclusions**: Fluffy Egyptian cotton towels, bathrobes, and sun loungers complimentary for all hotel guests.\n\nFree swimming access is included for all room guests; private cabanas can be booked under the **Spa & Facilities** tab!"
+        ],
+        "suggestions": ["Book Private Cabana", "Pool Timings & Rules", "Spa & Wellness Menu", "TechnoGym Fitness"]
+    },
+
+    # ============================================
+    # FITNESS & SAUNA
+    # ============================================
+    "fitness_sauna": {
+        "intent": "fitness_sauna",
+        "confidence_boost": 0.15,
+        "keywords": ["gym", "fitness", "technogym", "workout", "weights", "trainer", "sauna", "steam room", "cardio", "treadmill", "exercise"],
+        "entities": ["equipment", "service"],
+        "patterns": [
+            r"gym timings?",
+            r"is (there a )?gym",
+            r"fitness center",
+            r"sauna (available|timing)",
+            r"steam room",
+            r"personal trainer",
+            r"workout facilities"
+        ],
+        "context_required": False,
+        "responses": [
+            "💪 **TechnoGym Fitness Arena & Thermal Suites** 🏋️\n\nMaintain your wellness regimen with cutting-edge fitness technology:\n• **Fitness Arena**: Open 24/7 (Complimentary access using your room keycard)\n• **Equipment**: TechnoGym Artis cardio consoles with virtual routes, Olympic free weights, cable stations, and Smith machine\n• **Certified Personal Trainers**: 1-on-1 private coaching sessions available 6:00 AM – 9:00 PM (₹2,000/hour)\n• **Thermal Suite**: Authentic Finnish dry cedarwood sauna & eucalyptus aromatherapy steam room (Open 6:00 AM – 10:00 PM)\n• **Complimentary**: Chilled infused fruit water, workout towels, and luxury locker suites on Floor 4.\n\nBook personal trainers or thermal sessions via **Spa & Facilities**!"
+        ],
+        "suggestions": ["Book Personal Trainer", "Sauna & Cold Plunge", "Morning Yoga Classes", "Facilities Catalog"]
+    },
+
+    # ============================================
+    # YOGA & SOUND HEALING
+    # ============================================
+    "yoga_meditation": {
+        "intent": "yoga_meditation",
+        "confidence_boost": 0.15,
+        "keywords": ["yoga", "meditation", "pranayama", "sound bath", "chakra", "singing bowl", "hatha", "zen", "breathwork"],
+        "entities": ["class_type", "timing"],
+        "patterns": [
+            r"yoga (class|session|timing)",
+            r"meditation (session|timing)",
+            r"sound bath",
+            r"pranayama",
+            r"chakra healing",
+            r"yoga schedule"
+        ],
+        "context_required": False,
+        "responses": [
+            "🧘‍♀️ **Rooftop Zen Yoga & Sound Healing Pavilion** 🌸\n\nNurture body and spirit in our open-air glass pavilion on Floor 14:\n• **Sunrise Hatha Yoga & Prāṇāyāma**: 6:30 AM – 7:30 AM daily (₹1,200 per guest)\n• **Tibetan Singing Bowl Sound Bath**: 5:30 PM – 6:30 PM (₹2,200 per guest, acoustic chakra balancing)\n• **Sunset Mindful Breathwork**: 6:30 PM – 7:15 PM (₹1,000 per guest)\n• **Private Restorative Sessions**: 1-on-1 custom yoga masterclasses with master yogis (₹2,500/hr)\n\nComplimentary Manduka eco-mats, bolsters, and organic herbal infusion teas provided for every participant!"
+        ],
+        "suggestions": ["Sunrise Yoga Timings", "Tibetan Sound Bath", "Book Private Yoga", "Spa Treatments"]
+    },
+
+    # ============================================
+    # ROYAL SALON & GROOMING
+    # ============================================
+    "salon_grooming": {
+        "intent": "salon_grooming",
+        "confidence_boost": 0.15,
+        "keywords": ["salon", "haircut", "shave", "hair spa", "grooming", "manicure", "pedicure", "bridal", "blowdry", "barber"],
+        "entities": ["service_type"],
+        "patterns": [
+            r"salon services?",
+            r"hair cut",
+            r"hair spa",
+            r"grooming services?",
+            r"bridal styling",
+            r"(manicure|pedicure)",
+            r"royal shave"
+        ],
+        "context_required": False,
+        "responses": [
+            "✂️ **The Royal Salon & Executive Grooming** 💈\n\nRefined grooming and salon artistry on Floor 3:\n• **Gentleman's Royal Shave**: 45 mins | ₹1,500 (Hot towel ritual, single-edge razor, sandalwood oil balm)\n• **Ayurvedic Kesh Kanti Hair Spa**: 60 mins | ₹2,400 (Warm bhringraj oil head massage & herbal steam pack)\n• **Luxury Manicure & Pedicure Ritual**: 60 mins | ₹2,000 (Himalayan salt exfoliation & paraffin soak)\n• **Bridal & Gala Couture Styling**: Hair styling, makeup artistry & organic skincare (From ₹5,500)\n\n🕒 **Hours**: Open 9:00 AM – 8:00 PM Daily. Walk-ins welcome or pre-book via the Facilities tab!"
+        ],
+        "suggestions": ["Executive Grooming Menu", "Hair Spa Treatment", "Spa & Wellness", "Contact Concierge"]
+    },
+
+    # ============================================
+    # ALL FACILITIES OVERVIEW
+    # ============================================
+    "facilities_overview": {
+        "intent": "facilities_overview",
+        "confidence_boost": 0.15,
+        "keywords": ["facilities", "facility", "experiences", "amenities", "what to do", "recreation", "activities"],
+        "entities": ["facility_list"],
+        "patterns": [
+            r"facilit(y|ies)",
+            r"hotel facilities",
+            r"all facilities",
+            r"facilities available",
+            r"what experiences",
+            r"things to do in hotel",
+            r"hotel amenities"
+        ],
+        "context_required": False,
+        "responses": [
+            "✨ **Nur-e-Haya Luxury Experiences & Facilities Overview** 🏰\n\nImmerse yourself in our five-star wellness and recreation destinations:\n1️⃣ **The Royal Ayur Spa**: Ayurvedic therapies, Shirodhara, Turkish hammam & eucalyptus steam (Floor 3)\n2️⃣ **Skyline Heated Infinity Pool**: Panoramic rooftop pool, private heated cabanas & sunset lounge (Floor 14)\n3️⃣ **TechnoGym Fitness Arena**: 24/7 high-tech cardio, Olympic weights & Finnish sauna (Floor 4)\n4️⃣ **Zen Yoga Pavilion**: Sunrise Prāṇāyāma & Tibetan sound bath meditation (Floor 14)\n5️⃣ **The Royal Salon**: Executive grooming, hair rituals & gala styling (Floor 3)\n6️⃣ **Gourmet Dining**: 24/7 room service, royal Mughal breakfast, and multicuisine restaurant\n\nYou can view photos, choose time slots, and reserve experiences under the **Spa & Facilities** tab (`/facilities`)!"
+        ],
+        "suggestions": ["Spa Treatments & Rates", "Rooftop Pool Timings", "24/7 Fitness Center", "Book Room"]
+    }
 }
 
 
