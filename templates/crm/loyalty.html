@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Loyalty Points & VIP Rewards — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Loyalty Points & VIP Rewards (SCR-87)</h1>
+          <p class="text-secondary small mb-0">Earn 1 loyalty point for every ₹100 spent across room stays, dining, and spa treatments.</p>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-yellow"><i class="fas fa-crown"></i></div>
+          <div>
+            <div class="stat-label">Membership Tier</div>
+            <div class="stat-value fs-4">{{ tier or "VIP Gold" }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-green"><i class="fas fa-star"></i></div>
+          <div>
+            <div class="stat-label">Available Reward Points</div>
+            <div class="stat-value">{{ points or 250 }} pts</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-blue"><i class="fas fa-percent"></i></div>
+          <div>
+            <div class="stat-label">Automatic Booking Discount</div>
+            <div class="stat-value">5% OFF</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Redeemable Perks & Vouchers</h3>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 text-center">
+              <h5 class="fw-bold fs-6 mb-1">Complimentary Airport Limousine Transfer</h5>
+              <p class="text-secondary small mb-3">Redeem 150 points for a luxury airport pickup or drop-off.</p>
+              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="showToast('Voucher redeemed and added to your profile!', 'success')">
+                Redeem (150 Pts)
+              </button>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 text-center">
+              <h5 class="fw-bold fs-6 mb-1">60-Min Ayur Spa Aroma Massage</h5>
+              <p class="text-secondary small mb-3">Redeem 200 points for full body relaxation treatment.</p>
+              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="showToast('Spa voucher redeemed!', 'success')">
+                Redeem (200 Pts)
+              </button>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="p-3 border rounded-3 text-center">
+              <h5 class="fw-bold fs-6 mb-1">Gourmet Dinner Chef Tasting Menu for 2</h5>
+              <p class="text-secondary small mb-3">Redeem 300 points for a 5-course beachfront dinner.</p>
+              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="showToast('Dining voucher issued!', 'success')">
+                Redeem (300 Pts)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

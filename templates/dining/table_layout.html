@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Restaurant Table Layout & Seating — Waiter Desk{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Restaurant Table Layout & Seating (SCR-31)</h1>
+          <p class="text-secondary small mb-0">Live dining room layout for waitstaff and hosts.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <span class="badge-pill status-available"><i class="fas fa-circle"></i> Available</span>
+          <span class="badge-pill status-occupied"><i class="fas fa-circle"></i> Occupied</span>
+          <span class="badge-pill status-ready"><i class="fas fa-circle"></i> Billed</span>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% for tbl in tables %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="nh-card text-center p-4 nh-card-hover" style="cursor: pointer;" onclick="manageTable('{{ tbl.table_no }}', '{{ tbl.status }}')">
+            <div class="stat-icon-wrapper mx-auto mb-2 {% if tbl.status == 'available' %}stat-icon-green{% elif tbl.status == 'occupied' %}stat-icon-blue{% else %}stat-icon-yellow{% endif %}" style="width: 54px; height: 54px; font-size: 1.4rem;">
+              <i class="fas fa-chair"></i>
+            </div>
+            <h4 class="fw-bold fs-5 mb-1">Table {{ tbl.table_no }}</h4>
+            <p class="text-secondary small mb-2">{{ tbl.seats or 4 }} Guests Capacity</p>
+            <span class="badge-pill status-{{ tbl.status }}">{{ tbl.status }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function manageTable(tableNo, currentStatus) {
+  window.showModal({
+    title: `Table ${tableNo} Status`,
+    message: `Current state: ${currentStatus}. Change state for dining service?`,
+    confirmText: currentStatus === 'available' ? 'Mark Occupied' : 'Mark Available / Clean',
+    onConfirm: () => {
+      window.showToast(`Table ${tableNo} status updated.`, 'success');
+      setTimeout(() => location.reload(), 800);
+    }
+  });
+}
+</script>
+{% endblock %}

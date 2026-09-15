@@ -1,0 +1,235 @@
+<aside class="app-sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">NH</div>
+    <div>
+      <div class="sidebar-brand-name">Nur-e-Haya</div>
+      <span class="sidebar-role-badge">{{ session.get('user_role', 'guest') }}</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <!-- Guest & Member Navigation -->
+    {% if session.get('user_role') in ['guest', 'user', 'member', None] %}
+    <div class="nav-section-title">Guest Portal</div>
+    <a href="/dashboard" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+      <i class="fas fa-home"></i> Home
+    </a>
+    <a href="/rooms" class="nav-item {% if '/rooms' in request.path %}active{% endif %}">
+      <i class="fas fa-bed"></i> Rooms & Suites
+    </a>
+    <a href="/dining/menu" class="nav-item {% if '/dining' in request.path or '/menu' in request.path %}active{% endif %}">
+      <i class="fas fa-utensils"></i> Dining & Service
+    </a>
+    <a href="/facilities" class="nav-item {% if '/facilities' in request.path or '/wellness' in request.path %}active{% endif %}">
+      <i class="fas fa-spa"></i> Wellness & Spa
+    </a>
+    <a href="/events/banquets" class="nav-item {% if '/events' in request.path %}active{% endif %}">
+      <i class="fas fa-glass-cheers"></i> Banquets & Halls
+    </a>
+    <a href="/concierge/request" class="nav-item {% if '/concierge' in request.path %}active{% endif %}">
+      <i class="fas fa-concierge-bell"></i> Concierge
+    </a>
+    <a href="/services/request" class="nav-item {% if '/services' in request.path %}active{% endif %}">
+      <i class="fas fa-broom"></i> Room Services
+    </a>
+    <a href="/my-bookings" class="nav-item {% if '/my-bookings' in request.path %}active{% endif %}">
+      <i class="fas fa-calendar-check"></i> My Bookings
+    </a>
+    <a href="/crm/loyalty" class="nav-item {% if '/crm/loyalty' in request.path %}active{% endif %}">
+      <i class="fas fa-award"></i> Loyalty Rewards
+    </a>
+    {% endif %}
+
+    <!-- Front Desk Navigation -->
+    {% if session.get('user_role') in ['front_desk', 'manager', 'admin', 'super_admin'] or session.get('staff_role') == 'front_desk' %}
+    <div class="nav-section-title">Front Office</div>
+    <a href="/frontdesk/rooms" class="nav-item {% if '/frontdesk/rooms' in request.path %}active{% endif %}">
+      <i class="fas fa-th-large"></i> Room Board
+    </a>
+    <a href="/frontdesk/checkin" class="nav-item {% if '/frontdesk/checkin' in request.path %}active{% endif %}">
+      <i class="fas fa-key"></i> Guest Check-In
+    </a>
+    <a href="/frontdesk/checkout" class="nav-item {% if '/frontdesk/checkout' in request.path %}active{% endif %}">
+      <i class="fas fa-sign-out-alt"></i> Guest Check-Out
+    </a>
+    <a href="/frontdesk/walkin" class="nav-item {% if '/frontdesk/walkin' in request.path %}active{% endif %}">
+      <i class="fas fa-user-plus"></i> Walk-In Intake
+    </a>
+    <a href="/frontdesk/guests" class="nav-item {% if '/frontdesk/guests' in request.path %}active{% endif %}">
+      <i class="fas fa-address-book"></i> Guest Profiles
+    </a>
+    <a href="/frontdesk/night-audit" class="nav-item {% if '/frontdesk/night-audit' in request.path %}active{% endif %}">
+      <i class="fas fa-moon"></i> Night Audit (EOD)
+    </a>
+    {% endif %}
+
+    <!-- Housekeeping & Laundry Navigation -->
+    {% if session.get('user_role') in ['housekeeping', 'laundry', 'manager', 'admin'] or session.get('staff_role') in ['housekeeping', 'laundry'] %}
+    <div class="nav-section-title">Housekeeping & Linen</div>
+    <a href="/staff/housekeeping" class="nav-item {% if '/staff/housekeeping' in request.path %}active{% endif %}">
+      <i class="fas fa-tasks"></i> Cleaning Tasks
+    </a>
+    <a href="/staff/laundry" class="nav-item {% if '/staff/laundry' in request.path %}active{% endif %}">
+      <i class="fas fa-tshirt"></i> Laundry Queue
+    </a>
+    <a href="/services/lost-found" class="nav-item {% if '/lost-found' in request.path %}active{% endif %}">
+      <i class="fas fa-search-location"></i> Lost & Found
+    </a>
+    <a href="/services/linen" class="nav-item {% if '/linen' in request.path %}active{% endif %}">
+      <i class="fas fa-layer-group"></i> Linen Tracker
+    </a>
+    <a href="/services/deep-cleaning" class="nav-item {% if '/deep-cleaning' in request.path %}active{% endif %}">
+      <i class="fas fa-spray-can"></i> Deep Cleaning
+    </a>
+    {% endif %}
+
+    <!-- Kitchen & Dining Staff Navigation -->
+    {% if session.get('user_role') in ['chef', 'kitchen', 'waiter', 'cashier', 'manager', 'admin'] or session.get('staff_role') in ['chef', 'waiter'] %}
+    <div class="nav-section-title">Kitchen & Dining</div>
+    <a href="/dining/kitchen" class="nav-item {% if '/kitchen' in request.path %}active{% endif %}">
+      <i class="fas fa-fire"></i> Kitchen Display (KDS)
+    </a>
+    <a href="/dining/tables" class="nav-item {% if '/tables' in request.path %}active{% endif %}">
+      <i class="fas fa-chair"></i> Restaurant Tables
+    </a>
+    <a href="/staff/kitchen/menu" class="nav-item {% if '/staff/kitchen/menu' in request.path %}active{% endif %}">
+      <i class="fas fa-toggle-on"></i> Menu Availability
+    </a>
+    <a href="/dining/inventory" class="nav-item {% if '/dining/inventory' in request.path %}active{% endif %}">
+      <i class="fas fa-boxes"></i> Food Inventory
+    </a>
+    {% endif %}
+
+    <!-- Maintenance / Engineering Navigation -->
+    {% if session.get('user_role') in ['maintenance', 'manager', 'admin'] or session.get('staff_role') == 'maintenance' %}
+    <div class="nav-section-title">Engineering</div>
+    <a href="/staff/maintenance" class="nav-item {% if '/maintenance' in request.path %}active{% endif %}">
+      <i class="fas fa-tools"></i> Work Orders
+    </a>
+    <a href="/maintenance/preventive" class="nav-item {% if '/preventive' in request.path %}active{% endif %}">
+      <i class="fas fa-calendar-alt"></i> Preventive Calendar
+    </a>
+    <a href="/maintenance/assets" class="nav-item {% if '/assets' in request.path %}active{% endif %}">
+      <i class="fas fa-server"></i> Asset Register
+    </a>
+    {% endif %}
+
+    <!-- Concierge Navigation -->
+    {% if session.get('user_role') in ['concierge', 'manager', 'admin'] or session.get('staff_role') == 'concierge' %}
+    <div class="nav-section-title">Concierge Desk</div>
+    <a href="/staff/concierge" class="nav-item {% if '/staff/concierge' in request.path %}active{% endif %}">
+      <i class="fas fa-concierge-bell"></i> Request Queue
+    </a>
+    <a href="/concierge/transfers" class="nav-item {% if '/transfers' in request.path %}active{% endif %}">
+      <i class="fas fa-plane-arrival"></i> Airport Transfers
+    </a>
+    {% endif %}
+
+    <!-- Accounts & Payments Navigation -->
+    {% if session.get('user_role') in ['accountant', 'manager', 'admin', 'super_admin'] %}
+    <div class="nav-section-title">Accounts & Finance</div>
+    <a href="/accounts/ledger" class="nav-item {% if '/accounts/ledger' in request.path %}active{% endif %}">
+      <i class="fas fa-book"></i> General Ledger
+    </a>
+    <a href="/accounts/qr-verify" class="nav-item {% if '/qr-verify' in request.path %}active{% endif %}">
+      <i class="fas fa-qrcode"></i> QR Payments Verify
+    </a>
+    <a href="/accounts/refunds" class="nav-item {% if '/refunds' in request.path %}active{% endif %}">
+      <i class="fas fa-undo"></i> Refunds Processing
+    </a>
+    <a href="/accounts/settlement" class="nav-item {% if '/settlement' in request.path %}active{% endif %}">
+      <i class="fas fa-balance-scale"></i> Daily POS Settlement
+    </a>
+    {% endif %}
+
+    <!-- Manager Navigation -->
+    {% if session.get('user_role') in ['manager', 'admin', 'super_admin'] %}
+    <div class="nav-section-title">Management</div>
+    <a href="/manager" class="nav-item {% if request.path == '/manager' %}active{% endif %}">
+      <i class="fas fa-chart-line"></i> Operations Dashboard
+    </a>
+    <a href="/manager/tasks/assign" class="nav-item {% if '/manager/tasks' in request.path %}active{% endif %}">
+      <i class="fas fa-user-check"></i> Task Assignment
+    </a>
+    <a href="/manager/rates" class="nav-item {% if '/manager/rates' in request.path %}active{% endif %}">
+      <i class="fas fa-tags"></i> Room & Rates
+    </a>
+    <a href="/manager/reports" class="nav-item {% if '/manager/reports' in request.path %}active{% endif %}">
+      <i class="fas fa-file-csv"></i> Reports & Export
+    </a>
+    <a href="/manager/announcements" class="nav-item {% if '/announcements' in request.path %}active{% endif %}">
+      <i class="fas fa-bullhorn"></i> Broadcasts
+    </a>
+    <a href="/manager/shifts" class="nav-item {% if '/shifts' in request.path %}active{% endif %}">
+      <i class="fas fa-clock"></i> Shifts & Attendance
+    </a>
+    <a href="/manager/expenses" class="nav-item {% if '/expenses' in request.path %}active{% endif %}">
+      <i class="fas fa-receipt"></i> Expense Approvals
+    </a>
+    {% endif %}
+
+    <!-- Admin & Platform Navigation -->
+    {% if session.get('user_role') in ['admin', 'super_admin'] %}
+    <div class="nav-section-title">Platform Admin</div>
+    <a href="/admin" class="nav-item {% if request.path == '/admin' %}active{% endif %}">
+      <i class="fas fa-shield-alt"></i> Admin Console
+    </a>
+    <a href="/admin/revenue" class="nav-item {% if '/admin/revenue' in request.path %}active{% endif %}">
+      <i class="fas fa-chart-pie"></i> Revenue Analytics
+    </a>
+    <a href="/admin/staff" class="nav-item {% if '/admin/staff' in request.path %}active{% endif %}">
+      <i class="fas fa-users-cog"></i> Staff Management
+    </a>
+    <a href="/admin/menu" class="nav-item {% if request.path == '/admin/menu' %}active{% endif %}">
+      <i class="fas fa-utensils"></i> Menu CRUD
+    </a>
+    <a href="/admin/services" class="nav-item {% if '/admin/services' in request.path %}active{% endif %}">
+      <i class="fas fa-concierge-bell"></i> Services Catalogue
+    </a>
+    <a href="/admin/promo-codes" class="nav-item {% if '/promo-codes' in request.path %}active{% endif %}">
+      <i class="fas fa-ticket-alt"></i> Promo Codes
+    </a>
+    <a href="/admin/audit-logs" class="nav-item {% if '/audit' in request.path %}active{% endif %}">
+      <i class="fas fa-history"></i> Security Audit Logs
+    </a>
+    <a href="/admin/settings" class="nav-item {% if '/settings' in request.path %}active{% endif %}">
+      <i class="fas fa-cog"></i> System Settings
+    </a>
+    <a href="/admin/backup-export" class="nav-item {% if '/backup-export' in request.path %}active{% endif %}">
+      <i class="fas fa-download"></i> Data Backup & Export
+    </a>
+    <a href="/admin/newsletter" class="nav-item {% if '/newsletter' in request.path %}active{% endif %}">
+      <i class="fas fa-envelope-open-text"></i> Newsletter & Campaigns
+    </a>
+    {% endif %}
+
+    <!-- Security & Safety Navigation -->
+    {% if session.get('user_role') in ['security', 'admin', 'manager'] %}
+    <div class="nav-section-title">Security & Safety</div>
+    <a href="/staff/security" class="nav-item {% if request.path == '/staff/security' %}active{% endif %}">
+      <i class="fas fa-exclamation-triangle"></i> Incident Register
+    </a>
+    <a href="/security/visitors" class="nav-item {% if '/visitors' in request.path %}active{% endif %}">
+      <i class="fas fa-user-friends"></i> Visitor Log
+    </a>
+    <a href="/security/parking" class="nav-item {% if '/parking' in request.path %}active{% endif %}">
+      <i class="fas fa-parking"></i> Parking Slots
+    </a>
+    <a href="/security/emergency" class="nav-item {% if '/emergency' in request.path %}active{% endif %}">
+      <i class="fas fa-phone-alt"></i> Emergency Board
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/profile" class="d-flex align-items-center gap-2 text-decoration-none" style="color: var(--text-primary); font-size: 0.88rem; font-weight: 500;">
+      <i class="fas fa-user-circle fs-5 text-secondary"></i>
+      <span style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        {{ session.get('user_name', session.get('user_email', 'User')) }}
+      </span>
+    </a>
+    <a href="/logout" title="Sign Out" style="color: var(--text-tertiary);">
+      <i class="fas fa-sign-out-alt"></i>
+    </a>
+  </div>
+</aside>

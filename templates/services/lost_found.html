@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Lost & Found Register — Housekeeping — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Lost & Found Property Register (SCR-39)</h1>
+          <p class="text-secondary small mb-0">Record and return guest personal items discovered across the resort.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="logItemModal()">
+          <i class="fas fa-plus me-1"></i> Register Found Item
+        </button>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Custody Log</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Item Description</th>
+                <th>Location Found</th>
+                <th>Found By</th>
+                <th>Date Logged</th>
+                <th>Storage Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for itm in lost_found_items %}
+              <tr>
+                <td class="fw-bold">{{ itm.item_name }}</td>
+                <td>{{ itm.location_found }}</td>
+                <td>{{ itm.found_by }}</td>
+                <td>{{ itm.created_at }}</td>
+                <td><span class="badge-pill priority-medium">{{ itm.status }}</span></td>
+                <td>
+                  <button class="btn-nh btn-nh-outline btn-nh-sm" onclick="showToast('Claim verification initiated for {{ itm.item_name }}', 'info')">
+                    Return to Guest
+                  </button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No items currently stored in Lost & Found custody.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function logItemModal() {
+  const item_name = prompt('Enter Item Name (e.g. Gold Watch, iPhone, Sunglasses):');
+  if (!item_name) return;
+  const location_found = prompt('Location Found (e.g. Room 204 Bedside, Poolside Cabana):', 'Room 204');
+  
+  window.api('/housekeeping/lost-found', {
+    method: 'POST',
+    body: { item_name, location_found, description: 'Safely placed in Housekeeping Vault.' }
+  }).then(res => {
+    if (res.ok) {
+      window.showToast('Item logged to vault!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    }
+  });
+}
+</script>
+{% endblock %}

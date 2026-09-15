@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Cross-Department Staff Task Assignment — Management{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Cross-Department Staff Task Assignment (SCR-66)</h1>
+          <p class="text-secondary small mb-0">Delegate pending service requests and work orders to on-duty staff.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Pending Tasks Awaiting Assignment</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Task Ref #</th>
+                <th>Department / Scope</th>
+                <th>Room #</th>
+                <th>Priority</th>
+                <th>Assign To Staff Member</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in pending_tasks %}
+              <tr>
+                <td class="fw-bold">{{ t.task_no or "TSK" }}</td>
+                <td class="fw-semibold text-capitalize">{{ t.type }}</td>
+                <td><span class="badge-pill priority-medium">Room {{ t.room_number }}</span></td>
+                <td><span class="badge-pill priority-{{ t.priority }}">{{ t.priority }}</span></td>
+                <td>
+                  <select class="form-select form-select-sm" id="assign_select_{{ t.id }}">
+                    {% for s in staff_members %}
+                    <option value="{{ s.email }}">{{ s.name }} ({{ s.role }})</option>
+                    {% else %}
+                    <option value="cleaning@nur-e-haya.com">Ravi Kumar (Housekeeping Lead)</option>
+                    <option value="laundry@nur-e-haya.com">Sunil Laundry Specialist</option>
+                    <option value="maintenance@nur-e-haya.com">Prakash Nair (Chief Engineer)</option>
+                    {% endfor %}
+                  </select>
+                </td>
+                <td>
+                  <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="assignTask('{{ t.id }}')">
+                    Assign Task
+                  </button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No unassigned requests pending. All tasks assigned to active staff.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function assignTask(taskId) {
+  const selectElem = document.getElementById(`assign_select_${taskId}`);
+  const staffEmail = selectElem ? selectElem.value : 'cleaning@nur-e-haya.com';
+
+  const res = await window.api('/manager/tasks/assign', {
+    method: 'POST',
+    body: { task_id: taskId, staff_email: staffEmail }
+  });
+
+  if (res.ok) {
+    window.showToast(`Task assigned to ${staffEmail}!`, 'success');
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    window.showToast(res.message || 'Assignment failed', 'error');
+  }
+}
+</script>
+{% endblock %}

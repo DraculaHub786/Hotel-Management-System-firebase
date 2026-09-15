@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Valet & Parking Slot Management — Security — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Valet & Parking Slot Management (SCR-85)</h1>
+          <p class="text-secondary small mb-0">Monitor valet slots, EV supercharging bays, and guest vehicle licenses.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% for p in parking_slots %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="nh-card text-center p-3 nh-card-hover">
+            <div class="stat-icon-wrapper mx-auto mb-2 {% if p.status == 'available' %}stat-icon-green{% else %}stat-icon-blue{% endif %}">
+              <i class="fas fa-parking"></i>
+            </div>
+            <h4 class="fw-bold fs-5 mb-1">Slot {{ p.slot_no }}</h4>
+            <p class="text-secondary small mb-2">{{ p.type }}</p>
+            {% if p.vehicle_no %}
+            <div class="font-monospace small fw-bold text-dark mb-1">{{ p.vehicle_no }}</div>
+            <span class="badge-pill priority-medium mb-2">{{ p.room }}</span>
+            {% else %}
+            <span class="badge-pill status-available mb-2">Available</span>
+            {% endif %}
+            <button class="btn-nh btn-nh-outline btn-nh-sm w-100" onclick="showToast('Valet retrieved vehicle for {{ p.slot_no }}', 'info')">
+              {% if p.vehicle_no %}Retrieve Car{% else %}Assign Valet{% endif %}
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

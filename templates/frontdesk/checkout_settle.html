@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Check-Out & Folio Settlement — Front Desk{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Check-Out & Folio Settlement (SCR-19)</h1>
+          <p class="text-secondary small mb-0">Consolidate room charges, dining, and service incidentals for guest departure.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Departing / In-House Guests</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Room</th>
+                <th>Guest Name</th>
+                <th>Check-In</th>
+                <th>Check-Out</th>
+                <th>Folio Total</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for b in in_house_bookings %}
+              <tr>
+                <td><span class="badge-pill priority-medium">Room {{ b.room_number }}</span></td>
+                <td class="fw-semibold">{{ b.guest_name }}</td>
+                <td>{{ b.check_in }}</td>
+                <td>{{ b.check_out }}</td>
+                <td class="fw-bold text-success">₹{{ b.total_price or 3500 }}</td>
+                <td><span class="badge-pill status-{{ b.status }}">{{ b.status }}</span></td>
+                <td>
+                  <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="performCheckout('{{ b.id }}', '{{ b.room_number }}', '{{ b.total_price }}')">
+                    <i class="fas fa-receipt me-1"></i> Settle & Check Out
+                  </button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-secondary py-4">No active in-house guests currently pending check-out.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function performCheckout(bookingId, roomNumber, total) {
+  window.showModal({
+    title: `Settle Bill & Check Out Room ${roomNumber}`,
+    message: `Folio total is ₹${total || 3500}. Confirm payment settlement? Room will automatically transition to 'Cleaning' for housekeeping.`,
+    confirmText: 'Confirm & Print Folio',
+    onConfirm: async () => {
+      const res = await window.api('/api/front-desk/checkout', {
+        method: 'POST',
+        body: { booking_id: bookingId }
+      });
+      if (res.ok) {
+        window.showToast('Check-out completed! Housekeeping dispatched.', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        window.showToast(res.message || 'Check-out failed', 'error');
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

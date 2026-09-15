@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Guest History & CRM Profiles — Front Desk{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Guest History & Profiles (SCR-22)</h1>
+          <p class="text-secondary small mb-0">Review past stays, preferences, lifetime spend, and loyalty tiers.</p>
+        </div>
+      </div>
+
+      <div class="nh-card mb-4">
+        <div class="row g-3 align-items-center">
+          <div class="col-md-8">
+            <input type="text" id="guestSearch" class="form-control" placeholder="Search by guest name, email, or phone number...">
+          </div>
+          <div class="col-md-4">
+            <button class="btn-nh btn-nh-primary w-100" onclick="searchGuests()">
+              <i class="fas fa-search me-1"></i> Search Profiles
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Guest Folio Profiles</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Guest</th>
+                <th>Email</th>
+                <th>Total Stays</th>
+                <th>Lifetime Spend</th>
+                <th>Membership Tier</th>
+                <th>Preferences</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for g in guests %}
+              <tr>
+                <td class="fw-bold">{{ g.name }}</td>
+                <td>{{ g.email }}</td>
+                <td><span class="badge-pill priority-medium">{{ g.stays or 1 }} stays</span></td>
+                <td class="fw-bold text-success">₹{{ g.total_spend or 12000 }}</td>
+                <td>
+                  {% if g.role == 'member' %}
+                  <span class="badge-pill priority-high"><i class="fas fa-crown me-1"></i> VIP Member</span>
+                  {% else %}
+                  <span class="badge-pill priority-low">Standard</span>
+                  {% endif %}
+                </td>
+                <td class="small text-secondary">{{ g.preferences or "High floor, extra towels, non-smoking" }}</td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No guest profiles found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

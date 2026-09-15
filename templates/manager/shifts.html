@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Shifts Roster & Attendance — Management{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Staff Shift Scheduling & Attendance (SCR-71)</h1>
+          <p class="text-secondary small mb-0">Rosters for Morning, Afternoon, Evening, and Night duty rotations.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Roster updated and notifications dispatched.', 'success')">
+          <i class="fas fa-calendar-check me-1"></i> Publish Weekly Shift Roster
+        </button>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Today's Active Roster & Punch Log</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Staff Member</th>
+                <th>Department</th>
+                <th>Assigned Shift Hours</th>
+                <th>Current Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in shifts %}
+              <tr>
+                <td class="fw-bold">{{ s.staff_name }}</td>
+                <td><span class="badge-pill priority-low">{{ s.department }}</span></td>
+                <td>{{ s.shift }}</td>
+                <td>
+                  {% if s.status == 'On Duty' %}
+                  <span class="badge-pill status-available"><i class="fas fa-user-check"></i> On Duty</span>
+                  {% elif s.status == 'Scheduled' %}
+                  <span class="badge-pill priority-medium">Scheduled</span>
+                  {% else %}
+                  <span class="badge-pill priority-low">Off Duty</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <button class="btn-nh btn-nh-outline btn-nh-sm" onclick="showToast('Punch record adjusted.', 'info')">
+                    Adjust Clock
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Tax, GST & Rate Configuration — Platform Admin{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Tax, GST & Dynamic Rate Configuration (SCR-58)</h1>
+          <p class="text-secondary small mb-0">Configure applicable GST brackets, service charges, luxury cess, and member discounts.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-7 mx-auto">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-3">Global Taxation Rules</h3>
+            <form id="taxConfigForm">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Standard Room GST Tax (%)</label>
+                <input type="number" id="roomTax" class="form-control" value="12.0" step="0.1" required>
+                <span class="text-secondary small">Applied to room stays below ₹7,500/night.</span>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Luxury Suite GST Tax (%)</label>
+                <input type="number" id="luxuryTax" class="form-control" value="18.0" step="0.1" required>
+                <span class="text-secondary small">Applied to room stays equal to or exceeding ₹7,500/night.</span>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Food & Beverage Tax (GST %)</label>
+                <input type="number" id="fnbTax" class="form-control" value="5.0" step="0.1" required>
+              </div>
+              <div class="mb-4">
+                <label class="form-label small fw-semibold">VIP Club Member Discount (%)</label>
+                <input type="number" id="memberDiscount" class="form-control" value="5.0" step="0.1" required>
+              </div>
+
+              <button type="submit" class="btn-nh btn-nh-primary w-100">
+                <i class="fas fa-save me-1"></i> Save Tax & Discount Settings
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.getElementById('taxConfigForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const roomTax = document.getElementById('roomTax').value;
+  const fnbTax = document.getElementById('fnbTax').value;
+  const memberDiscount = document.getElementById('memberDiscount').value;
+
+  const res = await window.api('/accounts/taxes', {
+    method: 'POST',
+    body: { room_tax: roomTax, fnb_tax: fnbTax, member_discount: memberDiscount }
+  });
+  if (res.ok) {
+    window.showToast('Tax & Rate settings updated successfully!', 'success');
+  } else {
+    window.showToast('Failed to save settings', 'error');
+  }
+});
+</script>
+{% endblock %}

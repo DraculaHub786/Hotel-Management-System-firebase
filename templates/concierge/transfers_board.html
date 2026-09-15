@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Airport Transfers & Chauffeur Board — Concierge — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Airport Transfers & Chauffeur Board (SCR-49)</h1>
+          <p class="text-secondary small mb-0">Track upcoming guest arrivals, flight tracking, and assigned luxury fleet.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Fleet dispatch modal ready.', 'info')">
+          <i class="fas fa-car me-1"></i> Dispatch Chauffeur
+        </button>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Scheduled Airport Pickups & Drop-offs</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Guest</th>
+                <th>Flight No.</th>
+                <th>Arrival Time</th>
+                <th>Assigned Fleet</th>
+                <th>Chauffeur</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in airport_transfers %}
+              <tr>
+                <td class="fw-bold">{{ t.guest_name }}</td>
+                <td><span class="badge-pill priority-medium">{{ t.flight_no }}</span></td>
+                <td>{{ t.arrival_time }}</td>
+                <td>{{ t.car }}</td>
+                <td>{{ t.driver }}</td>
+                <td><span class="badge-pill status-{{ t.status }}">{{ t.status }}</span></td>
+                <td>
+                  <button class="btn-nh btn-nh-outline btn-nh-sm" onclick="showToast('Chauffeur status notified to guest.', 'success')">
+                    Update Driver
+                  </button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-secondary py-4">No airport transfers scheduled for today.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

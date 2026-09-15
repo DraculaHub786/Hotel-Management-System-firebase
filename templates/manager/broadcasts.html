@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Broadcasts & Announcements — Management — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Broadcasts & Staff Announcements (SCR-70)</h1>
+          <p class="text-secondary small mb-0">Post alerts to all staff, specific departments, or in-house guests.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-3">Compose New Announcement</h3>
+            <form id="broadcastForm">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Announcement Title</label>
+                <input type="text" id="bTitle" class="form-control" placeholder="e.g. VIP Head of State Arrival" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Target Audience</label>
+                <select id="bTarget" class="form-select">
+                  <option value="all">All Departments & Staff</option>
+                  <option value="front_desk">Front Desk Officers</option>
+                  <option value="housekeeping">Housekeeping & Laundry</option>
+                  <option value="kitchen">Kitchen & Chefs</option>
+                  <option value="maintenance">Maintenance Engineering</option>
+                  <option value="concierge">Concierge Desk</option>
+                  <option value="security">Security Patrol</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Message Content</label>
+                <textarea id="bMessage" class="form-control" rows="4" placeholder="Important operational guidelines..." required></textarea>
+              </div>
+              <button type="submit" class="btn-nh btn-nh-primary w-100">
+                <i class="fas fa-bullhorn me-1"></i> Send Immediate Broadcast
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-3">Recent Announcements Stream</h3>
+            <div class="d-flex flex-column gap-3">
+              {% for a in announcements %}
+              <div class="p-3 border rounded-3 bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <h5 class="fw-bold fs-6 mb-0">{{ a.title }}</h5>
+                  <span class="badge-pill priority-medium text-capitalize">{{ a.target_role }}</span>
+                </div>
+                <p class="small text-secondary mb-2">{{ a.message }}</p>
+                <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+                  <span>By: {{ a.posted_by }}</span>
+                  <span>{{ a.created_at }}</span>
+                </div>
+              </div>
+              {% else %}
+              <p class="text-secondary small mb-0 text-center py-4">No broadcasts published yet.</p>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = document.getElementById('bTitle').value;
+  const target_role = document.getElementById('bTarget').value;
+  const message = document.getElementById('bMessage').value;
+
+  const res = await window.api('/manager/announcements', {
+    method: 'POST',
+    body: { title, target_role, message }
+  });
+  if (res.ok) {
+    window.showToast('Announcement broadcasted successfully!', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    window.showToast(res.message || 'Broadcast failed', 'error');
+  }
+});
+</script>
+{% endblock %}

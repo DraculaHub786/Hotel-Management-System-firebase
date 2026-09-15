@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}The Royal Ayur Spa & Ayurvedic Wellness — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">The Royal Ayur Spa & Wellness Sanctuaries (SCR-62)</h1>
+          <p class="text-secondary small mb-0">Rejuvenating holistic therapies, herbal saunas, and organic aromatherapy rituals.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% set therapies = [
+          {"name": "Abhyanga Classical Warm Herbal Oil Therapy", "duration": "60 Mins", "price": 3200, "desc": "Full-body synchronization massage using warm medicated herbal oils to eliminate toxins."},
+          {"name": "Shirodhara Blissful Mind Calming Ritual", "duration": "45 Mins", "price": 2800, "desc": "Continuous stream of aromatic herbal decoctions over the third eye center for sleep restoration."},
+          {"name": "Himalayan Pink Salt Scrub & Detox Cocoon", "duration": "75 Mins", "price": 4200, "desc": "Invigorating thermal salt exfoliation followed by marine mud wrap and steam bath."}
+        ] %}
+        {% for t in therapies %}
+        <div class="col-md-6 col-lg-4">
+          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between">
+            <div>
+              <span class="badge-pill priority-medium mb-2"><i class="fas fa-clock"></i> {{ t.duration }}</span>
+              <h4 class="fw-bold fs-5 mb-2">{{ t.name }}</h4>
+              <p class="text-secondary small mb-4">{{ t.desc }}</p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <span class="fw-bold fs-5 text-primary">₹{{ t.price }}</span>
+              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="reserveSpa('{{ t.name }}')">
+                Reserve Slot
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function reserveSpa(treatment) {
+  const slot_time = prompt(`Select reservation time for ${treatment}:`, 'Today at 16:00');
+  if (!slot_time) return;
+
+  const res = await window.api('/wellness/spa', {
+    method: 'POST',
+    body: { treatment, slot_time }
+  });
+  if (res.ok) {
+    window.showToast('Spa session reserved successfully!', 'success');
+  }
+}
+</script>
+{% endblock %}

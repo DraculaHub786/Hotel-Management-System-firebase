@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Deep Cleaning & Sanitization Schedule — Housekeeping{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Deep Cleaning & Sanitization Schedule (SCR-43)</h1>
+          <p class="text-secondary small mb-0">Scheduled deep shampooing, mattress steaming, balcony power-washing, and AC vent cleaning.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Deep cleaning audit scheduled for tomorrow.', 'info')">
+          <i class="fas fa-calendar-plus me-1"></i> Add Schedule
+        </button>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Upcoming Deep-Cleaning Batches</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Room Batch</th>
+                <th>Cleaning Scope</th>
+                <th>Scheduled Date</th>
+                <th>Assigned Lead</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set schedules = [
+                {"batch": "Rooms 101 – 105", "scope": "Carpet & Mattress Deep Steam", "date": "2026-09-18", "lead": "Ravi Kumar", "status": "scheduled"},
+                {"batch": "Suite 102 & 103", "scope": "Curtains, Balcony & Marble Polish", "date": "2026-09-21", "lead": "Priya Singh", "status": "in_progress"},
+                {"batch": "Presidential Villa 301", "scope": "Complete Jacuzzi Descaling & Upholstery", "date": "2026-09-24", "lead": "Housekeeping Master Team", "status": "scheduled"}
+              ] %}
+              {% for s in schedules %}
+              <tr>
+                <td class="fw-bold">{{ s.batch }}</td>
+                <td>{{ s.scope }}</td>
+                <td>{{ s.date }}</td>
+                <td>{{ s.lead }}</td>
+                <td><span class="badge-pill priority-medium">{{ s.status }}</span></td>
+                <td>
+                  <button class="btn-nh btn-nh-outline btn-nh-sm" onclick="showToast('Deep cleaning checklist marked completed.', 'success')">
+                    Mark Done
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

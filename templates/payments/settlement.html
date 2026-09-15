@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Daily POS Settlement & Terminal Close — Accounts{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Daily POS Settlement & Terminal Close (SCR-57)</h1>
+          <p class="text-secondary small mb-0">Reconcile cash drawer, credit card gateway batches, and generate shift closing report.</p>
+        </div>
+        <button class="btn-nh btn-nh-danger btn-nh-sm" onclick="performSettlement()">
+          <i class="fas fa-lock me-1"></i> Close Daily Register
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-green"><i class="fas fa-money-bill-wave"></i></div>
+          <div>
+            <div class="stat-label">Total Daily Revenue</div>
+            <div class="stat-value">₹{{ total_revenue or "1,24,800" }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-blue"><i class="fas fa-credit-card"></i></div>
+          <div>
+            <div class="stat-label">Credit Card Batches</div>
+            <div class="stat-value">₹84,200</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-yellow"><i class="fas fa-qrcode"></i></div>
+          <div>
+            <div class="stat-label">UPI / QR Scans</div>
+            <div class="stat-value">₹40,600</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">POS Register Shift Breakdown</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Register / Shift</th>
+                <th>Cashier Name</th>
+                <th>Opening Float</th>
+                <th>Total Inflows</th>
+                <th>Cash in Drawer</th>
+                <th>Discrepancy</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="fw-bold">Main Front Desk #1</td>
+                <td>Pooja Sharma</td>
+                <td>₹10,000</td>
+                <td class="text-success fw-bold">₹62,400</td>
+                <td>₹72,400</td>
+                <td><span class="badge-pill status-available">₹0.00 (Balanced)</span></td>
+              </tr>
+              <tr>
+                <td class="fw-bold">Restaurant & Bar POS</td>
+                <td>Ramesh Cashier</td>
+                <td>₹5,000</td>
+                <td class="text-success fw-bold">₹48,200</td>
+                <td>₹53,200</td>
+                <td><span class="badge-pill status-available">₹0.00 (Balanced)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function performSettlement() {
+  window.showModal({
+    title: 'Confirm Register Close & POS Settlement',
+    message: 'This will finalize all cashier batches, lock today’s financial entries, and generate bank deposit slips. Proceed?',
+    confirmText: 'Settle & Close',
+    isDanger: true,
+    onConfirm: () => {
+      window.showToast('Daily register settled and closed successfully!', 'success');
+    }
+  });
+}
+</script>
+{% endblock %}

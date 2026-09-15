@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Bespoke Catering Packages — Events & Banqueting{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Banquet Catering Packages (SCR-60)</h1>
+          <p class="text-secondary small mb-0">Multi-cuisine buffets, live culinary theatrics, and bespoke dessert lounges.</p>
+        </div>
+        <a href="/events/banquets" class="btn-nh btn-nh-outline btn-nh-sm">
+          <i class="fas fa-arrow-left me-1"></i> Venues
+        </a>
+      </div>
+
+      <div class="row g-4">
+        {% for p in packages %}
+        <div class="col-md-6 col-lg-4">
+          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between">
+            <div>
+              <span class="badge-pill priority-high mb-2">Curated Menu</span>
+              <h4 class="fw-bold fs-5 mb-2">{{ p.name }}</h4>
+              <ul class="list-unstyled small text-secondary mb-4">
+                {% for itm in p['items'] %}
+                <li class="mb-1"><i class="fas fa-utensils text-warning me-2"></i>{{ itm }}</li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <span class="fw-bold fs-5 text-primary">₹{{ p.price_per_plate }} <span class="small text-secondary fw-normal">/ plate</span></span>
+              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Catering package selected for event quotation.', 'success')">
+                Select Package
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

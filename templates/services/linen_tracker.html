@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Linen Inventory & Laundry Tracker — Housekeeping{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Resort Linen Tracker & Par Stock (SCR-40)</h1>
+          <p class="text-secondary small mb-0">Track bedsheets, duvet covers, bath towels, and robes across linen closets.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Linen batch dispatched to laundry machines.', 'success')">
+          <i class="fas fa-soap me-1"></i> Send Batch to Laundry
+        </button>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Linen Par Stock Inventory</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Linen Category</th>
+                <th>Clean (Closet)</th>
+                <th>In-Use (Rooms)</th>
+                <th>Dirty (In Wash)</th>
+                <th>Total Par Level</th>
+                <th>Health Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for itm in linen_stock %}
+              <tr>
+                <td class="fw-bold">{{ itm.name }}</td>
+                <td class="text-success fw-bold">{{ itm.clean }}</td>
+                <td class="text-primary fw-semibold">{{ itm.in_use }}</td>
+                <td class="text-warning fw-semibold">{{ itm.laundry }}</td>
+                <td>{{ itm.clean + itm.in_use + itm.laundry }}</td>
+                <td>
+                  {% if itm.clean > 50 %}
+                  <span class="badge-pill status-available"><i class="fas fa-check"></i> Sufficient</span>
+                  {% else %}
+                  <span class="badge-pill priority-high"><i class="fas fa-exclamation-circle"></i> Low Clean Stock</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No linen inventory data recorded.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

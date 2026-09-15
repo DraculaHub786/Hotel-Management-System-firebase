@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}VIP Membership Tiers & Privileges — Administration{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">VIP Membership Management (SCR-88)</h1>
+          <p class="text-secondary small mb-0">Configure benefits for Silver, Gold, Platinum, and Presidential member tiers.</p>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="nh-card text-center h-100">
+            <span class="badge-pill priority-low mb-2">Tier 1</span>
+            <h4 class="fw-bold fs-5 mb-1">Silver Traveler</h4>
+            <p class="text-secondary small mb-3">0 – 100 Lifetime Points</p>
+            <ul class="list-unstyled small text-secondary mb-4 text-start">
+              <li><i class="fas fa-check text-success me-2"></i> Free High-Speed WiFi</li>
+              <li><i class="fas fa-check text-success me-2"></i> 10% Dining Discount</li>
+              <li><i class="fas fa-check text-success me-2"></i> Late 1 PM Check-out</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="nh-card text-center h-100 border-primary">
+            <span class="badge-pill priority-medium mb-2">Tier 2</span>
+            <h4 class="fw-bold fs-5 mb-1">VIP Gold Club</h4>
+            <p class="text-secondary small mb-3">101 – 500 Lifetime Points</p>
+            <ul class="list-unstyled small text-secondary mb-4 text-start">
+              <li><i class="fas fa-check text-success me-2"></i> 5% Discount Across Entire Resort</li>
+              <li><i class="fas fa-check text-success me-2"></i> Complimentary Daily Buffet Breakfast</li>
+              <li><i class="fas fa-check text-success me-2"></i> Late 3 PM Check-out & Room Upgrade</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="nh-card text-center h-100 border-warning">
+            <span class="badge-pill priority-high mb-2">Tier 3</span>
+            <h4 class="fw-bold fs-5 mb-1">Presidential Platinum</h4>
+            <p class="text-secondary small mb-3">500+ Lifetime Points</p>
+            <ul class="list-unstyled small text-secondary mb-4 text-start">
+              <li><i class="fas fa-check text-success me-2"></i> Dedicated 24/7 Butler Service</li>
+              <li><i class="fas fa-check text-success me-2"></i> Complimentary Chauffeur Airport Limousine</li>
+              <li><i class="fas fa-check text-success me-2"></i> Unlimited Ayur Spa Suite Access</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Enrolled Members Directory</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Member Name</th>
+                <th>Email</th>
+                <th>Membership Tier</th>
+                <th>Active Points</th>
+                <th>Discount Level</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for m in members %}
+              <tr>
+                <td class="fw-bold">{{ m.name }}</td>
+                <td>{{ m.email }}</td>
+                <td><span class="badge-pill priority-high">VIP Club</span></td>
+                <td class="fw-bold text-success">{{ m.loyalty_points or 150 }} pts</td>
+                <td>5% Off</td>
+                <td><span class="badge-pill status-available">Active</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No registered VIP members found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

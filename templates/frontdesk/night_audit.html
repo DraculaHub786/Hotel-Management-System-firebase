@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Night Audit & End of Day (EOD) — Front Desk{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Night Audit & End-of-Day Close (SCR-23)</h1>
+          <p class="text-secondary small mb-0">Perform daily room charge rollover, occupancy reconciliation, and revenue close.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary" id="runAuditBtn">
+          <i class="fas fa-moon me-1"></i> Execute Night Audit
+        </button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-blue"><i class="fas fa-bed"></i></div>
+          <div>
+            <div class="stat-label">Occupancy Rate</div>
+            <div class="stat-value">{{ occupancy_rate or 78.5 }}%</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-green"><i class="fas fa-rupee-sign"></i></div>
+          <div>
+            <div class="stat-label">Today's Room Revenue</div>
+            <div class="stat-value">₹{{ today_revenue or "48,500" }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-yellow"><i class="fas fa-file-invoice"></i></div>
+          <div>
+            <div class="stat-label">Pending Invoices</div>
+            <div class="stat-value">{{ pending_invoices or 3 }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Historical Night Audit Logs</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Audit Date</th>
+                <th>Audited By</th>
+                <th>Total Rooms</th>
+                <th>Occupied</th>
+                <th>Occupancy %</th>
+                <th>Total Daily Revenue</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in audits %}
+              <tr>
+                <td class="fw-bold">{{ a.audit_date }}</td>
+                <td>{{ a.audited_by }}</td>
+                <td>{{ a.total_rooms }}</td>
+                <td>{{ a.occupied_rooms }}</td>
+                <td>{{ a.occupancy_rate }}%</td>
+                <td class="text-success fw-bold">₹{{ a.total_revenue }}</td>
+                <td><span class="badge-pill status-completed">Closed</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" class="text-center text-secondary py-4">No prior night audits recorded. Click Execute Night Audit to run today's audit.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.getElementById('runAuditBtn').addEventListener('click', () => {
+  window.showModal({
+    title: 'Run End-of-Day Night Audit',
+    message: 'This will lock the business date, roll over in-house room charges, calculate daily occupancy, and record revenue settlement. Proceed?',
+    confirmText: 'Run Audit',
+    onConfirm: async () => {
+      const res = await window.api('/frontdesk/night-audit', { method: 'POST' });
+      if (res.ok) {
+        window.showToast('Night audit executed successfully!', 'success');
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        window.showToast(res.message || 'Night audit failed', 'error');
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

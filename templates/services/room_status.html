@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Housekeeping Room Status & Turndown — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Housekeeping Room Status Board (SCR-42)</h1>
+          <p class="text-secondary small mb-0">Live status synchronization with the Front Office.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% for r in rooms %}
+        <div class="col-6 col-md-4 col-lg-3">
+          <div class="nh-card p-3 nh-card-hover text-center">
+            <h4 class="fw-bold fs-5 mb-1">Room {{ r.number }}</h4>
+            <p class="text-secondary small mb-2">{{ r.type }}</p>
+            <span class="badge-pill status-{{ r.status }} mb-3 d-inline-block">{{ r.status }}</span>
+            <div class="pt-2 border-top">
+              {% if r.status == 'cleaning' %}
+              <button class="btn-nh btn-nh-success btn-nh-sm w-100" onclick="markRoomClean('{{ r.id }}', '{{ r.number }}')">
+                <i class="fas fa-check me-1"></i> Mark Clean
+              </button>
+              {% else %}
+              <button class="btn-nh btn-nh-outline btn-nh-sm w-100" onclick="markRoomCleaning('{{ r.id }}', '{{ r.number }}')">
+                Inspect
+              </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function markRoomClean(id, number) {
+  const res = await window.api('/api/front-desk/mark-clean', {
+    method: 'POST',
+    body: { room_id: id }
+  });
+  if (res.ok) {
+    window.showToast(`Room ${number} verified and released as Available!`, 'success');
+    setTimeout(() => location.reload(), 1000);
+  }
+}
+</script>
+{% endblock %}

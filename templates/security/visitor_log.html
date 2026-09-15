@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Visitor Access Control & Log — Security Patrol{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Resort Visitor Access Control Log (SCR-83)</h1>
+          <p class="text-secondary small mb-0">Record all non-resident visitors, host room confirmations, and gate in/out timestamps.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="logVisitorModal()">
+          <i class="fas fa-user-plus me-1"></i> Check-in Visitor
+        </button>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Visitor Access Manifest</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Visitor Name</th>
+                <th>Host Room</th>
+                <th>Purpose of Visit</th>
+                <th>Entry Timestamp</th>
+                <th>Exit Timestamp</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in visitor_logs %}
+              <tr>
+                <td class="fw-bold">{{ v.visitor_name }}</td>
+                <td><span class="badge-pill priority-medium">Room {{ v.host_room }}</span></td>
+                <td>{{ v.purpose }}</td>
+                <td>{{ v.in_time }}</td>
+                <td>{{ v.out_time or "Currently On Premises" }}</td>
+                <td>
+                  {% if not v.out_time %}
+                  <button class="btn-nh btn-nh-outline btn-nh-sm" onclick="showToast('Visitor departure recorded.', 'info')">
+                    Log Exit
+                  </button>
+                  {% else %}
+                  <span class="badge-pill priority-low">Departed</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No active visitors recorded on premises.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function logVisitorModal() {
+  const visitor_name = prompt('Visitor Full Name:');
+  if (!visitor_name) return;
+  const host_room = prompt('Host Room visiting:', '101');
+  const purpose = prompt('Purpose of Visit:', 'Personal meeting');
+
+  window.api('/security/visitors', {
+    method: 'POST',
+    body: { visitor_name, host_room, purpose }
+  }).then(res => {
+    if (res.ok) {
+      window.showToast('Visitor gate badge issued!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    }
+  });
+}
+</script>
+{% endblock %}

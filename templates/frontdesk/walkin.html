@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Walk-In Guest Registration — Front Desk{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Walk-In Intake & Immediate Check-In (SCR-21)</h1>
+          <p class="text-secondary small mb-0">Register direct arrivals without prior online reservation.</p>
+        </div>
+        <a href="/frontdesk/rooms" class="btn-nh btn-nh-outline btn-nh-sm">
+          <i class="fas fa-th-large me-1"></i> Check Available Rooms
+        </a>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-8 mx-auto">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-3">Guest & Reservation Details</h3>
+            <form id="walkinForm">
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Guest Full Name</label>
+                  <input type="text" id="guestName" class="form-control" placeholder="e.g. Rahul Verma" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Contact Phone</label>
+                  <input type="tel" id="guestPhone" class="form-control" placeholder="+91 98765 43210" required>
+                </div>
+              </div>
+
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Email (Optional)</label>
+                  <input type="email" id="guestEmail" class="form-control" placeholder="guest@example.com">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Government ID / Passport No.</label>
+                  <input type="text" id="guestIdProof" class="form-control" placeholder="Aadhaar / Passport #">
+                </div>
+              </div>
+
+              <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                  <label class="form-label small fw-semibold">Assign Room</label>
+                  <select id="roomNumber" class="form-select" required>
+                    {% for r in available_rooms %}
+                    <option value="{{ r.number }}">Room {{ r.number }} ({{ r.type }} - ₹{{ r.price }})</option>
+                    {% else %}
+                    <option value="101">Room 101 (Deluxe - ₹3500)</option>
+                    <option value="102">Room 102 (Suite - ₹5000)</option>
+                    <option value="103">Room 103 (Luxury - ₹8000)</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-semibold">Stay Duration (Nights)</label>
+                  <input type="number" id="stayNights" class="form-control" min="1" value="1" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-semibold">Total Price Collected (₹)</label>
+                  <input type="number" id="totalPrice" class="form-control" value="3500" required>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-nh btn-nh-primary w-100">
+                <i class="fas fa-check-circle me-1"></i> Confirm Registration & Issue Keycard
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.getElementById('walkinForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const guest_name = document.getElementById('guestName').value;
+  const email = document.getElementById('guestEmail').value || 'walkin@nur-e-haya.com';
+  const room_number = document.getElementById('roomNumber').value;
+  const total_price = document.getElementById('totalPrice').value;
+
+  const res = await window.api('/frontdesk/walkin', {
+    method: 'POST',
+    body: { guest_name, email, room_number, total_price }
+  });
+
+  if (res.ok) {
+    window.showToast('Walk-in registered & checked in!', 'success');
+    setTimeout(() => {
+      window.location.href = `/confirmation/${res.data.booking_id}`;
+    }, 1000);
+  } else {
+    window.showToast(res.message || 'Registration failed', 'error');
+  }
+});
+</script>
+{% endblock %}

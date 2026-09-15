@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}QR Payment Verification Console — Cashier & Accounts{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">QR Payment Verification Console (SCR-55)</h1>
+          <p class="text-secondary small mb-0">Reconcile UPI and dynamic QR scans directly against cashier books.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Pending QR Scans & Inbound Payments</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Order Ref #</th>
+                <th>Amount (₹)</th>
+                <th>Generated At</th>
+                <th>Verification State</th>
+                <th>Cashier Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for qr in qr_payments %}
+              <tr>
+                <td class="fw-bold">{{ qr.order_id }}</td>
+                <td class="fw-bold text-success">₹{{ qr.amount }}</td>
+                <td>{{ qr.created_at }}</td>
+                <td><span class="badge-pill status-{{ qr.status }}">{{ qr.status }}</span></td>
+                <td>
+                  {% if qr.status != 'paid' %}
+                  <button class="btn-nh btn-nh-success btn-nh-sm" onclick="verifyQR('{{ qr.order_id }}')">
+                    <i class="fas fa-check-double me-1"></i> Verify & Confirm
+                  </button>
+                  {% else %}
+                  <span class="text-muted small"><i class="fas fa-check"></i> Reconciled</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-secondary py-4">No pending QR payments awaiting cashier reconciliation.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function verifyQR(orderId) {
+  const res = await window.api('/accounts/qr-verify', {
+    method: 'POST',
+    body: { order_id: orderId }
+  });
+  if (res.ok) {
+    window.showToast('Payment verified and ledger updated!', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    window.showToast('Verification failed', 'error');
+  }
+}
+</script>
+{% endblock %}

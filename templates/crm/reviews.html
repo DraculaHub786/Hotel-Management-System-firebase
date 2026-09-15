@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Reviews, Ratings & Moderation — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Guest Reviews & Feedback Moderation (SCR-89)</h1>
+          <p class="text-secondary small mb-0">Verified guest reviews, sentiment feedback, and approval queue.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="writeReviewModal()">
+          <i class="fas fa-pen me-1"></i> Write a Review
+        </button>
+      </div>
+
+      <div class="row g-4">
+        {% for r in reviews %}
+        <div class="col-md-6">
+          <div class="nh-card h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold fs-6 mb-0">{{ r.guest_name }}</h5>
+                <div class="text-warning small">
+                  {% for i in range(r.rating or 5) %}★{% endfor %}
+                </div>
+              </div>
+              <p class="text-secondary small mb-3">"{{ r.comment }}"</p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <span class="small text-muted">{{ r.date or "Recent stay" }}</span>
+              <span class="badge-pill status-completed"><i class="fas fa-check-circle"></i> Verified Stay</span>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center text-secondary py-5">
+          No published reviews yet. Be the first to share your experience!
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function writeReviewModal() {
+  const rating = prompt('Rating (1 to 5 stars):', '5');
+  if (!rating) return;
+  const comment = prompt('Your Review & Stay Feedback:');
+  if (!comment) return;
+
+  window.api('/crm/reviews', {
+    method: 'POST',
+    body: { rating, comment }
+  }).then(res => {
+    if (res.ok) {
+      window.showToast('Thank you! Review submitted for verification.', 'success');
+    }
+  });
+}
+</script>
+{% endblock %}

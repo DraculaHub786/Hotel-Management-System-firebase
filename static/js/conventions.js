@@ -123,6 +123,10 @@
 
                 const resData = await response.json();
 
+                if (Array.isArray(resData)) {
+                    return resData;
+                }
+
                 if (resData.ok || resData.success) {
                     return resData.data !== undefined ? resData.data : resData;
                 } else {

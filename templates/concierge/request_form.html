@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Concierge Services Request — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">VIP Concierge Services Request (SCR-48)</h1>
+          <p class="text-secondary small mb-0">Wake-up calls, airport transfers, luxury chauffeur, bespoke city tours, or on-call medical care.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-7 mx-auto">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-3">Concierge Request Intake</h3>
+            <form id="conciergeForm">
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Your Room Number</label>
+                  <input type="text" id="cRoom" class="form-control" placeholder="e.g. Suite 103" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Service Required</label>
+                  <select id="cType" class="form-select" required>
+                    <option value="wake_up">Morning Wake-Up Call</option>
+                    <option value="airport_transfer">Airport Luxury Transfer</option>
+                    <option value="city_tour">City Heritage & Culture Tour</option>
+                    <option value="doctor">Doctor on Call Consultation</option>
+                    <option value="taxi">Local Chauffeur & Taxi</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Scheduled Date & Time</label>
+                <input type="text" id="cTime" class="form-control" placeholder="e.g. Tomorrow at 07:00 AM" required>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label small fw-semibold">Specific Requirements / Flight Info</label>
+                <textarea id="cDetails" class="form-control" rows="3" placeholder="Flight details, passenger count, luggage count, or medical symptoms..."></textarea>
+              </div>
+
+              <button type="submit" class="btn-nh btn-nh-primary w-100">
+                <i class="fas fa-bell me-1"></i> Dispatch Request to Concierge Desk
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.getElementById('conciergeForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const room_number = document.getElementById('cRoom').value;
+  const type = document.getElementById('cType').value;
+  const scheduled_time = document.getElementById('cTime').value;
+  const details = document.getElementById('cDetails').value;
+
+  const res = await window.api('/concierge/request', {
+    method: 'POST',
+    body: { room_number, type, scheduled_time, details }
+  });
+
+  if (res.ok) {
+    window.showToast('Concierge desk received your request!', 'success');
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1200);
+  } else {
+    window.showToast(res.message || 'Request failed', 'error');
+  }
+});
+</script>
+{% endblock %}

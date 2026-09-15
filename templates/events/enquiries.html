@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Event & Banquet Enquiries Inbox — Front Desk / Events{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Banquet & Convention Inquiries Inbox (SCR-64)</h1>
+          <p class="text-secondary small mb-0">Review inbound requests for weddings, conferences, and gala dinners.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Incoming Event RFP Submissions</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Hall Requested</th>
+                <th>Target Date</th>
+                <th>Estimated Guests</th>
+                <th>Organizer Email</th>
+                <th>Submission Time</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for enq in enquiries %}
+              <tr>
+                <td class="fw-bold">{{ enq.hall_name }}</td>
+                <td>{{ enq.event_date }}</td>
+                <td><span class="badge-pill priority-medium">{{ enq.guest_count }} Guests</span></td>
+                <td>{{ enq.user_email }}</td>
+                <td>{{ enq.created_at }}</td>
+                <td>
+                  <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Event proposal quote dispatched to client.', 'success')">
+                    Send Proposal
+                  </button>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No pending banquet inquiries.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

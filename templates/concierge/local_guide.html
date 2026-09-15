@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Local Guide & Concierge Insider Recommendations — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Local Insider Guide & Recommendations (SCR-52)</h1>
+          <p class="text-secondary small mb-0">Handpicked beaches, hidden cafes, artisan boutiques, and sunset viewpoints.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% set spots = [
+          {"name": "Fontainhas Latin Quarter", "category": "Culture & Heritage", "distance": "2.5 km", "rating": "4.9 ★", "desc": "Wander through centuries-old streets with vibrant yellow, blue, and terracotta villas."},
+          {"name": "Morjim Turtle Nesting Beach", "category": "Secluded Beaches", "distance": "14 km", "rating": "4.8 ★", "desc": "Pristine white sand shoreline known for peace, dolphin spotting, and olive ridley conservation."},
+          {"name": "Mum's Kitchen Panjim", "category": "Traditional Cuisine", "distance": "3.8 km", "rating": "4.7 ★", "desc": "Authentic regional coastal recipes prepared with age-old earthen clay techniques."},
+          {"name": "Cabo de Rama Cliff Fort", "category": "Scenic Sunsets", "distance": "28 km", "rating": "4.9 ★", "desc": "Dramatic clifftop ruins offering panoramic 180-degree vistas over the Arabian Sea."}
+        ] %}
+        {% for s in spots %}
+        <div class="col-md-6">
+          <div class="nh-card nh-card-hover h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge-pill priority-medium">{{ s.category }}</span>
+              <span class="text-warning fw-bold small">{{ s.rating }}</span>
+            </div>
+            <h4 class="fw-bold fs-5 mb-1">{{ s.name }}</h4>
+            <p class="text-secondary small mb-3">{{ s.desc }}</p>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <span class="small text-secondary"><i class="fas fa-map-marker-alt me-1 text-danger"></i> {{ s.distance }} from resort</span>
+              <button class="btn-nh btn-nh-outline btn-nh-sm" onclick="showToast('Chauffeur navigation route sent to your phone.', 'info')">
+                Get Directions
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

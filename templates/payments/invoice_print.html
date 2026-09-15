@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Tax Invoice & Guest Folio — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 800px;">
+  <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+    <a href="/accounts/ledger" class="btn-nh btn-nh-secondary btn-nh-sm">
+      <i class="fas fa-arrow-left me-1"></i> Back to Ledger
+    </a>
+    <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="window.print()">
+      <i class="fas fa-print me-1"></i> Print Invoice PDF
+    </button>
+  </div>
+
+  <div class="nh-card p-5 bg-white border">
+    <div class="d-flex justify-content-between align-items-start pb-4 mb-4 border-bottom">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <div class="sidebar-logo">NH</div>
+          <h2 class="fs-4 fw-bold mb-0">Nur-e-Haya Resort</h2>
+        </div>
+        <p class="text-secondary small mb-0">Beachfront Avenue, Candolim, Goa 403515<br>GSTIN: 30AAAAA0000A1Z5 | CIN: U55101GA2024PTC123456</p>
+      </div>
+      <div class="text-end">
+        <h3 class="fs-5 fw-bold text-primary mb-1">TAX INVOICE</h3>
+        <p class="small text-secondary mb-0">Invoice #: <strong>{{ invoice.invoice_no or "INV-2026-8891" }}</strong><br>Date: {{ invoice.created_at or "2026-09-15" }}</p>
+      </div>
+    </div>
+
+    <div class="row mb-4">
+      <div class="col-6">
+        <h5 class="fs-6 fw-bold text-secondary text-uppercase mb-1">Billed To:</h5>
+        <p class="mb-0 fw-semibold">{{ invoice.guest_name or "VIP Guest" }}</p>
+        <p class="small text-secondary mb-0">{{ invoice.user_email or "guest@example.com" }}</p>
+        <p class="small text-secondary mb-0">Room: {{ invoice.room_number or "Suite 103" }}</p>
+      </div>
+      <div class="col-6 text-end">
+        <h5 class="fs-6 fw-bold text-secondary text-uppercase mb-1">Payment Details:</h5>
+        <p class="small mb-0">Method: <strong>{{ invoice.payment_method or "UPI / Card" }}</strong></p>
+        <p class="small mb-0">Status: <span class="badge-pill status-paid">PAID</span></p>
+      </div>
+    </div>
+
+    <table class="nh-table mb-4">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="text-center">Qty / Nights</th>
+          <th class="text-end">Rate (₹)</th>
+          <th class="text-end">Amount (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Room Charges — Luxury Suite Stay</td>
+          <td class="text-center">2</td>
+          <td class="text-end">5,000.00</td>
+          <td class="text-end">10,000.00</td>
+        </tr>
+        <tr>
+          <td>In-Room Gourmet Dining & Breakfast</td>
+          <td class="text-center">1</td>
+          <td class="text-end">1,850.00</td>
+          <td class="text-end">1,850.00</td>
+        </tr>
+        <tr>
+          <td>The Royal Ayur Spa Holistic Treatment</td>
+          <td class="text-center">1</td>
+          <td class="text-end">2,500.00</td>
+          <td class="text-end">2,500.00</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3" class="text-end fw-semibold">Subtotal:</td>
+          <td class="text-end fw-semibold">₹14,350.00</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="text-end text-success fw-semibold">VIP Member Discount (5%):</td>
+          <td class="text-end text-success fw-semibold">-₹717.50</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="text-end fw-semibold">GST (18% Hospitality Tax):</td>
+          <td class="text-end fw-semibold">₹2,453.85</td>
+        </tr>
+        <tr class="fs-5 fw-bold border-top border-dark">
+          <td colspan="3" class="text-end text-primary">Total Paid:</td>
+          <td class="text-end text-primary">₹16,086.35</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="text-center pt-4 border-top text-secondary small">
+      <p class="mb-1">Thank you for choosing Nur-e-Haya Resort & Operating Platform.</p>
+      <p class="mb-0">This is a digitally generated tax invoice and requires no physical signature.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

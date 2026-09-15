@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Room Mini Bar Selection & Consumption — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">In-Room Mini Bar Selection (SCR-32)</h1>
+          <p class="text-secondary small mb-0">Beverages, imported snacks, and refreshments stocked in your room chiller.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% set minibar_items = [
+          {"name": "Evian Natural Spring Water (750ml)", "price": 250, "category": "Water", "stock": "Chiller A"},
+          {"name": "Perrier Sparkling Mineral Water", "price": 320, "category": "Sparkling", "stock": "Chiller A"},
+          {"name": "Artisanal Dark Chocolate Truffles", "price": 450, "category": "Confectionery", "stock": "Snack Tray"},
+          {"name": "Roasted Pistachios & Salted Cashews", "price": 380, "category": "Dry Fruits", "stock": "Snack Tray"},
+          {"name": "Cold Brew Hazelnut Latte", "price": 290, "category": "Beverage", "stock": "Chiller B"},
+          {"name": "Organic Pressed Green Juice", "price": 350, "category": "Wellness", "stock": "Chiller B"}
+        ] %}
+
+        {% for itm in minibar_items %}
+        <div class="col-md-6 col-lg-4">
+          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between">
+            <div>
+              <span class="badge-pill priority-low mb-2">{{ itm.stock }}</span>
+              <h4 class="fw-bold fs-6 mb-1">{{ itm.name }}</h4>
+              <p class="text-secondary small mb-3">Category: {{ itm.category }}</p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <span class="fw-bold fs-5 text-primary">₹{{ itm.price }}</span>
+              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="chargeMiniBar('{{ itm.name }}', {{ itm.price }})">
+                <i class="fas fa-plus me-1"></i> Log Consumption
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function chargeMiniBar(item, price) {
+  const roomNo = prompt('Enter Room Number for Mini Bar billing:', '101');
+  if (!roomNo) return;
+
+  const res = await window.api('/dining/minibar', {
+    method: 'POST',
+    body: { room_number: roomNo, items: [{ name: item, price: price, qty: 1 }] }
+  });
+
+  if (res.ok) {
+    window.showToast(`${item} charged to Room ${roomNo} folio!`, 'success');
+  } else {
+    window.showToast('Failed to log consumption', 'error');
+  }
+}
+</script>
+{% endblock %}

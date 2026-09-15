@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Operations Dashboard — General Management — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">General Operations Executive Dashboard (SCR-65)</h1>
+          <p class="text-secondary small mb-0">Cross-departmental pulse: front office, housekeeping, kitchen, and finance.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/manager/reports?format=csv" class="btn-nh btn-nh-primary btn-nh-sm">
+            <i class="fas fa-file-csv me-1"></i> Export Daily CSV
+          </a>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-blue"><i class="fas fa-bed"></i></div>
+          <div>
+            <div class="stat-label">Occupancy Rate</div>
+            <div class="stat-value">{{ stats.occupancy_pct }}%</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-green"><i class="fas fa-rupee-sign"></i></div>
+          <div>
+            <div class="stat-label">Today's Revenue</div>
+            <div class="stat-value">₹{{ stats.today_revenue }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-yellow"><i class="fas fa-broom"></i></div>
+          <div>
+            <div class="stat-label">Housekeeping Queue</div>
+            <div class="stat-value">{{ stats.active_hsk_tasks }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrapper stat-icon-red"><i class="fas fa-tools"></i></div>
+          <div>
+            <div class="stat-label">Open Work Orders</div>
+            <div class="stat-value">{{ stats.active_maint_tasks }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="nh-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="nh-card-title mb-0">Departmental Task Load</h3>
+              <a href="/manager/tasks/assign" class="btn-nh btn-nh-outline btn-nh-sm">Assign Tasks</a>
+            </div>
+            <ul class="list-group list-group-flush small">
+              <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                <span><i class="fas fa-bed text-primary me-2"></i> Rooms in Turnover Cleaning</span>
+                <span class="badge-pill priority-high">{{ stats.cleaning_rooms }} Rooms</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                <span><i class="fas fa-tools text-danger me-2"></i> Maintenance Tickets Under Repair</span>
+                <span class="badge-pill priority-urgent">{{ stats.active_maint_tasks }} Open</span>
+              </li>
+              <li class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                <span><i class="fas fa-credit-card text-warning me-2"></i> Unreconciled QR Payments</span>
+                <span class="badge-pill status-ready">{{ stats.pending_payments }} Pending</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <div class="nh-card h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="nh-card-title mb-0">Management Quick Actions</h3>
+            </div>
+            <div class="d-grid gap-2">
+              <a href="/manager/announcements" class="btn-nh btn-nh-secondary text-start justify-content-start py-2">
+                <i class="fas fa-bullhorn text-primary me-2"></i> Broadcast Staff Announcement
+              </a>
+              <a href="/manager/rates" class="btn-nh btn-nh-secondary text-start justify-content-start py-2">
+                <i class="fas fa-tags text-success me-2"></i> Adjust Room Base Rates & Multipliers
+              </a>
+              <a href="/manager/expenses" class="btn-nh btn-nh-secondary text-start justify-content-start py-2">
+                <i class="fas fa-check-circle text-warning me-2"></i> Review Department Petty Cash Approvals
+              </a>
+              <a href="/manager/shifts" class="btn-nh btn-nh-secondary text-start justify-content-start py-2">
+                <i class="fas fa-user-clock text-info me-2"></i> Review Shift Roster & Attendance
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

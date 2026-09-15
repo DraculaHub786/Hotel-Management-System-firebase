@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Fixed Asset Register & Warranties — Engineering{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Fixed Asset Register & Warranties (SCR-46)</h1>
+          <p class="text-secondary small mb-0">Hardware inventory, serial numbers, locations, and warranty expiration.</p>
+        </div>
+        <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('New asset modal ready.', 'info')">
+          <i class="fas fa-plus me-1"></i> Register New Asset
+        </button>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Facility Assets</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Asset Tag</th>
+                <th>Asset Name</th>
+                <th>Location</th>
+                <th>Serial Number</th>
+                <th>Installation Date</th>
+                <th>Warranty Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ast in assets %}
+              <tr>
+                <td class="fw-bold text-primary">{{ ast.asset_id }}</td>
+                <td class="fw-semibold">{{ ast.name }}</td>
+                <td>{{ ast.location }}</td>
+                <td class="font-monospace small">{{ ast.serial }}</td>
+                <td>{{ ast.installed }}</td>
+                <td>
+                  <span class="badge-pill status-available"><i class="fas fa-shield-alt"></i> Valid ({{ ast.warranty_until }})</span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No fixed assets logged.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

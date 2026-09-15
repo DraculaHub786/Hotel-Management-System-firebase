@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Resort Availability Calendar Matrix — Management{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Room Availability & Occupancy Calendar Matrix (SCR-68)</h1>
+          <p class="text-secondary small mb-0">Visual 7-day multi-room forecast and block management.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">7-Day Horizon Availability</h3>
+        <div class="nh-table-container">
+          <table class="nh-table text-center">
+            <thead>
+              <tr>
+                <th class="text-start">Room</th>
+                <th>Today</th>
+                <th>+1 Day</th>
+                <th>+2 Days</th>
+                <th>+3 Days</th>
+                <th>+4 Days</th>
+                <th>+5 Days</th>
+                <th>+6 Days</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in rooms %}
+              <tr>
+                <td class="text-start fw-bold">Room {{ r.number }} ({{ r.type }})</td>
+                <td><span class="badge-pill {% if r.status == 'occupied' %}status-occupied{% else %}status-available{% endif %}">{% if r.status == 'occupied' %}Occupied{% else %}Available{% endif %}</span></td>
+                <td><span class="badge-pill status-available">Available</span></td>
+                <td><span class="badge-pill status-occupied">Booked</span></td>
+                <td><span class="badge-pill status-occupied">Booked</span></td>
+                <td><span class="badge-pill status-available">Available</span></td>
+                <td><span class="badge-pill status-available">Available</span></td>
+                <td><span class="badge-pill status-available">Available</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

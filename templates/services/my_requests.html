@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}My Service Requests — Live Status — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">My Service Requests (SCR-36)</h1>
+          <p class="text-secondary small mb-0">Live status trail (pending → assigned → in progress → completed).</p>
+        </div>
+        <a href="/services/request" class="btn-nh btn-nh-primary btn-nh-sm">
+          <i class="fas fa-plus me-1"></i> New Request
+        </a>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Active & Recent Requests</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Request #</th>
+                <th>Service</th>
+                <th>Room</th>
+                <th>Priority</th>
+                <th>Submitted</th>
+                <th>Live Status</th>
+              </tr>
+            </thead>
+            <tbody id="requestsTable">
+              {% for req in requests %}
+              <tr>
+                <td class="fw-bold">{{ req.request_no }}</td>
+                <td class="fw-semibold text-capitalize">{{ req.service_type }}</td>
+                <td><span class="badge-pill priority-medium">Room {{ req.room_number }}</span></td>
+                <td><span class="badge-pill priority-{{ req.priority }}">{{ req.priority }}</span></td>
+                <td>{{ req.created_at }}</td>
+                <td><span class="badge-pill status-{{ req.status }}">{{ req.status }}</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No active service requests logged.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+// Start 3-second live polling per master_plan.md Phase 5
+const poller = window.startPolling('/api/service-requests', (data) => {
+  if (Array.isArray(data) && data.length > 0) {
+    const tbody = document.getElementById('requestsTable');
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td class="fw-bold">${r.request_no || 'REQ'}</td>
+        <td class="fw-semibold text-capitalize">${r.service_type || 'Service'}</td>
+        <td><span class="badge-pill priority-medium">Room ${r.room_number || ''}</span></td>
+        <td><span class="badge-pill priority-${r.priority || 'medium'}">${r.priority || 'medium'}</span></td>
+        <td>${r.created_at || ''}</td>
+        <td><span class="badge-pill status-${r.status || 'pending'}">${r.status || 'pending'}</span></td>
+      </tr>
+    `).join('');
+  }
+}, 3000);
+</script>
+{% endblock %}

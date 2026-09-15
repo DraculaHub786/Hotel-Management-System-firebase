@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Doctor on Call & Medical Assistance — Concierge{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Doctor on Call & Emergency Medical Care (SCR-51)</h1>
+          <p class="text-secondary small mb-0">24/7 on-site doctor visits, licensed nurses, and emergency medical triage.</p>
+        </div>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="nh-card border-danger">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="stat-icon-wrapper stat-icon-red"><i class="fas fa-heartbeat"></i></div>
+              <div>
+                <h4 class="fw-bold fs-5 mb-0">Immediate Medical Dispatch</h4>
+                <p class="text-secondary small mb-0">Urgent in-room doctor visit within 15–20 minutes.</p>
+              </div>
+            </div>
+            <button class="btn-nh btn-nh-danger w-100" onclick="showToast('Urgent medical call dispatched to on-call physician!', 'error')">
+              <i class="fas fa-ambulance me-1"></i> Request Emergency Doctor Visit
+            </button>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="nh-card">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="stat-icon-wrapper stat-icon-blue"><i class="fas fa-prescription-bottle-alt"></i></div>
+              <div>
+                <h4 class="fw-bold fs-5 mb-0">Pharmacy & First-Aid Delivery</h4>
+                <p class="text-secondary small mb-0">Over-the-counter and prescription medicines brought directly to your room.</p>
+              </div>
+            </div>
+            <button class="btn-nh btn-nh-outline w-100" onclick="showToast('Pharmacy delivery request logged.', 'info')">
+              <i class="fas fa-pills me-1"></i> Order First-Aid / Medicines
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">On-Panel Medical Practitioners</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Physician Name</th>
+                <th>Specialization</th>
+                <th>Hospital Affiliation</th>
+                <th>Availability</th>
+                <th>Contact Hotline</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="fw-bold">Dr. Sarah D'Souza, MD</td>
+                <td>Internal & General Medicine</td>
+                <td>Manipal Medical Hospital</td>
+                <td><span class="badge-pill status-available">24/7 On-Call</span></td>
+                <td>+91 832 245 1100</td>
+              </tr>
+              <tr>
+                <td class="fw-bold">Dr. Rajesh Kulkarni, MBBS, DCH</td>
+                <td>Pediatrics & Family Care</td>
+                <td>Apollo Clinic</td>
+                <td><span class="badge-pill priority-medium">08:00 – 21:00</span></td>
+                <td>+91 832 245 2244</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

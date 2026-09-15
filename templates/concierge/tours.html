@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Tours, Excursions & Activities — Nur-e-Haya Concierge{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Curated Tours & Resort Excursions (SCR-50)</h1>
+          <p class="text-secondary small mb-0">Immersive heritage trails, private yacht cruises, and culinary masterclasses.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% set tour_items = [
+          {"title": "Old Latin Quarter (Fontainhas) Walking Trail", "duration": "3 Hours", "departure": "09:00 AM", "price": 1400, "desc": "Guided walk through Portuguese heritage mansions, tile art galleries, and bakeries."},
+          {"title": "Private Sunset Yacht & Champagne Cruise", "duration": "2.5 Hours", "departure": "05:00 PM", "price": 4800, "desc": "Sailing through tranquil backwaters with live acoustic music and artisanal canapés."},
+          {"title": "Organic Spice Farm Safari & Traditional Lunch", "duration": "Full Day", "departure": "08:30 AM", "price": 2800, "desc": "Tour of spice plantations, elephant interactions, and authentic wood-fired feast."}
+        ] %}
+        {% for t in tour_items %}
+        <div class="col-md-6 col-lg-4">
+          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between">
+            <div>
+              <span class="badge-pill priority-medium mb-2"><i class="fas fa-clock"></i> {{ t.duration }}</span>
+              <h4 class="fw-bold fs-6 mb-2">{{ t.title }}</h4>
+              <p class="text-secondary small mb-3">{{ t.desc }}</p>
+              <div class="small text-muted mb-3"><i class="fas fa-calendar-alt me-1"></i> Departs: {{ t.departure }}</div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <span class="fw-bold fs-5 text-primary">₹{{ t.price }} <span class="small text-secondary fw-normal">/ guest</span></span>
+              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Tour reservation submitted to Concierge!', 'success')">
+                Book Excursion
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

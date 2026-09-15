@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Verify OTP — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 75vh;">
+  <div class="nh-card" style="max-width: 440px; width: 100%; text-align: center;">
+    <div class="sidebar-logo mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.5rem;">
+      <i class="fas fa-shield-alt"></i>
+    </div>
+    <h2 class="nh-card-title mb-1" style="font-size: 1.4rem;">Security Verification</h2>
+    <p class="nh-card-subtitle mb-4">Enter the 6-digit code sent to your registered email.</p>
+
+    <form id="otpForm">
+      <input type="hidden" id="otpEmail" value="{{ request.args.get('email', '') }}">
+      <input type="hidden" id="otpPurpose" value="{{ request.args.get('purpose', 'register') }}">
+      
+      <div class="mb-4">
+        <input type="text" id="otpCode" class="form-control text-center fw-bold fs-3" 
+               maxlength="6" placeholder="••••••" style="letter-spacing: 8px; height: 56px; border-radius: var(--radius-md);" required>
+      </div>
+
+      <button type="submit" class="btn-nh btn-nh-primary w-100 mb-3" id="verifyBtn">
+        Verify & Continue
+      </button>
+
+      <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+        <span class="text-secondary small">Didn't receive code?</span>
+        <button type="button" class="btn btn-sm btn-link text-decoration-none p-0" id="resendBtn">
+          Resend OTP
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('otpForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('otpEmail').value;
+  const otp = document.getElementById('otpCode').value.trim();
+  const purpose = document.getElementById('otpPurpose').value;
+
+  const res = await window.api('/api/auth/verify-otp', {
+    method: 'POST',
+    body: { email, otp, purpose }
+  });
+
+  if (res.ok) {
+    window.showToast('OTP verified successfully!', 'success');
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 1000);
+  } else {
+    window.showToast(res.message || 'Verification failed', 'error');
+  }
+});
+
+document.getElementById('resendBtn').addEventListener('click', async () => {
+  const email = document.getElementById('otpEmail').value;
+  const purpose = document.getElementById('otpPurpose').value;
+  const res = await window.api('/api/auth/resend-otp', {
+    method: 'POST',
+    body: { email, purpose }
+  });
+  if (res.ok) {
+    window.showToast('A new OTP has been sent.', 'info');
+    if (res.data && res.data.dev_otp) {
+      console.log('Dev OTP:', res.data.dev_otp);
+    }
+  } else {
+    window.showToast(res.message || 'Failed to resend', 'error');
+  }
+});
+</script>
+{% endblock %}

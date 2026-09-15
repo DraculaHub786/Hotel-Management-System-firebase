@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Department Expense Approvals — General Manager{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Department Expense Approvals (SCR-72)</h1>
+          <p class="text-secondary small mb-0">Review departmental petty cash, procurement requests, and emergency facility spends.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Requisitions Pending Executive Sign-Off</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Requisition #</th>
+                <th>Department</th>
+                <th>Description / Purpose</th>
+                <th>Requested Amount (₹)</th>
+                <th>Status</th>
+                <th>Approval Decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for exp in expenses %}
+              <tr>
+                <td class="fw-bold">{{ exp.expense_id }}</td>
+                <td><span class="badge-pill priority-medium">{{ exp.department }}</span></td>
+                <td>{{ exp.item }}</td>
+                <td class="fw-bold text-danger">₹{{ exp.amount }}</td>
+                <td>
+                  {% if exp.status == 'approved' %}
+                  <span class="badge-pill status-completed">Approved</span>
+                  {% else %}
+                  <span class="badge-pill status-ready">Pending Approval</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if exp.status != 'approved' %}
+                  <button class="btn-nh btn-nh-success btn-nh-sm" onclick="showToast('Expense voucher approved and routed to accounts!', 'success')">
+                    <i class="fas fa-check me-1"></i> Approve
+                  </button>
+                  <button class="btn-nh btn-nh-danger btn-nh-sm ms-1" onclick="showToast('Requisition rejected.', 'info')">
+                    Reject
+                  </button>
+                  {% else %}
+                  <span class="text-success small fw-semibold"><i class="fas fa-file-invoice"></i> Dispatched to Bank</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

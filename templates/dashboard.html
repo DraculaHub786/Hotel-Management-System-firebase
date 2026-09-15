@@ -5585,6 +5585,22 @@ function showNewBooking() {
     const form = document.getElementById('bookingForm');
     if (form) form.reset();
     
+    // Default check-in (today) and check-out (tomorrow)
+    const today = new Date().toISOString().split('T')[0];
+    const tomorrowDate = new Date();
+    tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrow = tomorrowDate.toISOString().split('T')[0];
+    const checkInInput = document.getElementById('checkIn');
+    const checkOutInput = document.getElementById('checkOut');
+    if (checkInInput) {
+        checkInInput.min = today;
+        checkInInput.value = today;
+    }
+    if (checkOutInput) {
+        checkOutInput.min = tomorrow;
+        checkOutInput.value = tomorrow;
+    }
+    
     selectedRoom = null;
     currentBookingStep = 1;
     goToStep(1);
@@ -5896,12 +5912,19 @@ async function loadAvailableRooms() {
     const checkInInput = document.getElementById('checkIn');
     const checkOutInput = document.getElementById('checkOut');
     
-    if (!checkInInput || !checkOutInput) return;
+    let checkIn = checkInInput ? checkInInput.value : '';
+    let checkOut = checkOutInput ? checkOutInput.value : '';
     
-    const checkIn = checkInInput.value;
-    const checkOut = checkOutInput.value;
-    
-    if (!checkIn || !checkOut) return;
+    if (!checkIn) {
+        checkIn = new Date().toISOString().split('T')[0];
+        if (checkInInput) checkInInput.value = checkIn;
+    }
+    if (!checkOut) {
+        const tomorrowDate = new Date();
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        checkOut = tomorrowDate.toISOString().split('T')[0];
+        if (checkOutInput) checkOutInput.value = checkOut;
+    }
     
     const roomsContainer = document.getElementById('availableRooms');
     const roomsLoader = document.getElementById('roomsLoader');
@@ -5911,7 +5934,8 @@ async function loadAvailableRooms() {
     try {
         const cacheBuster = new Date().getTime();
         const response = await fetch(`/api/rooms/available?check_in=${checkIn}&check_out=${checkOut}&_=${cacheBuster}`);
-        const rooms = await response.json();
+        const raw = await response.json();
+        const rooms = Array.isArray(raw) ? raw : (raw.data || raw.rooms || []);
         
         if (roomsLoader) roomsLoader.style.display = 'none';
         displayAvailableRooms(rooms);
@@ -5934,16 +5958,17 @@ function displayAvailableRooms(rooms) {
         '105': { type: 'Family', price: 2000, image: '/static/images/single-room.jpg', maxGuests: 4, amenities: ['WiFi', 'AC', 'TV'] }
     };
     
+    // Normalize room numbers to string for safe comparison
     const availableRoomNumbers = rooms.length === 0 
         ? Object.keys(roomDetails) 
-        : rooms.map(r => r.number);
+        : rooms.map(r => String(r.number ?? r.room_number ?? r.id));
     
     const allRoomNumbers = Object.keys(roomDetails);
     
     container.innerHTML = allRoomNumbers.map(roomNumber => {
         const details = roomDetails[roomNumber];
-        const isAvailable = availableRoomNumbers.includes(roomNumber);
-        const room = rooms.find(r => r.number === roomNumber) || { 
+        const isAvailable = rooms.length === 0 ? true : availableRoomNumbers.includes(String(roomNumber));
+        const room = rooms.find(r => String(r.number ?? r.room_number ?? r.id) === String(roomNumber)) || { 
             number: roomNumber, 
             id: roomNumber,
             amenities: details.amenities

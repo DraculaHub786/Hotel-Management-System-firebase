@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Preventive Maintenance Calendar — Engineering — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Preventive Maintenance Schedule (SCR-45)</h1>
+          <p class="text-secondary small mb-0">Scheduled servicing for HVAC chillers, backup generators, elevators, and RO water filtration plants.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Equipment Inspection Calendar</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Plant / Equipment</th>
+                <th>Cycle</th>
+                <th>Next Due Date</th>
+                <th>Certified Technician</th>
+                <th>Operational Health</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set schedules = [
+                {"system": "Central Chillers (Daikin VRV)", "cycle": "Monthly", "due": "2026-10-01", "tech": "Prakash Nair (HVAC Lead)", "status": "Good"},
+                {"system": "Passenger Elevators 1 & 2", "cycle": "Bi-Weekly", "due": "2026-09-22", "tech": "Otis Field Engineer", "status": "Due Soon"},
+                {"system": "Cummins 250kVA Emergency Generator", "cycle": "Monthly", "due": "2026-09-28", "tech": "Power Plant Specialist", "status": "Good"},
+                {"system": "RO Commercial Water Treatment & Softener", "cycle": "Quarterly", "due": "2026-11-10", "tech": "Ion Exchange Service", "status": "Good"}
+              ] %}
+              {% for s in schedules %}
+              <tr>
+                <td class="fw-bold">{{ s.system }}</td>
+                <td><span class="badge-pill priority-low">{{ s.cycle }}</span></td>
+                <td>{{ s.due }}</td>
+                <td>{{ s.tech }}</td>
+                <td>
+                  {% if s.status == 'Good' %}
+                  <span class="badge-pill status-available"><i class="fas fa-check-circle"></i> {{ s.status }}</span>
+                  {% else %}
+                  <span class="badge-pill priority-high"><i class="fas fa-clock"></i> {{ s.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Preventive maintenance audit checklist logged.', 'success')">
+                    Log Service Run
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

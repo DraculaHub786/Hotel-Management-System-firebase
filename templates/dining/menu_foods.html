@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Dining Menu — Gourmet Foods — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Culinary Menu — Gourmet Foods (SCR-24)</h1>
+          <p class="text-secondary small mb-0">Crafted by Executive Chefs. Members receive an automatic 5% discount.</p>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="/dining/foods" class="btn-nh btn-nh-primary btn-nh-sm">Foods</a>
+          <a href="/dining/drinks" class="btn-nh btn-nh-outline btn-nh-sm">Beverages</a>
+          <a href="/dining/snacks" class="btn-nh btn-nh-outline btn-nh-sm">Snacks</a>
+          <a href="/cart" class="btn-nh btn-nh-secondary btn-nh-sm"><i class="fas fa-shopping-bag me-1"></i> View Cart</a>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        {% for itm in items %}
+        <div class="col-md-6 col-lg-4">
+          <div class="nh-card nh-card-hover h-100 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h4 class="fw-bold fs-6 mb-0">{{ itm.name }}</h4>
+                {% if itm.is_veg %}
+                <span class="badge-pill priority-low text-success border border-success" style="font-size: 0.7rem;"><i class="fas fa-circle fs-6"></i> Veg</span>
+                {% else %}
+                <span class="badge-pill priority-urgent" style="font-size: 0.7rem;"><i class="fas fa-play" style="transform: rotate(-90deg); font-size: 0.6rem;"></i> Non-Veg</span>
+                {% endif %}
+              </div>
+              <p class="text-secondary small mb-3">{{ itm.description or "Prepared fresh with locally sourced ingredients." }}</p>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+              <span class="fw-bold fs-5 text-primary">₹{{ itm.price }}</span>
+              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="addToCart('{{ itm.id }}', '{{ itm.name }}', {{ itm.price }})">
+                <i class="fas fa-plus me-1"></i> Add
+              </button>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center text-secondary py-5">
+          No food items found.
+        </div>
+        {% endfor %}
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+function addToCart(id, name, price) {
+  let cart = JSON.parse(localStorage.getItem('nh_cart') || '[]');
+  const existing = cart.find(x => x.ref_id === id);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({ type: 'food', ref_id: id, name, price, qty: 1 });
+  }
+  localStorage.setItem('nh_cart', JSON.stringify(cart));
+  window.showToast(`${name} added to cart!`, 'success');
+}
+</script>
+{% endblock %}

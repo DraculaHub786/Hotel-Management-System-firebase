@@ -1,0 +1,43 @@
+<header class="app-topbar">
+  <div class="d-flex align-items-center gap-3">
+    <button type="button" id="nh-sidebar-toggle" class="btn btn-sm d-lg-none" style="border: none; background: transparent; font-size: 1.2rem; color: var(--text-primary);">
+      <i class="fas fa-bars"></i>
+    </button>
+    <form action="/search" method="GET" class="topbar-search d-none d-sm-block">
+      <i class="fas fa-search"></i>
+      <input type="text" name="q" placeholder="Search guests, rooms, bookings..." value="{{ request.args.get('q', '') }}">
+    </form>
+  </div>
+
+  <div class="topbar-actions">
+    {% if session.get('user_role') in ['member', 'guest', 'user', None] %}
+    <a href="/cart" class="btn-nh btn-nh-outline btn-nh-sm" title="View Cart">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="d-none d-md-inline">Cart</span>
+    </a>
+    {% endif %}
+
+    <a href="/notifications" class="btn-nh btn-nh-outline btn-nh-sm" title="Notifications">
+      <i class="fas fa-bell"></i>
+    </a>
+
+    <a href="/help" class="btn-nh btn-nh-outline btn-nh-sm" title="Help Center">
+      <i class="fas fa-question-circle"></i>
+    </a>
+
+    <div class="dropdown">
+      <button class="btn-nh btn-nh-secondary btn-nh-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fas fa-user me-1"></i>
+        <span>{{ session.get('user_name', session.get('user_email', 'Account')).split(' ')[0] }}</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" style="border-radius: var(--radius-md);">
+        <li><a class="dropdown-item py-2" href="/profile"><i class="fas fa-user-circle me-2 text-primary"></i> Profile & Settings</a></li>
+        {% if session.get('user_role') == 'member' %}
+        <li><a class="dropdown-item py-2" href="/crm/loyalty"><i class="fas fa-crown me-2 text-warning"></i> VIP Member Perks</a></li>
+        {% endif %}
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item py-2 text-danger" href="/logout"><i class="fas fa-sign-out-alt me-2"></i> Sign Out</a></li>
+      </ul>
+    </div>
+  </div>
+</header>

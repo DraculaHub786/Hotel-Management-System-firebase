@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Check-In — Front Desk{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Guest Check-In (SCR-18)</h1>
+          <p class="text-secondary small mb-0">Process guest arrivals, verify OTP, and assign keycards.</p>
+        </div>
+        <a href="/frontdesk/walkin" class="btn-nh btn-nh-primary btn-nh-sm">
+          <i class="fas fa-plus me-1"></i> New Walk-in
+        </a>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-3">Today's Expected Arrivals</h3>
+            <div class="nh-table-container">
+              <table class="nh-table">
+                <thead>
+                  <tr>
+                    <th>Booking #</th>
+                    <th>Guest</th>
+                    <th>Room</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="arrivalsTable">
+                  {% for b in arrivals %}
+                  <tr>
+                    <td class="fw-bold">{{ b.booking_no }}</td>
+                    <td>{{ b.guest_name }}</td>
+                    <td><span class="badge-pill priority-medium">Room {{ b.room_number }}</span></td>
+                    <td><span class="badge-pill status-{{ b.status }}">{{ b.status }}</span></td>
+                    <td>
+                      {% if b.status != 'checked_in' %}
+                      <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="performCheckin('{{ b.id }}', '{{ b.room_number }}')">
+                        Check In
+                      </button>
+                      {% else %}
+                      <span class="text-success small fw-bold"><i class="fas fa-check"></i> In House</span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% else %}
+                  <tr>
+                    <td colspan="5" class="text-center text-secondary py-4">No pending arrivals for today.</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-2">Self Check-In OTP Verification</h3>
+            <p class="text-secondary small mb-3">Guest presenting check-in confirmation code or booking number:</p>
+
+            <form id="expressCheckinForm">
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Booking ID or Confirmation #</label>
+                <input type="text" id="manualBookingId" class="form-control" placeholder="e.g. BK1726354890" required>
+              </div>
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Room Assigned</label>
+                <input type="text" id="manualRoomNumber" class="form-control" placeholder="e.g. 102" required>
+              </div>
+              <button type="submit" class="btn-nh btn-nh-primary w-100">
+                Complete Express Check-In
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function performCheckin(bookingId, roomNumber) {
+  const res = await window.api('/api/front-desk/checkin', {
+    method: 'POST',
+    body: { booking_id: bookingId, room_number: roomNumber }
+  });
+  if (res.ok) {
+    window.showToast('Guest checked in successfully!', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } else {
+    window.showToast(res.message || 'Check-in failed', 'error');
+  }
+}
+
+document.getElementById('expressCheckinForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const bookingId = document.getElementById('manualBookingId').value.trim();
+  const roomNumber = document.getElementById('manualRoomNumber').value.trim();
+  await performCheckin(bookingId, roomNumber);
+});
+</script>
+{% endblock %}

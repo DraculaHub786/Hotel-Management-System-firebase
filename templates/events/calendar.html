@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Resort Events & Banqueting Calendar — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Resort Events & Conventions Calendar (SCR-61)</h1>
+          <p class="text-secondary small mb-0">Master schedule of weddings, symposiums, wellness retreats, and pool galas.</p>
+        </div>
+      </div>
+
+      <div class="nh-card">
+        <h3 class="nh-card-title mb-3">Confirmed Upcoming Events</h3>
+        <div class="nh-table-container">
+          <table class="nh-table">
+            <thead>
+              <tr>
+                <th>Event Date</th>
+                <th>Hall / Venue</th>
+                <th>Event Type</th>
+                <th>Host / Organizer</th>
+                <th>Attendees</th>
+                <th>Banquet Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% set sample_events = [
+                {"date": "2026-09-20", "hall": "Grand Kohinoor Ballroom", "type": "Global Tech Leadership Summit", "host": "Nasscom", "guests": 350, "status": "confirmed"},
+                {"date": "2026-09-24", "hall": "Palm Lawn & Pool Deck", "type": "Destination Sangeet & Cocktail Soiree", "host": "Mehta & Singhania Wedding", "guests": 280, "status": "confirmed"},
+                {"date": "2026-10-02", "hall": "Sapphire Conference Suite", "type": "Cardiology CME Conference", "host": "Indian Medical Association", "guests": 110, "status": "in_progress"}
+              ] %}
+              {% for e in sample_events %}
+              <tr>
+                <td class="fw-bold">{{ e.date }}</td>
+                <td class="fw-semibold">{{ e.hall }}</td>
+                <td>{{ e.type }}</td>
+                <td>{{ e.host }}</td>
+                <td><span class="badge-pill priority-medium">{{ e.guests }} Guests</span></td>
+                <td><span class="badge-pill status-{{ e.status }}">{{ e.status }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+{% endblock %}

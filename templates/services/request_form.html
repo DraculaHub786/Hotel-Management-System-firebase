@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Guest Service Request — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Room Service & Maintenance Request (SCR-35)</h1>
+          <p class="text-secondary small mb-0">Request room cleaning, laundry, fresh linens, or technical assistance.</p>
+        </div>
+        <a href="/services/my-requests" class="btn-nh btn-nh-outline btn-nh-sm">
+          <i class="fas fa-history me-1"></i> Track Active Requests
+        </a>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-7 mx-auto">
+          <div class="nh-card">
+            <h3 class="nh-card-title mb-3">Service Details</h3>
+            <form id="serviceReqForm">
+              <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Your Room Number</label>
+                  <input type="text" id="roomNumber" class="form-control" placeholder="e.g. 101" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Service Type</label>
+                  <select id="serviceType" class="form-select" required>
+                    <option value="cleaning">Daily Room Cleaning & Tidying</option>
+                    <option value="laundry">Laundry & Dry Cleaning Pickup</option>
+                    <option value="ironing">Garment Pressing & Ironing</option>
+                    <option value="maintenance">Technical / AC / Plumbing Maintenance</option>
+                    <option value="linen">Extra Towels & Fresh Linens</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label small fw-semibold">Urgency / Priority</label>
+                <select id="reqPriority" class="form-select">
+                  <option value="low">Low — Whenever convenient</option>
+                  <option value="medium" selected>Medium — Standard turnaround</option>
+                  <option value="high">High — Within 30 minutes</option>
+                  <option value="urgent">Urgent — Immediate assistance</option>
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label small fw-semibold">Special Instructions or Notes</label>
+                <textarea id="reqNotes" class="form-control" rows="3" placeholder="e.g. Please do not disturb before 11 AM, need hypoallergenic pillow..."></textarea>
+              </div>
+
+              <button type="submit" class="btn-nh btn-nh-primary w-100">
+                <i class="fas fa-paper-plane me-1"></i> Submit Request
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.getElementById('serviceReqForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const room_number = document.getElementById('roomNumber').value;
+  const service_type = document.getElementById('serviceType').value;
+  const priority = document.getElementById('reqPriority').value;
+  const description = document.getElementById('reqNotes').value;
+
+  const res = await window.api('/services/request', {
+    method: 'POST',
+    body: { room_number, service_type, priority, description }
+  });
+
+  if (res.ok) {
+    window.showToast('Request submitted! Staff has been notified.', 'success');
+    setTimeout(() => {
+      window.location.href = '/services/my-requests';
+    }, 1000);
+  } else {
+    window.showToast(res.message || 'Submission failed', 'error');
+  }
+});
+</script>
+{% endblock %}

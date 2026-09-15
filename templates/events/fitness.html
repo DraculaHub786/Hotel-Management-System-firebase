@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Infinity Sky Pool & FitLife Gymnasium — Nur-e-Haya{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  {% include "components/sidebar.html" %}
+  <div class="app-main">
+    {% include "components/topbar.html" %}
+
+    <main class="app-content">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Infinity Pool & Gymnasium Reservations (SCR-63)</h1>
+          <p class="text-secondary small mb-0">Complimentary access for hotel guests and VIP club members.</p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="nh-card h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="stat-icon-wrapper stat-icon-blue"><i class="fas fa-swimming-pool"></i></div>
+              <span class="badge-pill status-available">Open 06:00 – 21:00</span>
+            </div>
+            <h4 class="fw-bold fs-5 mb-2">Panoramic Infinity Sky Pool</h4>
+            <p class="text-secondary small mb-4">Heated rooftop pool overlooking the ocean with complimentary cabanas and sun-loungers.</p>
+            <button class="btn-nh btn-nh-primary w-100" onclick="bookFitness('Infinity Pool Cabana')">
+              Reserve Pool Cabana Slot
+            </button>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="nh-card h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="stat-icon-wrapper stat-icon-green"><i class="fas fa-dumbbell"></i></div>
+              <span class="badge-pill status-available">Open 24/7</span>
+            </div>
+            <h4 class="fw-bold fs-5 mb-2">FitLife High-Tech Gymnasium</h4>
+            <p class="text-secondary small mb-4">Equipped with Technogym smart cardio machines, Olympic free weights, and resident personal trainers.</p>
+            <button class="btn-nh btn-nh-primary w-100" onclick="bookFitness('Personal Trainer Session')">
+              Book Trainer Consultation
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+async function bookFitness(fac) {
+  const time_slot = prompt(`Select reservation time for ${fac}:`, 'Tomorrow at 08:00 AM');
+  if (!time_slot) return;
+
+  const res = await window.api('/wellness/fitness', {
+    method: 'POST',
+    body: { facility: fac, time_slot }
+  });
+  if (res.ok) {
+    window.showToast(`${fac} slot reserved!`, 'success');
+  }
+}
+</script>
+{% endblock %}
