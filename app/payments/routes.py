@@ -17,6 +17,7 @@ payments_bp = Blueprint('payments', __name__)
 
 # Guest Payment Flow (Section C.6 / C.7)
 @payments_bp.route('/pay/<txn_id>', methods=['GET'])
+@payments_bp.route('/pay/<txn_id>/qr', methods=['GET'])
 @login_required
 def pay_qr_view(txn_id):
     doc = transactions_col().document(txn_id).get()
@@ -39,7 +40,16 @@ def pay_qr_view(txn_id):
             'total': amt,
             'currency': 'INR'
         }
-    return render_template('guest/pay_qr.html', transaction=tdata, txn_id=txn_id)
+    
+    phone = tdata.get('phone')
+    if not phone and tdata.get('booking_id'):
+        bdoc = bookings_col().document(str(tdata.get('booking_id'))).get()
+        if bdoc.exists:
+            phone = bdoc.to_dict().get('phone')
+    if not phone:
+        phone = session.get('user_phone') or '9876543210'
+
+    return render_template('guest/pay_qr.html', transaction=tdata, txn_id=txn_id, phone=phone)
 
 @payments_bp.route('/pay/<txn_id>/otp', methods=['GET'])
 @login_required
@@ -52,16 +62,26 @@ def pay_otp_view(txn_id):
             tdoc = matches[0]
             tdata = tdoc.to_dict()
 
+    # Retrieve associated phone number
+    phone = tdata.get('phone')
+    if not phone and tdata.get('booking_id'):
+        bdoc = bookings_col().document(str(tdata.get('booking_id'))).get()
+        if bdoc.exists:
+            phone = bdoc.to_dict().get('phone')
+    if not phone:
+        phone = session.get('user_phone') or '9876543210'
+
     # Generate or retrieve active dynamic 6-digit OTP
     otp_code = tdata.get('otp')
     if not otp_code or otp_code == '482913':
         otp_code = f"{random.randint(100000, 999999)}"
         if tdoc and tdoc.exists:
-            tdoc.reference.update({"otp": otp_code})
+            tdoc.reference.update({"otp": otp_code, "phone": phone})
         else:
             transactions_col().document(txn_id).set({
                 "transaction_id": txn_id,
                 "otp": otp_code,
+                "phone": phone,
                 "status": "pending",
                 "created_at": datetime.utcnow().isoformat() + "Z"
             }, merge=True)
@@ -71,19 +91,20 @@ def pay_otp_view(txn_id):
 
     banner = f"""
 ======================================================================
-🔐 [PAYMENT OTP VERIFICATION]
+🔐 [PHONE OTP VERIFICATION — STEP 1 OF 2]
    Transaction ID : {txn_id}
+   Mobile Number  : +91 {phone}
    Booking Ref    : {ref}
    Amount Payable : ₹{amt}
-   >>> 6-DIGIT OTP: {otp_code} <<<
+   >>> DEMO OTP: {otp_code} <<<
    Timestamp      : {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
-   Instruction    : Enter the 6-digit OTP above on /pay/{txn_id}/otp
+   Instruction    : Verify mobile number on /pay/{txn_id}/otp before QR payment
 ======================================================================
 """
     logger.info(banner)
     print(banner, flush=True)
 
-    return render_template('guest/pay_otp.html', txn_id=txn_id)
+    return render_template('guest/pay_otp.html', txn_id=txn_id, phone=phone, otp_code=otp_code, amount=amt, booking_ref=ref)
 
 @payments_bp.route('/api/payment/create-qr', methods=['POST'])
 @login_required
@@ -138,17 +159,41 @@ def api_txn_status(txn_id):
         if matches:
             tdata = matches[0].to_dict()
     st = tdata.get('status') or tdata.get('payment_status', 'pending')
-    return api_success({"status": st})
+    b_id = tdata.get('booking_id') or tdata.get('reference_no') or 'bk_5521'
+    return api_success({"status": st, "booking_id": b_id, "phone_verified": tdata.get('phone_verified', False)})
 
 @payments_bp.route('/api/transactions/<txn_id>/simulate-pay', methods=['POST'])
 def api_simulate_pay(txn_id):
+    b_id = 'bk_5521'
     doc = transactions_col().document(txn_id).get()
+    now_iso = datetime.utcnow().isoformat() + "Z"
     if doc.exists:
-        doc.reference.update({"payment_status": "completed", "status": "paid"})
+        doc.reference.update({"payment_status": "completed", "status": "paid", "paid_at": now_iso})
+        tdata = doc.to_dict()
+        b_id = tdata.get('booking_id') or tdata.get('reference_no') or b_id
     else:
         for d in transactions_col().where('transaction_id', '==', txn_id).stream():
-            d.reference.update({"payment_status": "completed", "status": "paid"})
-    return api_success({"status": "paid", "message": "Payment simulation confirmed"})
+            d.reference.update({"payment_status": "completed", "status": "paid", "paid_at": now_iso})
+            tdata = d.to_dict()
+            b_id = tdata.get('booking_id') or tdata.get('reference_no') or b_id
+
+    # Update associated booking to confirmed & paid
+    bdoc = bookings_col().document(str(b_id)).get()
+    if not bdoc.exists:
+        bmatches = list(bookings_col().where('booking_no', '==', str(b_id)).limit(1).get())
+        if not bmatches:
+            bmatches = list(bookings_col().where('txn_id', '==', txn_id).limit(1).get())
+        if bmatches:
+            bdoc = bmatches[0]
+    if bdoc and bdoc.exists:
+        bdoc.reference.update({
+            "status": "confirmed",
+            "payment_status": "paid",
+            "confirmed_at": now_iso
+        })
+        b_id = bdoc.id
+
+    return api_success({"status": "paid", "booking_id": b_id, "message": "Payment simulation confirmed"})
 
 @payments_bp.route('/api/process-payment', methods=['POST'])
 @login_required

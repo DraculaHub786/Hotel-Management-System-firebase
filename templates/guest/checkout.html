@@ -191,9 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear cart from client storage
             localStorage.removeItem('nurehaya_cart');
 
-            Toast.success('Reservation created! Proceeding to payment...');
+            Toast.success('Reservation created! Proceeding to mobile verification...');
             setTimeout(() => {
-                window.location.href = `/pay/${result.txn_id}`;
+                window.location.href = result.redirect_url || `/pay/${result.txn_id}/otp`;
             }, 600);
         }
     });

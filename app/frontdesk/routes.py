@@ -318,9 +318,11 @@ def cart_checkout_api():
         "currency": "INR"
     }
     dynamic_otp = f"{random.randint(100000, 999999)}"
+    phone_val = body.get('phone') or '9876543210'
     transactions_col().document(txn_id).set({
         "transaction_id": txn_id,
         "user_email": user_email,
+        "phone": phone_val,
         "amount": pricing['total'],
         "total": pricing['total'],
         "payment_method": payment_method,
@@ -336,13 +338,14 @@ def cart_checkout_api():
 
     checkout_banner = f"""
 ======================================================================
-🔐 [NEW PAYMENT TRANSACTION INITIATED]
+🔐 [NEW PAYMENT TRANSACTION INITIATED — STEP 1: PHONE VERIFY]
    Transaction ID : {txn_id}
+   Mobile Number  : +91 {phone_val}
    Booking Ref    : {booking_no}
    Amount Payable : ₹{pricing['total']}
-   >>> 6-DIGIT OTP: {dynamic_otp} <<<
+   >>> DEMO OTP: {dynamic_otp} <<<
    Timestamp      : {now_iso}
-   Instruction    : Enter the 6-digit OTP above on /pay/{txn_id}/otp
+   Instruction    : Verify mobile number on /pay/{txn_id}/otp before QR payment
 ======================================================================
 """
     logger.info(checkout_banner)
@@ -354,7 +357,7 @@ def cart_checkout_api():
         "txn_id": txn_id,
         "order_summary": order_sum,
         "total": pricing['total'],
-        "redirect_url": f"/pay/{txn_id}"
+        "redirect_url": f"/pay/{txn_id}/otp"
     })
 
 @frontdesk_bp.route('/confirmation/<booking_id>', methods=['GET'])
@@ -480,37 +483,84 @@ def api_cancel_booking(booking_id):
 @frontdesk_bp.route('/frontdesk/checkin', methods=['GET'])
 @role_required('admin', 'manager', 'front_desk')
 def checkin_view():
-    arrivals = [d.to_dict() for d in bookings_col().stream()]
+    arrivals = []
+    for doc in bookings_col().stream():
+        d = doc.to_dict()
+        d['id'] = doc.id
+        arrivals.append(d)
     return render_template('frontdesk/checkin.html', arrivals=arrivals)
 
 @frontdesk_bp.route('/frontdesk/checkout', methods=['GET'])
 @role_required('admin', 'manager', 'front_desk')
 def checkout_view_desk():
-    in_house = [d.to_dict() for d in bookings_col().where('status', '==', 'checked_in').stream()]
+    in_house = []
+    for doc in bookings_col().where('status', '==', 'checked_in').stream():
+        d = doc.to_dict()
+        d['id'] = doc.id
+        in_house.append(d)
     return render_template('frontdesk/checkout_settle.html', in_house_bookings=in_house)
 
 @frontdesk_bp.route('/frontdesk/guests', methods=['GET'])
 @role_required('admin', 'manager', 'front_desk')
 def guest_history():
-    guests = [d.to_dict() for d in users_col().where('role', 'in', ['guest', 'user', 'member']).stream()]
+    guests = []
+    for doc in users_col().where('role', 'in', ['guest', 'user', 'member']).stream():
+        d = doc.to_dict()
+        d['id'] = doc.id
+        guests.append(d)
     return render_template('frontdesk/guest_history.html', guests=guests)
 
 @frontdesk_bp.route('/staff/front-desk', methods=['GET'])
 @frontdesk_bp.route('/frontdesk', methods=['GET'])
+@frontdesk_bp.route('/frontdesk/arrivals-departures', methods=['GET'])
 @role_required('admin', 'manager', 'front_desk')
 def frontdesk_dashboard():
     today_str = datetime.utcnow().date().isoformat()
     arrivals = []
     departures = []
+    in_house = []
     for doc in bookings_col().stream():
         d = doc.to_dict()
         d['id'] = doc.id
-        if d.get('check_in', '').startswith(today_str):
-            arrivals.append(d)
-        if d.get('check_out', '').startswith(today_str):
-            departures.append(d)
+        cin = str(d.get('check_in') or '')
+        cout = str(d.get('check_out') or '')
+        b_status = str(d.get('status') or '')
 
-    return render_template('frontdesk/arrivals_departures.html', arrivals=arrivals, departures=departures)
+        if cin.startswith(today_str) or b_status == 'confirmed':
+            arrivals.append(d)
+        if cout.startswith(today_str):
+            departures.append(d)
+        if b_status == 'checked_in':
+            in_house.append(d)
+
+    return render_template('frontdesk/arrivals_departures.html', arrivals=arrivals, departures=departures, in_house=in_house)
+
+@frontdesk_bp.route('/api/front-desk/queue', methods=['GET'])
+@role_required('admin', 'manager', 'front_desk')
+def api_frontdesk_queue():
+    today_str = datetime.utcnow().date().isoformat()
+    arrivals = []
+    departures = []
+    in_house = []
+    for doc in bookings_col().stream():
+        d = doc.to_dict()
+        d['id'] = doc.id
+        cin = str(d.get('check_in') or '')
+        cout = str(d.get('check_out') or '')
+        b_status = str(d.get('status') or '')
+
+        if cin.startswith(today_str) or b_status == 'confirmed':
+            arrivals.append(d)
+        if cout.startswith(today_str):
+            departures.append(d)
+        if b_status == 'checked_in':
+            in_house.append(d)
+
+    return api_success({
+        "arrivals": arrivals,
+        "departures": departures,
+        "in_house": in_house
+    })
 
 @frontdesk_bp.route('/staff/front-desk/rooms', methods=['GET'])
 @frontdesk_bp.route('/frontdesk/rooms', methods=['GET'])
@@ -626,8 +676,13 @@ def api_frontdesk_checkin():
     if not booking_id:
         return api_error(message="booking_id is required", status=400)
 
-    bdoc = bookings_col().document(booking_id).get()
+    bdoc = bookings_col().document(str(booking_id)).get()
     if not bdoc.exists:
+        matches = list(bookings_col().where('booking_no', '==', str(booking_id)).limit(1).get())
+        if matches:
+            bdoc = matches[0]
+
+    if not bdoc or not bdoc.exists:
         return api_error(message="Booking not found", status=404)
 
     now_iso = datetime.utcnow().isoformat() + "Z"
@@ -644,7 +699,8 @@ def api_frontdesk_checkin():
             rdoc.reference.update({"status": "occupied"})
 
     return api_success({
-        "booking_id": booking_id,
+        "booking_id": bdoc.id,
+        "booking_no": bdoc.to_dict().get('booking_no', booking_id),
         "status": "checked_in",
         "checked_in_at": now_iso,
         "message": "Guest checked in successfully"
@@ -655,9 +711,16 @@ def api_frontdesk_checkin():
 def api_frontdesk_checkout():
     data = request.get_json() or {}
     booking_id = data.get('booking_id')
+    if not booking_id:
+        return api_error(message="booking_id is required", status=400)
     
-    bdoc = bookings_col().document(booking_id).get()
+    bdoc = bookings_col().document(str(booking_id)).get()
     if not bdoc.exists:
+        matches = list(bookings_col().where('booking_no', '==', str(booking_id)).limit(1).get())
+        if matches:
+            bdoc = matches[0]
+
+    if not bdoc or not bdoc.exists:
         return api_error(message="Booking not found", status=404)
 
     bdata = bdoc.to_dict()

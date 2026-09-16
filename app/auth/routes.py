@@ -260,10 +260,10 @@ def verify_otp_endpoint():
 
         success_banner = f"""
 ======================================================================
-✅ [PAYMENT OTP VERIFICATION SUCCEEDED]
+✅ [PHONE OTP VERIFICATION SUCCEEDED]
    Transaction ID : {txn_id}
    Verified Code  : '{code}'
-   Status         : Payment Confirmed & Booking Finalized
+   Status         : Phone Number Verified -> Proceeding to QR Payment
 ======================================================================
 """
         logger.info(success_banner)
@@ -275,9 +275,8 @@ def verify_otp_endpoint():
 
         if tdoc and tdoc.exists:
             tdoc.reference.update({
-                "status": "paid",
-                "payment_status": "completed",
-                "paid_at": now_iso
+                "phone_verified": True,
+                "verified_at": now_iso
             })
             tdata = tdoc.to_dict()
             b_id = tdata.get('booking_id') or tdata.get('reference_no') or b_id
@@ -292,9 +291,7 @@ def verify_otp_endpoint():
             if bdoc and bdoc.exists:
                 bdata = bdoc.to_dict()
                 bdoc.reference.update({
-                    "status": "confirmed",
-                    "payment_status": "paid",
-                    "confirmed_at": now_iso
+                    "phone_verified": True
                 })
                 conf_code = bdata.get('booking_no') or conf_code
                 b_id = bdoc.id
@@ -302,8 +299,9 @@ def verify_otp_endpoint():
         return api_success({
             "booking_id": b_id,
             "confirmation_code": conf_code,
+            "next_url": f"/pay/{txn_id}",
             "receipt_url": f"/api/receipt/{txn_id}",
-            "message": "Payment verified and booking confirmed successfully!"
+            "message": "Phone number verified successfully! Proceed to QR payment."
         })
 
     # Registration / Auth OTP Verification

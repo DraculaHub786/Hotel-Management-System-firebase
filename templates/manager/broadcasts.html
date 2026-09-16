@@ -3,94 +3,125 @@
 {% block title %}Broadcasts & Announcements — Management — Nur-e-Haya{% endblock %}
 
 {% block content %}
-<div class="app-shell">
-  {% include "components/sidebar.html" %}
-  <div class="app-main">
-    {% include "components/topbar.html" %}
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+        <i class="fas fa-bullhorn text-warning me-2"></i>Broadcasts & Announcements (SCR-70)
+      </h1>
+      <p class="text-secondary small mb-0">Post immediate operational broadcasts to all users, specific staff teams, or in-house VIP guests.</p>
+    </div>
+  </div>
 
-    <main class="app-content">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 class="h3 fw-bold mb-1">Broadcasts & Staff Announcements (SCR-70)</h1>
-          <p class="text-secondary small mb-0">Post alerts to all staff, specific departments, or in-house guests.</p>
-        </div>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-lg-5">
-          <div class="nh-card">
-            <h3 class="nh-card-title mb-3">Compose New Announcement</h3>
-            <form id="broadcastForm">
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Announcement Title</label>
-                <input type="text" id="bTitle" class="form-control" placeholder="e.g. VIP Head of State Arrival" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Target Audience</label>
-                <select id="bTarget" class="form-select">
-                  <option value="all">All Departments & Staff</option>
-                  <option value="front_desk">Front Desk Officers</option>
-                  <option value="housekeeping">Housekeeping & Laundry</option>
-                  <option value="kitchen">Kitchen & Chefs</option>
-                  <option value="maintenance">Maintenance Engineering</option>
-                  <option value="concierge">Concierge Desk</option>
-                  <option value="security">Security Patrol</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Message Content</label>
-                <textarea id="bMessage" class="form-control" rows="4" placeholder="Important operational guidelines..." required></textarea>
-              </div>
-              <button type="submit" class="btn-nh btn-nh-primary w-100">
-                <i class="fas fa-bullhorn me-1"></i> Send Immediate Broadcast
-              </button>
-            </form>
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="card p-4">
+        <h3 class="fw-bold mb-3 fs-5" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+          <i class="fas fa-edit text-warning me-2"></i>Compose Announcement
+        </h3>
+        <form id="broadcastForm">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Announcement Title</label>
+            <input type="text" id="bTitle" class="form-control" placeholder="e.g. VIP Head of State Arrival / Evening Rooftop Gala" required>
           </div>
-        </div>
-
-        <div class="col-lg-7">
-          <div class="nh-card">
-            <h3 class="nh-card-title mb-3">Recent Announcements Stream</h3>
-            <div class="d-flex flex-column gap-3">
-              {% for a in announcements %}
-              <div class="p-3 border rounded-3 bg-light">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <h5 class="fw-bold fs-6 mb-0">{{ a.title }}</h5>
-                  <span class="badge-pill priority-medium text-capitalize">{{ a.target_role }}</span>
-                </div>
-                <p class="small text-secondary mb-2">{{ a.message }}</p>
-                <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
-                  <span>By: {{ a.posted_by }}</span>
-                  <span>{{ a.created_at }}</span>
-                </div>
-              </div>
-              {% else %}
-              <p class="text-secondary small mb-0 text-center py-4">No broadcasts published yet.</p>
-              {% endfor %}
+          <div class="row g-2 mb-3">
+            <div class="col-md-7">
+              <label class="form-label small fw-semibold">Target Audience</label>
+              <select id="bTarget" class="form-select">
+                <option value="all">Everyone (Guests, VIP & Staff)</option>
+                <option value="guest">Guests & VIP Members</option>
+                <option value="front_desk">Front Desk Officers</option>
+                <option value="housekeeping">Housekeeping & Laundry</option>
+                <option value="kitchen">Kitchen & Dining Staff</option>
+                <option value="maintenance">Maintenance Engineering</option>
+                <option value="concierge">Concierge Desk</option>
+                <option value="security">Security Patrol</option>
+                <option value="admin">Management & Admins</option>
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label small fw-semibold">Priority Level</label>
+              <select id="bPriority" class="form-select">
+                <option value="normal">Standard</option>
+                <option value="urgent" class="text-danger fw-bold">🚨 Urgent Alert</option>
+              </select>
             </div>
           </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Message Content</label>
+            <textarea id="bMessage" class="form-control" rows="4" placeholder="Important operational guidelines or hotel notice to display on recipient screens..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2">
+            <i class="fas fa-bullhorn me-1"></i> Send Immediate Broadcast
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card p-4">
+        <h3 class="fw-bold mb-3 fs-5" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+          <i class="fas fa-stream text-warning me-2"></i>Recent Announcements Stream
+        </h3>
+        <div class="d-flex flex-column gap-3">
+          {% for a in announcements %}
+          <div class="p-3 border rounded-3" style="background: rgba(15, 26, 42, 0.6); border-color: {% if a.priority == 'urgent' %}rgba(199, 0, 57, 0.4){% else %}rgba(212, 175, 55, 0.2){% endif %} !important; border-left: 4px solid {% if a.priority == 'urgent' %}#c70039{% else %}#d4af37{% endif %} !important;">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <h5 class="fw-bold fs-6 mb-0 text-white">{{ a.title }}</h5>
+              <div class="d-flex gap-1">
+                {% if a.priority == 'urgent' %}
+                <span class="badge bg-danger">URGENT</span>
+                {% endif %}
+                <span class="badge bg-secondary text-warning text-capitalize">{{ a.target_role or 'All' }}</span>
+              </div>
+            </div>
+            <p class="small text-secondary mb-2" style="font-size: 13px;">{{ a.message }}</p>
+            <div class="d-flex justify-content-between text-muted" style="font-size: 0.75rem;">
+              <span><i class="fas fa-user-circle me-1"></i>By: {{ a.posted_by or 'Management' }}</span>
+              <span><i class="fas fa-clock me-1"></i>{{ (a.created_at or '')[:19].replace('T', ' ') }}</span>
+            </div>
+          </div>
+          {% else %}
+          <p class="text-secondary small mb-0 text-center py-4">No broadcasts published yet.</p>
+          {% endfor %}
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </div>
 
 <script>
 document.getElementById('broadcastForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const title = document.getElementById('bTitle').value;
+  const title = document.getElementById('bTitle').value.trim();
   const target_role = document.getElementById('bTarget').value;
-  const message = document.getElementById('bMessage').value;
+  const priority = document.getElementById('bPriority').value;
+  const message = document.getElementById('bMessage').value.trim();
 
-  const res = await window.api('/manager/announcements', {
-    method: 'POST',
-    body: { title, target_role, message }
-  });
-  if (res.ok) {
-    window.showToast('Announcement broadcasted successfully!', 'success');
-    setTimeout(() => location.reload(), 1000);
-  } else {
-    window.showToast(res.message || 'Broadcast failed', 'error');
+  try {
+    const res = await (window.AppAPI ? AppAPI.post('/manager/announcements', {
+      title, target_role, priority, message
+    }) : (window.api ? window.api('/manager/announcements', {
+      method: 'POST',
+      body: { title, target_role, priority, message }
+    }) : fetch('/manager/announcements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, target_role, priority, message })
+    }).then(r => r.json())));
+
+    if (res.ok || res.message) {
+      if (window.Toast) Toast.success('Announcement broadcasted successfully to all target screens!');
+      else if (window.showToast) window.showToast('Announcement broadcasted successfully!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      const msg = res.message || 'Broadcast failed';
+      if (window.Toast) Toast.error(msg);
+      else alert(msg);
+    }
+  } catch(err) {
+    if (window.Toast) Toast.error(err.message || 'Broadcast failed');
+    else alert(err.message || 'Broadcast failed');
   }
 });
 </script>

@@ -1,103 +1,142 @@
 {% extends "base.html" %}
 
-{% block title %}Guest Check-In — Front Desk{% endblock %}
+{% block title %}Guest Check-In — Front Desk — Nur-e-Haya{% endblock %}
 
 {% block content %}
-<div class="app-shell">
-  {% include "components/sidebar.html" %}
-  <div class="app-main">
-    {% include "components/topbar.html" %}
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+        <i class="fas fa-key text-warning me-2"></i>Guest Check-In (SCR-18)
+      </h1>
+      <p class="text-secondary small mb-0">Process expected arrivals, verify government ID, and assign keycards.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/staff/front-desk" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+        <i class="fas fa-concierge-bell me-1"></i> Arrivals Board
+      </a>
+      <a href="/frontdesk/walkin" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+        <i class="fas fa-plus me-1"></i> New Walk-in
+      </a>
+    </div>
+  </div>
 
-    <main class="app-content">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 class="h3 fw-bold mb-1">Guest Check-In (SCR-18)</h1>
-          <p class="text-secondary small mb-0">Process guest arrivals, verify OTP, and assign keycards.</p>
-        </div>
-        <a href="/frontdesk/walkin" class="btn-nh btn-nh-primary btn-nh-sm">
-          <i class="fas fa-plus me-1"></i> New Walk-in
-        </a>
-      </div>
-
-      <div class="row g-4">
-        <div class="col-lg-7">
-          <div class="nh-card">
-            <h3 class="nh-card-title mb-3">Today's Expected Arrivals</h3>
-            <div class="nh-table-container">
-              <table class="nh-table">
-                <thead>
-                  <tr>
-                    <th>Booking #</th>
-                    <th>Guest</th>
-                    <th>Room</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="arrivalsTable">
-                  {% for b in arrivals %}
-                  <tr>
-                    <td class="fw-bold">{{ b.booking_no }}</td>
-                    <td>{{ b.guest_name }}</td>
-                    <td><span class="badge-pill priority-medium">Room {{ b.room_number }}</span></td>
-                    <td><span class="badge-pill status-{{ b.status }}">{{ b.status }}</span></td>
-                    <td>
-                      {% if b.status != 'checked_in' %}
-                      <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="performCheckin('{{ b.id }}', '{{ b.room_number }}')">
-                        Check In
-                      </button>
-                      {% else %}
-                      <span class="text-success small fw-bold"><i class="fas fa-check"></i> In House</span>
-                      {% endif %}
-                    </td>
-                  </tr>
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card p-4">
+        <h3 class="fw-bold mb-3 fs-5" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+          <i class="fas fa-list-check text-warning me-2"></i>Expected Arrivals
+        </h3>
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle mb-0" style="background: transparent; border-color: rgba(212, 175, 55, 0.2);">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(212, 175, 55, 0.3); font-family: 'Cinzel', serif; font-size: 12px; color: var(--text-secondary);">
+                <th>Booking #</th>
+                <th>Guest Name</th>
+                <th>Room</th>
+                <th>Status</th>
+                <th style="text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="arrivalsTable">
+              {% for b in arrivals %}
+              <tr>
+                <td class="fw-bold" style="color: var(--primary-color); font-family: monospace;">{{ b.booking_no or b.id }}</td>
+                <td class="fw-semibold text-white">{{ b.guest_name or b.user_email }}</td>
+                <td><span class="badge bg-secondary text-warning">Room {{ b.room_number or '101' }}</span></td>
+                <td>
+                  {% if b.status == 'checked_in' %}
+                  <span class="badge bg-success">In House</span>
+                  {% elif b.status == 'confirmed' %}
+                  <span class="badge bg-primary">Confirmed</span>
                   {% else %}
-                  <tr>
-                    <td colspan="5" class="text-center text-secondary py-4">No pending arrivals for today.</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-lg-5">
-          <div class="nh-card">
-            <h3 class="nh-card-title mb-2">Self Check-In OTP Verification</h3>
-            <p class="text-secondary small mb-3">Guest presenting check-in confirmation code or booking number:</p>
-
-            <form id="expressCheckinForm">
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Booking ID or Confirmation #</label>
-                <input type="text" id="manualBookingId" class="form-control" placeholder="e.g. BK1726354890" required>
-              </div>
-              <div class="mb-3">
-                <label class="form-label small fw-semibold">Room Assigned</label>
-                <input type="text" id="manualRoomNumber" class="form-control" placeholder="e.g. 102" required>
-              </div>
-              <button type="submit" class="btn-nh btn-nh-primary w-100">
-                Complete Express Check-In
-              </button>
-            </form>
-          </div>
+                  <span class="badge bg-secondary">{{ b.status or 'Pending' }}</span>
+                  {% endif %}
+                </td>
+                <td style="text-align: right;">
+                  {% if b.status != 'checked_in' %}
+                  <button type="button" class="btn btn-primary btn-sm px-3" onclick="performCheckin('{{ b.id or b.booking_no }}', '{{ b.room_number or '101' }}')">
+                    <i class="fas fa-key me-1"></i> Check In
+                  </button>
+                  {% else %}
+                  <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i> Checked In</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="5" class="text-center text-secondary py-4">No pending arrivals currently listed.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
-    </main>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card p-4">
+        <h3 class="fw-bold mb-2 fs-5" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+          <i class="fas fa-qrcode text-warning me-2"></i>Express / Walk-In Verification
+        </h3>
+        <p class="text-secondary small mb-3">Guest presenting check-in confirmation code or booking number:</p>
+
+        <form id="expressCheckinForm">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Booking ID or Confirmation #</label>
+            <input type="text" id="manualBookingId" class="form-control" placeholder="e.g. BK1726354890 or booking ID" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Room Assigned</label>
+            <input type="text" id="manualRoomNumber" class="form-control" placeholder="e.g. 101, 102, 204" value="101" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Check-in Notes (Optional)</label>
+            <textarea id="manualNotes" class="form-control" rows="2" placeholder="Keycard issued, luggage in room..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2">
+            <i class="fas fa-check-circle me-1"></i> Complete Express Check-In
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-async function performCheckin(bookingId, roomNumber) {
-  const res = await window.api('/api/front-desk/checkin', {
-    method: 'POST',
-    body: { booking_id: bookingId, room_number: roomNumber }
-  });
-  if (res.ok) {
-    window.showToast('Guest checked in successfully!', 'success');
-    setTimeout(() => location.reload(), 1000);
-  } else {
-    window.showToast(res.message || 'Check-in failed', 'error');
+async function performCheckin(bookingId, roomNumber, notes = '') {
+  if (!bookingId) {
+    if (window.Toast) Toast.error('Invalid booking reference');
+    else alert('Invalid booking reference');
+    return;
+  }
+  try {
+    const res = await (window.AppAPI ? AppAPI.post('/api/front-desk/checkin', {
+      booking_id: bookingId,
+      room_number: roomNumber,
+      notes: notes
+    }) : (window.api ? window.api('/api/front-desk/checkin', {
+      method: 'POST',
+      body: { booking_id: bookingId, room_number: roomNumber, notes: notes }
+    }) : fetch('/api/front-desk/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ booking_id: bookingId, room_number: roomNumber, notes: notes })
+    }).then(r => r.json())));
+
+    if (res.ok || res.status === 'checked_in') {
+      if (window.Toast) Toast.success('Guest checked in successfully! Keycards active.');
+      else if (window.showToast) window.showToast('Guest checked in successfully!', 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      const msg = res.message || 'Check-in failed';
+      if (window.Toast) Toast.error(msg);
+      else if (window.showToast) window.showToast(msg, 'error');
+      else alert(msg);
+    }
+  } catch(e) {
+    if (window.Toast) Toast.error(e.message || 'Check-in error');
+    else alert(e.message || 'Check-in error');
   }
 }
 
@@ -105,7 +144,8 @@ document.getElementById('expressCheckinForm').addEventListener('submit', async (
   e.preventDefault();
   const bookingId = document.getElementById('manualBookingId').value.trim();
   const roomNumber = document.getElementById('manualRoomNumber').value.trim();
-  await performCheckin(bookingId, roomNumber);
+  const notes = document.getElementById('manualNotes').value.trim();
+  await performCheckin(bookingId, roomNumber, notes);
 });
 </script>
 {% endblock %}

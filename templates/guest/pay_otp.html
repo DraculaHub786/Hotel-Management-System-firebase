@@ -1,58 +1,133 @@
 {% extends "base.html" %}
 
-{% block title %}Verify Payment OTP — Nur-e-Haya{% endblock %}
+{% block title %}Verify Phone Number — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block extra_css %}
 <style>
     .otp-wrapper {
-        min-height: 80vh;
+        min-height: 85vh;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 30px 15px;
+        padding: 40px 15px;
     }
 
     .otp-card {
         width: 100%;
-        max-width: 420px;
-        background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+        max-width: 440px;
+        background: var(--glass-bg, rgba(22, 34, 54, 0.9));
         border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.15);
-        border-radius: 14px;
-        padding: 38px 32px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(212, 175, 55, 0.12);
+        border-radius: 16px;
+        padding: 36px 30px;
         text-align: center;
+        position: relative;
+    }
+
+    .step-pill-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .step-pill {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .step-pill.active {
+        background: rgba(212, 175, 55, 0.2);
+        color: var(--primary-color, #d4af37);
+        border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .step-pill.upcoming {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary, #94a3b8);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .otp-input-field {
-        font-size: 26px;
-        letter-spacing: 12px;
+        font-size: 28px;
+        letter-spacing: 14px;
         text-align: center;
-        font-weight: bold;
-        color: var(--primary-color);
+        font-weight: 700;
+        color: var(--primary-color, #d4af37);
         font-family: monospace;
+        padding: 12px 16px;
+        background: rgba(10, 18, 32, 0.8);
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        border-radius: 10px;
+    }
+
+    .otp-input-field:focus {
+        border-color: var(--primary-color, #d4af37);
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+        outline: none;
+    }
+
+    .demo-helper-box {
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px dashed rgba(212, 175, 55, 0.4);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        text-align: left;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="otp-wrapper">
+    <!-- Step Indicator -->
+    <div class="step-pill-bar">
+        <span class="step-pill active"><i class="fas fa-shield-alt me-1"></i> Step 1: Phone Verification</span>
+        <i class="fas fa-chevron-right text-secondary" style="font-size: 10px;"></i>
+        <span class="step-pill upcoming"><i class="fas fa-qrcode me-1"></i> Step 2: UPI QR Payment</span>
+    </div>
+
     <div class="otp-card">
-        <div style="width: 60px; height: 60px; border-radius: 50%; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--primary-color); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-            <i class="fas fa-shield-alt" style="font-size: 24px; color: var(--primary-color);"></i>
+        <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--primary-color, #d4af37); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <i class="fas fa-mobile-screen-button" style="font-size: 24px; color: var(--primary-color, #d4af37);"></i>
         </div>
 
-        <h2 style="font-size: 22px; color: var(--text-bright); margin-bottom: 8px;">Security Verification</h2>
-        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 20px;">
-            Please enter the 6-digit confirmation code sent to your registered phone / email.
-            <br><span style="font-size: 12px; color: var(--primary-color); opacity: 0.9; display: inline-block; margin-top: 6px;">
-                <i class="fas fa-terminal" style="margin-right: 4px;"></i> Check your server / terminal console logs for the verification OTP
+        <h2 style="font-size: 22px; color: var(--text-bright, #ffffff); margin-bottom: 6px; font-family: 'Cinzel', serif;">Phone Verification</h2>
+        <p style="font-size: 13px; color: var(--text-secondary, #94a3b8); line-height: 1.5; margin-bottom: 18px;">
+            Please verify your mobile number before proceeding to payment.
+            <br>
+            <span class="badge bg-secondary-subtle text-light mt-2 py-1 px-3" style="font-size: 12px; font-weight: 500;">
+                <i class="fas fa-phone me-1 text-warning"></i> +91 {{ phone or '9876543210' }}
             </span>
         </p>
+
+        <!-- Demo Mode Box -->
+        <div class="demo-helper-box">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="badge bg-warning text-dark me-1" style="font-size: 10px; font-weight: 700;">DEMO MODE</span>
+                    <span style="font-size: 12px; color: var(--text-bright);">Code: <strong style="letter-spacing: 2px; color: #ffd700;" id="demoCodeDisplay">{{ otp_code or '482913' }}</strong></span>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size: 11px;" id="autoFillBtn">
+                    <i class="fas fa-magic me-1"></i> Auto-fill
+                </button>
+            </div>
+            <div class="small text-secondary mt-1" style="font-size: 11px;">
+                <i class="fas fa-terminal me-1 text-warning"></i> Code logged in server console. Press auto-fill for instant test.
+            </div>
+        </div>
 
         <form id="otpForm" novalidate>
             <input type="hidden" name="txn_id" value="{{ txn_id }}">
 
-            <div class="form-group">
+            <div class="form-group mb-3">
+                <label for="otpInput" class="form-label small text-secondary mb-1">Enter 6-Digit Verification Code</label>
                 <input 
                     type="text" 
                     id="otpInput" 
@@ -64,17 +139,17 @@
                     autofocus
                     autocomplete="off"
                 >
-                <div class="form-field-error" data-for="otp" style="justify-content: center;"></div>
+                <div class="form-field-error text-danger small mt-1" data-for="otp" style="justify-content: center;"></div>
             </div>
 
-            <button type="submit" class="btn btn-primary" id="btnVerifyOtp" style="width: 100%; margin-top: 10px;">
-                CONFIRM & FINALIZE BOOKING
+            <button type="submit" class="btn btn-primary" id="btnVerifyOtp" style="width: 100%; padding: 12px 18px; font-weight: 600; letter-spacing: 0.5px;">
+                VERIFY & PROCEED TO PAYMENT <i class="fas fa-arrow-right ms-1"></i>
             </button>
 
-            <div style="margin-top: 16px; font-size: 12px; color: var(--text-secondary);">
-                Didn't receive code? 
-                <a href="javascript:void(0)" id="resendOtpBtn" style="color: var(--primary-color); text-decoration: underline; font-weight: 500;">
-                    Resend Code (Print to Logs)
+            <div class="d-flex justify-content-between align-items-center mt-3" style="font-size: 12px; color: var(--text-secondary);">
+                <span>Amount: <strong style="color: var(--primary-color);">₹{{ amount or 8815 }}</strong></span>
+                <a href="javascript:void(0)" id="resendOtpBtn" style="color: var(--primary-color); text-decoration: underline;">
+                    Resend Code
                 </a>
             </div>
         </form>
@@ -86,19 +161,46 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('otpForm');
+    const otpInput = document.getElementById('otpInput');
+    const autoFillBtn = document.getElementById('autoFillBtn');
     const resendBtn = document.getElementById('resendOtpBtn');
+    const demoCode = '{{ otp_code or "482913" }}';
     
+    // Auto-fill convenience button for demo
+    if (autoFillBtn) {
+        autoFillBtn.addEventListener('click', () => {
+            otpInput.value = demoCode;
+            otpInput.focus();
+            if (typeof Toast !== 'undefined') {
+                Toast.info('Demo code auto-filled: ' + demoCode);
+            }
+        });
+    }
+
     AppForm.bind(form, {
         onSubmit: async (data, formEl) => {
-            const result = await AppAPI.post('/api/otp/verify', {
-                txn_id: data.txn_id,
-                otp: data.otp
-            });
+            const submitBtn = document.getElementById('btnVerifyOtp');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `<span class="btn-spinner"></span> Verifying Phone...`;
+            }
 
-            Toast.success('Payment verified! Booking confirmed.');
-            setTimeout(() => {
-                window.location.href = `/confirmation/${result.booking_id}`;
-            }, 700);
+            try {
+                const result = await AppAPI.post('/api/otp/verify', {
+                    txn_id: data.txn_id,
+                    otp: data.otp
+                });
+
+                Toast.success('Mobile number verified! Proceeding to QR payment...');
+                setTimeout(() => {
+                    window.location.href = result.next_url || `/pay/${data.txn_id}`;
+                }, 600);
+            } catch (err) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = `VERIFY & PROCEED TO PAYMENT <i class="fas fa-arrow-right ms-1"></i>`;
+                }
+            }
         }
     });
 
@@ -111,12 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const res = await AppAPI.post('/api/auth/resend-otp', {
                     txn_id: '{{ txn_id }}'
                 });
-                Toast.success('New OTP generated! Check your terminal / server logs.');
-                resendBtn.innerText = 'Resend Code (Print to Logs)';
+                Toast.success('New OTP generated! Check server logs.');
+                resendBtn.innerText = 'Resend Code';
                 resendBtn.style.pointerEvents = 'auto';
             } catch (err) {
                 Toast.error('Failed to generate new OTP');
-                resendBtn.innerText = 'Resend Code (Print to Logs)';
+                resendBtn.innerText = 'Resend Code';
                 resendBtn.style.pointerEvents = 'auto';
             }
         });

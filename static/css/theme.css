@@ -139,17 +139,43 @@ a:hover {
   background-color: transparent !important;
 }
 
+/* Guard: If a child view renders an inner app-shell inside base.html's app-content-area,
+   flatten it and suppress duplicate inner sidebar/topbar automatically */
+.app-content-area .app-shell {
+  min-height: auto !important;
+  height: auto !important;
+  display: block !important;
+}
+.app-content-area .app-sidebar {
+  display: none !important;
+}
+.app-content-area .app-topbar {
+  display: none !important;
+}
+.app-content-area .app-main {
+  min-height: auto !important;
+  height: auto !important;
+  display: block !important;
+  overflow: visible !important;
+}
+.app-content-area .app-content {
+  padding: 0 !important;
+  max-width: 100% !important;
+}
+
 .app-sidebar {
   width: 260px;
   background: rgba(15, 26, 42, 0.95) !important;
   border-right: 1px solid var(--border) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: column !important;
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
   z-index: 100;
   transition: transform var(--transition-normal);
 }
@@ -201,11 +227,37 @@ a:hover {
 
 .sidebar-nav {
   padding: 16px 12px;
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
   gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+.sidebar-nav .nav-item,
+.sidebar-nav .nav-section-title {
+  width: 100% !important;
+  flex-shrink: 0 !important;
+}
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.4);
+  border-radius: 4px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.8);
 }
 
 .nav-section-title {

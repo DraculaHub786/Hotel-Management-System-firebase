@@ -509,87 +509,146 @@
 
     {% if session.get('user_email') %}
     <!-- Section M: Shared Shell Layout (Authenticated) -->
-    <div class="app-shell d-flex">
-        <!-- Sidebar: 240px, collapsible -->
-        <aside class="app-sidebar d-flex flex-column flex-shrink-0 bg-dark-surface p-3" id="appSidebar">
+    <div class="app-shell d-flex" style="height: 100vh; overflow: hidden;">
+        <!-- Sidebar: 260px, scrollable independently without moving the main content -->
+        <aside class="app-sidebar d-flex flex-column flex-shrink-0 bg-dark-surface p-3" id="appSidebar" style="height: 100vh; max-height: 100vh; width: 260px; overflow: hidden; border-right: 1px solid rgba(212, 175, 55, 0.2);">
             <!-- Brand Logo -->
-            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none text-white brand-header">
+            <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none text-white brand-header flex-shrink-0">
                 <i class="fas fa-hotel text-warning fs-4 me-2"></i>
-                <span class="fs-5 fw-bold brand-text" style="font-family: 'Cinzel', serif; letter-spacing: 1px;">Nur-E-Haya</span>
+                <span class="fs-5 fw-bold brand-text" style="font-family: 'Cinzel', serif; letter-spacing: 1px; color: #d4af37;">Nur-E-Haya</span>
             </a>
-            <hr class="border-secondary my-3">
+            <hr class="border-secondary my-2 flex-shrink-0">
 
-            <!-- Role-Filtered Navigation (Server-Side Filtered) -->
-            <ul class="nav nav-pills flex-column mb-auto gap-1" id="shellNav">
+            <!-- Role-Filtered Navigation (Server-Side Filtered with Independent Scroll) -->
+            <ul class="nav nav-pills flex-column flex-nowrap gap-1 w-100" id="shellNav" style="display: flex !important; flex-direction: column !important; flex-wrap: nowrap !important; flex: 1 1 0% !important; min-height: 0 !important; width: 100% !important; overflow-y: auto !important; overflow-x: hidden !important; padding-right: 4px; overscroll-behavior: contain;">
                 {% set role = session.get('user_role', 'guest') %}
                 
                 {% if role == 'super_admin' %}
-                    <li class="nav-item"><a href="/super-admin/settings" class="nav-link text-white"><i class="fas fa-sliders-h me-2"></i><span class="nav-label">Global Settings</span></a></li>
-                    <li class="nav-item"><a href="/super-admin/audit-log" class="nav-link text-white"><i class="fas fa-history me-2"></i><span class="nav-label">Audit Log</span></a></li>
-                    <li class="nav-item"><a href="/super-admin/admins" class="nav-link text-white"><i class="fas fa-user-shield me-2"></i><span class="nav-label">Admins</span></a></li>
-                    <li class="nav-item"><a href="/super-admin/properties" class="nav-link text-white"><i class="fas fa-city me-2"></i><span class="nav-label">Properties</span></a></li>
-                    <li class="nav-item"><a href="/super-admin/impersonate" class="nav-link text-white"><i class="fas fa-user-secret me-2"></i><span class="nav-label">Impersonate</span></a></li>
-                    <li class="nav-item"><a href="/admin" class="nav-link text-white"><i class="fas fa-tachometer-alt me-2"></i><span class="nav-label">Admin Overview</span></a></li>
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Super Admin</li>
+                    <li class="nav-item"><a href="/super-admin/settings" class="nav-link text-white"><i class="fas fa-sliders-h me-2 text-warning"></i><span class="nav-label">Global Settings</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/audit-log" class="nav-link text-white"><i class="fas fa-history me-2 text-warning"></i><span class="nav-label">Audit Log</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/admins" class="nav-link text-white"><i class="fas fa-user-shield me-2 text-warning"></i><span class="nav-label">Admins List</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/properties" class="nav-link text-white"><i class="fas fa-city me-2 text-warning"></i><span class="nav-label">Properties</span></a></li>
+                    <li class="nav-item"><a href="/super-admin/impersonate" class="nav-link text-white"><i class="fas fa-user-secret me-2 text-warning"></i><span class="nav-label">Impersonate</span></a></li>
+                    <li class="nav-item"><a href="/admin" class="nav-link text-white"><i class="fas fa-tachometer-alt me-2 text-warning"></i><span class="nav-label">Admin Overview</span></a></li>
                 {% endif %}
 
                 {% if role in ['admin', 'super_admin'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Platform Management</li>
                     <li class="nav-item"><a href="/admin/staff" class="nav-link text-white"><i class="fas fa-users me-2"></i><span class="nav-label">Staff Roster</span></a></li>
                     <li class="nav-item"><a href="/admin/rooms" class="nav-link text-white"><i class="fas fa-door-open me-2"></i><span class="nav-label">Rooms Inventory</span></a></li>
                     <li class="nav-item"><a href="/admin/revenue" class="nav-link text-white"><i class="fas fa-chart-line me-2"></i><span class="nav-label">Revenue & BI</span></a></li>
                     <li class="nav-item"><a href="/admin/refunds" class="nav-link text-white"><i class="fas fa-undo-alt me-2"></i><span class="nav-label">Refunds Queue</span></a></li>
                     <li class="nav-item"><a href="/admin/bookings" class="nav-link text-white"><i class="fas fa-calendar-alt me-2"></i><span class="nav-label">Master Bookings</span></a></li>
                     <li class="nav-item"><a href="/admin/incidents" class="nav-link text-white"><i class="fas fa-shield-alt me-2"></i><span class="nav-label">Incident Rollup</span></a></li>
+                    <li class="nav-item"><a href="/admin/promo-codes" class="nav-link text-white"><i class="fas fa-ticket-alt me-2"></i><span class="nav-label">Promo Codes</span></a></li>
+                    <li class="nav-item"><a href="/admin/newsletter" class="nav-link text-white"><i class="fas fa-envelope-open-text me-2"></i><span class="nav-label">Campaigns</span></a></li>
+                {% endif %}
+
+                {% if role in ['manager', 'admin', 'super_admin'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Operations Management</li>
+                    <li class="nav-item"><a href="/manager" class="nav-link text-white"><i class="fas fa-chart-pie me-2"></i><span class="nav-label">Operations Console</span></a></li>
+                    <li class="nav-item"><a href="/manager/announcements" class="nav-link text-white"><i class="fas fa-bullhorn me-2 text-warning"></i><span class="nav-label">Broadcasts</span></a></li>
+                    <li class="nav-item"><a href="/manager/tasks/assign" class="nav-link text-white"><i class="fas fa-user-check me-2"></i><span class="nav-label">Task Assignment</span></a></li>
+                    <li class="nav-item"><a href="/manager/shifts" class="nav-link text-white"><i class="fas fa-clock me-2"></i><span class="nav-label">Staff Shifts</span></a></li>
+                    <li class="nav-item"><a href="/manager/expenses" class="nav-link text-white"><i class="fas fa-receipt me-2"></i><span class="nav-label">Expense Approvals</span></a></li>
+                    <li class="nav-item"><a href="/manager/reports" class="nav-link text-white"><i class="fas fa-file-csv me-2"></i><span class="nav-label">Audit Reports</span></a></li>
                 {% endif %}
 
                 {% if role in ['front_desk', 'admin', 'super_admin'] %}
-                    <li class="nav-item"><a href="/staff/front-desk" class="nav-link text-white"><i class="fas fa-concierge-bell me-2"></i><span class="nav-label">Front Desk</span></a></li>
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Front Desk</li>
+                    <li class="nav-item"><a href="/staff/front-desk" class="nav-link text-white"><i class="fas fa-concierge-bell me-2"></i><span class="nav-label">Arrivals & Departures</span></a></li>
                     <li class="nav-item"><a href="/staff/front-desk/rooms" class="nav-link text-white"><i class="fas fa-th-large me-2"></i><span class="nav-label">Room Board</span></a></li>
+                    <li class="nav-item"><a href="/frontdesk/checkin" class="nav-link text-white"><i class="fas fa-key me-2 text-success"></i><span class="nav-label">Guest Check-In</span></a></li>
+                    <li class="nav-item"><a href="/frontdesk/checkout" class="nav-link text-white"><i class="fas fa-sign-out-alt me-2 text-danger"></i><span class="nav-label">Check-Out & Folio</span></a></li>
+                    <li class="nav-item"><a href="/frontdesk/walkin" class="nav-link text-white"><i class="fas fa-user-plus me-2 text-info"></i><span class="nav-label">Walk-In Intake</span></a></li>
+                    <li class="nav-item"><a href="/frontdesk/guests" class="nav-link text-white"><i class="fas fa-address-book me-2"></i><span class="nav-label">Guest Profiles</span></a></li>
+                    <li class="nav-item"><a href="/frontdesk/tape-chart" class="nav-link text-white"><i class="fas fa-calendar-alt me-2"></i><span class="nav-label">Tape Chart</span></a></li>
+                    <li class="nav-item"><a href="/frontdesk/night-audit" class="nav-link text-white"><i class="fas fa-moon me-2 text-warning"></i><span class="nav-label">Night Audit (EOD)</span></a></li>
                 {% endif %}
 
                 {% if role in ['housekeeping', 'admin', 'super_admin'] %}
-                    <li class="nav-item"><a href="/staff/housekeeping" class="nav-link text-white"><i class="fas fa-broom me-2"></i><span class="nav-label">Housekeeping</span></a></li>
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Housekeeping</li>
+                    <li class="nav-item"><a href="/staff/housekeeping" class="nav-link text-white"><i class="fas fa-broom me-2"></i><span class="nav-label">Task Board</span></a></li>
+                    <li class="nav-item"><a href="/services/room-status" class="nav-link text-white"><i class="fas fa-door-closed me-2"></i><span class="nav-label">Room Status</span></a></li>
+                    <li class="nav-item"><a href="/services/deep-cleaning" class="nav-link text-white"><i class="fas fa-spray-can me-2"></i><span class="nav-label">Deep Cleaning</span></a></li>
+                    <li class="nav-item"><a href="/services/lost-found" class="nav-link text-white"><i class="fas fa-search-location me-2"></i><span class="nav-label">Lost & Found</span></a></li>
+                    <li class="nav-item"><a href="/services/linen" class="nav-link text-white"><i class="fas fa-layer-group me-2"></i><span class="nav-label">Linen Tracker</span></a></li>
                 {% endif %}
 
                 {% if role in ['laundry', 'admin', 'super_admin'] %}
                     <li class="nav-item"><a href="/staff/laundry" class="nav-link text-white"><i class="fas fa-tshirt me-2"></i><span class="nav-label">Laundry Board</span></a></li>
                 {% endif %}
 
-                {% if role in ['room_service', 'kitchen', 'admin', 'super_admin'] %}
+                {% if role in ['room_service', 'kitchen', 'chef', 'waiter', 'admin', 'super_admin'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Kitchen & Dining</li>
                     <li class="nav-item"><a href="/staff/room-service" class="nav-link text-white"><i class="fas fa-utensils me-2"></i><span class="nav-label">Room Service</span></a></li>
                     <li class="nav-item"><a href="/staff/kitchen" class="nav-link text-white"><i class="fas fa-fire me-2"></i><span class="nav-label">Kitchen KDS</span></a></li>
+                    <li class="nav-item"><a href="/dining/tables" class="nav-link text-white"><i class="fas fa-chair me-2"></i><span class="nav-label">Dining Tables</span></a></li>
                     <li class="nav-item"><a href="/staff/kitchen/menu" class="nav-link text-white"><i class="fas fa-toggle-on me-2"></i><span class="nav-label">86 Menu List</span></a></li>
+                    <li class="nav-item"><a href="/dining/inventory" class="nav-link text-white"><i class="fas fa-boxes me-2"></i><span class="nav-label">Food Inventory</span></a></li>
                 {% endif %}
 
                 {% if role in ['maintenance', 'admin', 'super_admin'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Engineering</li>
                     <li class="nav-item"><a href="/staff/maintenance" class="nav-link text-white"><i class="fas fa-tools me-2"></i><span class="nav-label">Maintenance</span></a></li>
+                    <li class="nav-item"><a href="/maintenance/preventive" class="nav-link text-white"><i class="fas fa-calendar-check me-2"></i><span class="nav-label">Preventive Schedule</span></a></li>
+                    <li class="nav-item"><a href="/maintenance/assets" class="nav-link text-white"><i class="fas fa-server me-2"></i><span class="nav-label">Asset Register</span></a></li>
                 {% endif %}
 
                 {% if role in ['security', 'admin', 'super_admin'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Security & Safety</li>
                     <li class="nav-item"><a href="/staff/security" class="nav-link text-white"><i class="fas fa-shield-alt me-2"></i><span class="nav-label">Security Log</span></a></li>
                     <li class="nav-item"><a href="/staff/security/flags" class="nav-link text-white"><i class="fas fa-id-card me-2"></i><span class="nav-label">ID Flags</span></a></li>
+                    <li class="nav-item"><a href="/security/visitors" class="nav-link text-white"><i class="fas fa-user-friends me-2"></i><span class="nav-label">Visitor Log</span></a></li>
+                    <li class="nav-item"><a href="/security/parking" class="nav-link text-white"><i class="fas fa-parking me-2"></i><span class="nav-label">Parking Slots</span></a></li>
                 {% endif %}
 
-                {% if role == 'guest' %}
-                    <li class="nav-item"><a href="/rooms" class="nav-link text-white"><i class="fas fa-bed me-2"></i><span class="nav-label">Explore Rooms</span></a></li>
-                    <li class="nav-item"><a href="/facilities" class="nav-link text-white"><i class="fas fa-spa me-2"></i><span class="nav-label">Spa & Facilities</span></a></li>
-                    <li class="nav-item"><a href="/menu" class="nav-link text-white"><i class="fas fa-utensils me-2"></i><span class="nav-label">Dining Menu</span></a></li>
-                    <li class="nav-item"><a href="/my-bookings" class="nav-link text-white"><i class="fas fa-suitcase me-2"></i><span class="nav-label">My Bookings</span></a></li>
-                    <li class="nav-item"><a href="/support" class="nav-link text-white"><i class="fas fa-headset me-2"></i><span class="nav-label">Concierge AI</span></a></li>
-                    <li class="nav-item"><a href="/account" class="nav-link text-white"><i class="fas fa-user me-2"></i><span class="nav-label">My Account</span></a></li>
+                {% if role in ['concierge', 'admin', 'super_admin'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Concierge</li>
+                    <li class="nav-item"><a href="/staff/concierge" class="nav-link text-white"><i class="fas fa-bell me-2"></i><span class="nav-label">Requests Queue</span></a></li>
+                    <li class="nav-item"><a href="/concierge/transfers" class="nav-link text-white"><i class="fas fa-plane-arrival me-2"></i><span class="nav-label">Transfers Board</span></a></li>
+                {% endif %}
+
+                {% if role in ['accountant', 'admin', 'super_admin'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">Finance</li>
+                    <li class="nav-item"><a href="/accounts/ledger" class="nav-link text-white"><i class="fas fa-book me-2"></i><span class="nav-label">General Ledger</span></a></li>
+                    <li class="nav-item"><a href="/accounts/qr-verify" class="nav-link text-white"><i class="fas fa-qrcode me-2"></i><span class="nav-label">QR Verify</span></a></li>
+                    <li class="nav-item"><a href="/accounts/settlement" class="nav-link text-white"><i class="fas fa-balance-scale me-2"></i><span class="nav-label">Daily Settlement</span></a></li>
+                {% endif %}
+
+                <!-- Guest, VIP Member & Public Users Portal -->
+                {% if role in ['guest', 'member', 'vip', 'user'] %}
+                    <li class="nav-section-header small text-uppercase text-secondary fw-bold px-2 pt-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        {% if role in ['member', 'vip'] %}<i class="fas fa-crown text-warning me-1"></i> VIP Guest Portal{% else %}Guest Portal{% endif %}
+                    </li>
+                    <li class="nav-item"><a href="/rooms" class="nav-link text-white"><i class="fas fa-bed me-2 text-warning"></i><span class="nav-label">Explore Rooms</span></a></li>
+                    <li class="nav-item"><a href="/facilities" class="nav-link text-white"><i class="fas fa-spa me-2 text-warning"></i><span class="nav-label">Spa & Facilities</span></a></li>
+                    <li class="nav-item"><a href="/menu" class="nav-link text-white"><i class="fas fa-utensils me-2 text-warning"></i><span class="nav-label">Dining Menu</span></a></li>
+                    <li class="nav-item"><a href="/my-bookings" class="nav-link text-white"><i class="fas fa-suitcase me-2 text-warning"></i><span class="nav-label">My Bookings</span></a></li>
+                    {% if role in ['member', 'vip'] %}
+                    <li class="nav-item"><a href="/crm/loyalty" class="nav-link text-warning fw-bold"><i class="fas fa-crown me-2"></i><span class="nav-label">VIP Rewards & Perks</span></a></li>
+                    {% else %}
+                    <li class="nav-item"><a href="/crm/loyalty" class="nav-link text-white"><i class="fas fa-award me-2"></i><span class="nav-label">Loyalty Club</span></a></li>
+                    {% endif %}
+                    <li class="nav-item"><a href="/support" class="nav-link text-white"><i class="fas fa-headset me-2 text-warning"></i><span class="nav-label">Concierge AI</span></a></li>
+                    <li class="nav-item"><a href="/account" class="nav-link text-white"><i class="fas fa-user me-2 text-warning"></i><span class="nav-label">My Account</span></a></li>
                 {% endif %}
             </ul>
 
-            <hr class="border-secondary my-3">
+            <hr class="border-secondary my-2 flex-shrink-0">
 
             <!-- Bottom: User avatar + name + role badge, logout (Section M spec) -->
-            <div class="user-profile-widget d-flex align-items-center justify-content-between">
+            <div class="user-profile-widget d-flex align-items-center justify-content-between flex-shrink-0 pt-2 border-top border-secondary">
                 <div class="d-flex align-items-center gap-2 overflow-hidden">
-                    <div class="rounded-circle bg-warning text-dark fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; font-size: 13px;">
-                        {{ session.get('user_email', 'U')[0]|upper }}
+                    <div class="rounded-circle {% if role in ['member', 'vip'] %}bg-warning text-dark border border-light{% else %}bg-warning text-dark{% endif %} fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; font-size: 13px;">
+                        {% if role in ['member', 'vip'] %}<i class="fas fa-crown" style="font-size: 14px;"></i>{% else %}{{ session.get('user_email', 'U')[0]|upper }}{% endif %}
                     </div>
                     <div class="user-meta text-truncate">
-                        <div class="text-white small fw-bold text-truncate">{{ session.get('user_email', 'Staff User') }}</div>
-                        <span class="badge bg-warning text-dark py-0 px-2 rounded-pill" style="font-size: 0.68rem; letter-spacing: 0.5px;">{{ role|upper }}</span>
+                        <div class="text-white small fw-bold text-truncate">{{ session.get('user_name') or session.get('user_email', 'Staff User') }}</div>
+                        <span class="badge {% if role in ['member', 'vip'] %}bg-warning text-dark fw-bold{% else %}bg-secondary text-light{% endif %} py-0 px-2 rounded-pill" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                            {% if role in ['member', 'vip'] %}VIP MEMBER{% else %}{{ role|upper }}{% endif %}
+                        </span>
                     </div>
                 </div>
                 <a href="/logout" class="btn btn-sm btn-outline-danger p-1 rounded-circle" title="Sign Out">
@@ -598,10 +657,10 @@
             </div>
         </aside>
 
-        <!-- Main Wrapper with Topbar & Content Area -->
-        <div class="app-main d-flex flex-column flex-grow-1 overflow-auto">
+        <!-- Main Wrapper with Topbar & Content Area (Independently scrollable) -->
+        <div class="app-main d-flex flex-column flex-grow-1" style="height: 100vh; overflow-y: auto; overflow-x: hidden; min-width: 0;">
             <!-- Topbar (Section M spec) -->
-            <header class="app-topbar luxury-topbar px-4 py-2 d-flex align-items-center justify-content-between sticky-top">
+            <header class="app-topbar luxury-topbar px-4 py-2 d-flex align-items-center justify-content-between sticky-top flex-shrink-0" style="z-index: 1020;">
                 <div class="d-flex align-items-center gap-3">
                     <button class="btn btn-sm btn-outline-warning border d-md-none" onclick="toggleMobileSidebar()">
                         <i class="fas fa-bars"></i>
@@ -615,7 +674,7 @@
 
                 <div class="d-flex align-items-center gap-3">
                     <!-- Shift Clock-In/Out Widget (Staff roles only, per Section M spec) -->
-                    {% if role not in ['guest'] %}
+                    {% if role not in ['guest', 'member', 'vip', 'user'] %}
                     <div class="shift-widget d-flex align-items-center gap-2 px-3 py-1 rounded-pill" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.3);">
                         <span class="badge rounded-circle bg-success p-1 d-inline-block" style="width: 8px; height: 8px; box-shadow: 0 0 8px #008670;"></span>
                         <span class="small fw-semibold text-warning" id="shiftStatusLabel">On Duty</span>
@@ -625,19 +684,23 @@
                     </div>
                     {% endif %}
 
-                    <!-- Notification Bell with Dropdown -->
+                    <!-- Live Announcements & Notification Bell with Dropdown -->
                     <div class="dropdown">
-                        <button class="btn btn-dark-glass rounded-circle p-2 position-relative border" data-bs-toggle="dropdown" style="background: rgba(22, 34, 54, 0.85); border-color: rgba(212, 175, 55, 0.3) !important;">
+                        <button class="btn btn-dark-glass rounded-circle p-2 position-relative border" data-bs-toggle="dropdown" style="background: rgba(22, 34, 54, 0.85); border-color: rgba(212, 175, 55, 0.3) !important;" title="Announcements & Alerts">
                             <i class="fas fa-bell text-warning"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-dark rounded-circle">
-                                <span class="visually-hidden">New alerts</span>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-dark d-none" id="notificationBadge" style="font-size: 10px;">
+                                0
                             </span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border rounded-3 p-2" style="width: 290px; background: #162236; border-color: rgba(212, 175, 55, 0.3) !important; color: #fff9e6;">
-                            <li class="dropdown-header fw-bold text-warning" style="font-family: 'Cinzel', serif; letter-spacing: 0.5px;">Notifications (Recent)</li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border rounded-3 p-2" style="width: 320px; max-height: 420px; overflow-y: auto; background: #162236; border-color: rgba(212, 175, 55, 0.3) !important; color: #fff9e6;">
+                            <li class="dropdown-header d-flex justify-content-between align-items-center fw-bold text-warning" style="font-family: 'Cinzel', serif; letter-spacing: 0.5px;">
+                                <span>Announcements</span>
+                                <span class="badge bg-warning text-dark rounded-pill" style="font-size: 10px;">Live Broadcasts</span>
+                            </li>
                             <li><hr class="dropdown-divider" style="border-color: rgba(212, 175, 55, 0.2);"></li>
-                            <li class="px-2 py-1 small" style="color: #e8dfc1;"><i class="fas fa-check-circle text-success me-1"></i> System online & operational</li>
-                            <li class="px-2 py-1 small" style="color: #e8dfc1;"><i class="fas fa-door-open text-warning me-1"></i> Room turnover sync active</li>
+                            <div id="notificationsList">
+                                <li class="px-2 py-2 small text-secondary text-center">Loading announcements...</li>
+                            </div>
                         </ul>
                     </div>
                 </div>
@@ -645,6 +708,18 @@
 
             <!-- Role-Specific Screen Content Area -->
             <main class="app-content-area flex-grow-1 p-3">
+                <!-- Live Urgent Broadcast Alert Banner -->
+                <div id="urgentBroadcastBanner" class="alert alert-warning d-none align-items-center justify-content-between mb-3 shadow" style="background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.5); color: #fff9e6; border-radius: 8px;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fas fa-bullhorn text-warning fs-5"></i>
+                        <div>
+                            <strong id="urgentBroadcastTitle" class="text-warning">Broadcast Notice:</strong>
+                            <span id="urgentBroadcastMessage" class="ms-1"></span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" aria-label="Dismiss" onclick="document.getElementById('urgentBroadcastBanner').classList.add('d-none')"></button>
+                </div>
+
                 {% block content %}{% endblock %}
             </main>
         </div>
@@ -652,7 +727,8 @@
 
     <style>
     .app-shell {
-        min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
     }
     .luxury-topbar {
         background: rgba(15, 26, 42, 0.95) !important;
@@ -660,27 +736,70 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(15px);
         color: var(--text-primary);
-        z-index: 1020;
     }
     .topbar-search-input:focus {
         border-color: #d4af37 !important;
         box-shadow: 0 0 10px rgba(212, 175, 55, 0.3) !important;
     }
     .app-sidebar {
-        width: 240px;
-        min-height: 100vh;
+        width: 260px;
+        height: 100vh !important;
+        max-height: 100vh !important;
         background: #0f1a2a;
         transition: width 0.25s ease;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
     }
     .app-sidebar .nav-link {
         font-size: 0.88rem;
         border-radius: 8px;
         padding: 8px 12px;
         transition: all 0.2s;
+        display: flex !important;
+        align-items: center !important;
+        width: 100% !important;
+        white-space: nowrap !important;
     }
     .app-sidebar .nav-link:hover {
         background: rgba(212, 175, 55, 0.15);
         color: #d4af37 !important;
+    }
+    #shellNav, .sidebar-nav {
+        display: flex !important;
+        flex-direction: column !important;
+        flex-wrap: nowrap !important;
+        flex: 1 1 0% !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        overscroll-behavior: contain !important;
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(212, 175, 55, 0.4) transparent !important;
+    }
+    #shellNav .nav-item, 
+    .sidebar-nav .nav-item, 
+    #shellNav .nav-section-header, 
+    .sidebar-nav .nav-section-title {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex-shrink: 0 !important;
+        display: block !important;
+    }
+    #shellNav::-webkit-scrollbar, .sidebar-nav::-webkit-scrollbar {
+        width: 6px !important;
+    }
+    #shellNav::-webkit-scrollbar-track, .sidebar-nav::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.15) !important;
+        border-radius: 4px !important;
+    }
+    #shellNav::-webkit-scrollbar-thumb, .sidebar-nav::-webkit-scrollbar-thumb {
+        background: rgba(212, 175, 55, 0.4) !important;
+        border-radius: 4px !important;
+    }
+    #shellNav::-webkit-scrollbar-thumb:hover, .sidebar-nav::-webkit-scrollbar-thumb:hover {
+        background: rgba(212, 175, 55, 0.8) !important;
     }
     /* Responsive rules per Section M & 8 */
     @media (max-width: 1024px) and (min-width: 769px) {
@@ -690,6 +809,7 @@
         }
         .app-sidebar .brand-text,
         .app-sidebar .nav-label,
+        .app-sidebar .nav-section-header,
         .app-sidebar .user-meta {
             display: none !important;
         }
@@ -705,7 +825,7 @@
     @media (max-width: 768px) {
         .app-sidebar {
             position: fixed;
-            left: -260px;
+            left: -280px;
             top: 0;
             bottom: 0;
             z-index: 1050;
@@ -722,6 +842,19 @@
         document.getElementById('appSidebar').classList.toggle('show-mobile');
     }
 
+    // Forward wheel scrolling anywhere over the sidebar directly to navigation container
+    document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('appSidebar');
+        const shellNav = document.getElementById('shellNav');
+        if (sidebar && shellNav) {
+            sidebar.addEventListener('wheel', (e) => {
+                if (e.target !== shellNav && !shellNav.contains(e.target)) {
+                    shellNav.scrollTop += e.deltaY;
+                }
+            }, { passive: true });
+        }
+    });
+
     let onDuty = true;
     function toggleShift() {
         onDuty = !onDuty;
@@ -737,6 +870,57 @@
             if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.info('Shift ended & logged');
         }
     }
+
+    // Dynamic Live Announcements Poller across all screens
+    async function loadLiveAnnouncements() {
+        try {
+            const res = await fetch('/api/announcements/active');
+            if (!res.ok) return;
+            const payload = await res.json();
+            const items = (payload && payload.data) ? payload.data : [];
+            const notifList = document.getElementById('notificationsList');
+            const badge = document.getElementById('notificationBadge');
+            if (!notifList) return;
+
+            if (items.length === 0) {
+                notifList.innerHTML = '<li class="px-2 py-2 small text-secondary text-center"><i class="fas fa-check-circle text-success me-1"></i> No broadcasts active</li>';
+                if (badge) badge.classList.add('d-none');
+                return;
+            }
+
+            if (badge) {
+                badge.textContent = items.length;
+                badge.classList.remove('d-none');
+            }
+
+            notifList.innerHTML = items.map(a => `
+                <li class="px-2 py-2 mb-2 rounded" style="background: rgba(255,255,255,0.04); border-left: 3px solid ${a.priority === 'urgent' ? '#c70039' : '#d4af37'};">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong style="color: #fff9e6; font-size: 12.5px;">${a.title || 'Announcement'}</strong>
+                        <span class="badge ${a.priority === 'urgent' ? 'bg-danger' : 'bg-secondary'}" style="font-size: 8.5px; text-transform: uppercase;">${a.priority || 'info'}</span>
+                    </div>
+                    <div class="small text-secondary" style="font-size: 11.5px; line-height: 1.35;">${a.message || ''}</div>
+                    <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 10px;">
+                        <span><i class="fas fa-bullhorn me-1 text-warning"></i>${a.posted_by || 'Management'}</span>
+                        <span>${(a.created_at || '').slice(0, 10)}</span>
+                    </div>
+                </li>
+            `).join('');
+
+            // Check if top announcement is urgent
+            const latestUrgent = items.find(x => x.priority === 'urgent');
+            const banner = document.getElementById('urgentBroadcastBanner');
+            if (latestUrgent && banner) {
+                document.getElementById('urgentBroadcastTitle').textContent = `Urgent Broadcast: ${latestUrgent.title}`;
+                document.getElementById('urgentBroadcastMessage').textContent = latestUrgent.message || '';
+                banner.classList.remove('d-none');
+                banner.classList.add('d-flex');
+            }
+        } catch(e) {
+            console.warn('Failed to load live announcements', e);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', loadLiveAnnouncements);
     </script>
     {% else %}
     <!-- Unauthenticated Navigation & Public Layout -->

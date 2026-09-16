@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Scan to Pay — Nur-e-Haya{% endblock %}
+{% block title %}Scan & Pay UPI — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block extra_css %}
 <style>
     .qr-wrapper {
-        min-height: 80vh;
+        min-height: 85vh;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -16,26 +16,56 @@
     .qr-card {
         width: 100%;
         max-width: 440px;
-        background: var(--glass-bg, rgba(22, 34, 54, 0.85));
+        background: var(--glass-bg, rgba(22, 34, 54, 0.9));
         border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(212, 175, 55, 0.15);
-        border-radius: 14px;
-        padding: 38px 30px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(212, 175, 55, 0.12);
+        border-radius: 16px;
+        padding: 36px 30px;
         text-align: center;
         position: relative;
     }
 
-    .qr-image-frame {
-        width: 230px;
-        height: 230px;
-        margin: 20px auto;
-        background: #ffffff;
-        padding: 12px;
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    .step-pill-bar {
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
+        margin-bottom: 24px;
+    }
+
+    .step-pill {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    .step-pill.completed {
+        background: rgba(46, 229, 157, 0.15);
+        color: #2ee59d;
+        border: 1px solid rgba(46, 229, 157, 0.35);
+    }
+
+    .step-pill.active {
+        background: rgba(212, 175, 55, 0.2);
+        color: var(--primary-color, #d4af37);
+        border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .qr-image-frame {
+        width: 220px;
+        height: 220px;
+        margin: 16px auto;
+        background: #ffffff;
+        padding: 12px;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(212, 175, 55, 0.3);
     }
 
     .qr-image-frame img {
@@ -48,10 +78,25 @@
 
 {% block content %}
 <div class="qr-wrapper">
-    <!-- Section C.6 Payment QR screen centered card -->
+    <!-- Step Indicator -->
+    <div class="step-pill-bar">
+        <a href="/pay/{{ txn_id }}/otp" style="text-decoration: none;">
+            <span class="step-pill completed"><i class="fas fa-check-circle me-1 text-success"></i> Step 1: Phone Verified</span>
+        </a>
+        <i class="fas fa-chevron-right text-secondary" style="font-size: 10px;"></i>
+        <span class="step-pill active"><i class="fas fa-qrcode me-1"></i> Step 2: UPI QR Payment</span>
+    </div>
+
     <div class="qr-card">
-        <span style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px;">Unified Payment QR</span>
-        <h2 style="font-size: 32px; font-weight: 800; color: var(--primary-color); font-family: 'Cinzel', serif; margin: 8px 0 14px;">
+        <!-- Verified phone tag -->
+        <div class="mb-2">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1" style="font-size: 11px; font-weight: 500;">
+                <i class="fas fa-shield-check me-1"></i> Phone Verified: +91 {{ phone or '9876543210' }}
+            </span>
+        </div>
+
+        <span style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px;">Payable Amount</span>
+        <h2 style="font-size: 32px; font-weight: 800; color: var(--primary-color, #d4af37); font-family: 'Cinzel', serif; margin: 4px 0 12px;">
             ₹{{ (transaction.order_summary.total if (transaction and transaction.order_summary and transaction.order_summary.total) else (transaction.amount if (transaction and transaction.amount) else 8815)) }}
         </h2>
 
@@ -60,35 +105,34 @@
             <img id="qrImageElement" src="" alt="Payment QR Code">
         </div>
 
-        <p style="font-size: 14px; color: var(--text-bright); margin-bottom: 8px; font-weight: 600;">
-            Scan with your phone to confirm payment
+        <p style="font-size: 13px; color: var(--text-bright); margin-bottom: 6px; font-weight: 600;">
+            Scan with Google Pay, PhonePe, Paytm, or any UPI app
         </p>
 
         <!-- Countdown timer (10 min) -->
-        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">
             <i class="fas fa-stopwatch" style="color: var(--primary-color); margin-right: 4px;"></i> 
             QR code expires in: <strong id="countdownTimer" style="color: var(--primary-color);">10:00</strong>
         </div>
 
-        <!-- Small text link: Trouble scanning? Use this link instead -->
-        <div style="margin-bottom: 24px;">
-            <a href="#" id="troubleScanningLink" style="font-size: 12px; color: var(--text-secondary); text-decoration: underline;">
-                Trouble scanning? Use this link instead
-            </a>
-        </div>
-
-        <!-- Live status poll / listener: "Waiting for payment confirmation..." spinner -->
-        <div style="padding: 14px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(212,175,55,0.15); display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <!-- Live status poll / listener -->
+        <div style="padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid rgba(212,175,55,0.15); display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 12px;">
             <span class="btn-spinner"></span>
             <span style="font-size: 13px; color: var(--text-primary);" id="pollStatusLabel">
-                Waiting for payment confirmation...
+                Waiting for UPI payment confirmation...
             </span>
         </div>
 
         <!-- Dev Simulator Quick Action -->
-        <button type="button" class="btn btn-secondary" id="btnSimulatePhonePay" style="width: 100%; margin-top: 15px; font-size: 12px; padding: 8px;">
+        <button type="button" class="btn btn-secondary" id="btnSimulatePhonePay" style="width: 100%; font-size: 12px; padding: 10px;">
             <i class="fas fa-mobile-alt" style="margin-right: 6px;"></i> Simulate Phone Scan & Pay
         </button>
+
+        <div class="mt-3">
+            <a href="/pay/{{ txn_id }}/otp" id="troubleScanningLink" style="font-size: 11px; color: var(--text-secondary); text-decoration: underline;">
+                <i class="fas fa-arrow-left me-1"></i> Back to Phone Verification
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -99,8 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const txnId = '{{ txn_id }}';
     const qrImg = document.getElementById('qrImageElement');
     const timerLabel = document.getElementById('countdownTimer');
-    const troubleLink = document.getElementById('troubleScanningLink');
     const simulateBtn = document.getElementById('btnSimulatePhonePay');
+    const defaultBookingId = '{{ transaction.booking_id or transaction.reference_no or "bk_5521" }}';
 
     // 1. Fetch QR code per Section C.7
     async function fetchQR() {
@@ -108,7 +152,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = await AppAPI.post('/api/payment/create-qr', { txn_id: txnId });
             const b64 = data.qr_image_base64 || data.qr_base64 || data.qr_code || '';
             qrImg.src = b64.startsWith('data:') ? b64 : `data:image/png;base64,${b64}`;
-            troubleLink.href = data.qr_payload || `/pay/${txnId}/otp`;
         } catch (err) {
             Toast.error('Could not generate QR code. Retrying...');
         }
@@ -129,8 +172,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         timerLabel.textContent = `${m}:${s}`;
     }, 1000);
 
-    // 3. Live status polling listener per Section C.6
-    // Auto-navigates to OTP screen the instant transactions.status flips to "paid"
+    // 3. Live status polling listener
+    // Auto-navigates to Confirmation screen the instant transactions.status flips to "paid"
     const pollInterval = setInterval(async () => {
         try {
             const res = await fetch(`/api/transactions/${txnId}/status`);
@@ -140,9 +183,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (txn.status === 'paid' || txn.status === 'completed') {
                     clearInterval(pollInterval);
                     clearInterval(timerInterval);
-                    Toast.success('Payment received! Verifying security code...');
+                    Toast.success('Payment received! Finalizing booking...');
                     setTimeout(() => {
-                        window.location.href = `/pay/${txnId}/otp`;
+                        const bId = txn.booking_id || defaultBookingId;
+                        window.location.href = `/confirmation/${bId}`;
                     }, 500);
                 }
             }
@@ -152,11 +196,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. Simulate phone payment
     simulateBtn.addEventListener('click', async () => {
         simulateBtn.disabled = true;
-        simulateBtn.innerHTML = `<span class="btn-spinner"></span> Simulating...`;
-        await fetch(`/api/transactions/${txnId}/simulate-pay`, { method: 'POST' });
-        Toast.success('Payment simulated on phone! Redirecting...');
+        simulateBtn.innerHTML = `<span class="btn-spinner"></span> Confirming Payment...`;
+        const res = await fetch(`/api/transactions/${txnId}/simulate-pay`, { method: 'POST' });
+        const data = await res.json();
+        const bId = (data.data && data.data.booking_id) || data.booking_id || defaultBookingId;
+        Toast.success('Payment simulated on phone! Booking confirmed.');
         setTimeout(() => {
-            window.location.href = `/pay/${txnId}/otp`;
+            window.location.href = `/confirmation/${bId}`;
         }, 600);
     });
 });

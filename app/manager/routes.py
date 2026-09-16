@@ -7,7 +7,7 @@ from app.firebase_db import (
     rooms_col, bookings_col, transactions_col, housekeeping_tasks_col,
     maintenance_tickets_col, announcements_col, settings_col, users_col
 )
-from app.auth.decorators import role_required
+from app.auth.decorators import login_required, role_required
 from api_utils import api_success, api_error, permission_denied
 
 logger = logging.getLogger(__name__)
@@ -123,21 +123,68 @@ def operations_reports():
 
 # SCR-70: Announcements / Broadcasts
 @manager_bp.route('/manager/announcements', methods=['GET', 'POST'])
-@role_required('admin', 'manager')
+@role_required('admin', 'manager', 'super_admin')
 def announcements():
     if request.method == 'GET':
-        posts = [d.to_dict() for d in announcements_col().order_by('created_at', direction='DESCENDING').stream()]
+        posts = []
+        try:
+            for d in announcements_col().stream():
+                item = d.to_dict()
+                item['id'] = d.id
+                posts.append(item)
+            posts.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        except Exception as e:
+            logger.warning(f"Error fetching announcements: {e}")
         return render_template('manager/broadcasts.html', announcements=posts)
 
     data = request.get_json() or {}
-    announcements_col().add({
+    new_doc = {
         "title": data.get('title'),
         "message": data.get('message'),
         "target_role": data.get('target_role', 'all'),
-        "posted_by": session.get('user_email'),
+        "priority": data.get('priority', 'normal'),
+        "posted_by": session.get('user_name', session.get('user_email', 'Management')),
+        "posted_by_email": session.get('user_email'),
         "created_at": datetime.utcnow().isoformat() + "Z"
-    })
+    }
+    announcements_col().add(new_doc)
     return api_success({"message": "Announcement broadcasted successfully."})
+
+@manager_bp.route('/api/announcements/active', methods=['GET'])
+@login_required
+def api_active_announcements():
+    user_role = session.get('user_role', 'guest')
+    active = []
+    try:
+        for d in announcements_col().stream():
+            item = d.to_dict()
+            item['id'] = d.id
+            target = str(item.get('target_role', 'all')).lower()
+            u_role = str(user_role).lower()
+
+            # Role match evaluation
+            matches = False
+            if target in ['all', '', 'everyone', 'all_staff']:
+                matches = True
+            elif target == u_role:
+                matches = True
+            elif u_role in ['guest', 'member', 'vip', 'user'] and target in ['guest', 'guests', 'member', 'vip']:
+                matches = True
+            elif u_role in ['super_admin', 'admin', 'manager']:
+                matches = True  # Admins and managers see all broadcasts
+            elif u_role in ['housekeeping', 'laundry'] and target in ['housekeeping', 'laundry']:
+                matches = True
+            elif u_role in ['kitchen', 'chef', 'waiter', 'room_service'] and target in ['kitchen', 'dining']:
+                matches = True
+
+            if matches:
+                active.append(item)
+
+        active.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    except Exception as e:
+        logger.warning(f"Error streaming active announcements: {e}")
+
+    return api_success(active[:15])
 
 # SCR-71: Staff Shifts & Attendance
 @manager_bp.route('/manager/shifts', methods=['GET', 'POST'])
