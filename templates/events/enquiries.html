@@ -27,6 +27,7 @@
                 <th>Estimated Guests</th>
                 <th>Organizer Email</th>
                 <th>Submission Time</th>
+                <th>Status</th>
                 <th>Action</th>
               </tr>
             </thead>
@@ -37,11 +38,15 @@
                 <td>{{ enq.event_date }}</td>
                 <td><span class="badge-pill priority-medium">{{ enq.guest_count }} Guests</span></td>
                 <td>{{ enq.user_email }}</td>
-                <td>{{ enq.created_at }}</td>
+                <td><span class="badge-pill status-{{ enq.status or 'pending' }}">{{ enq.status or 'pending' }}</span></td>
                 <td>
-                  <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Event proposal quote dispatched to client.', 'success')">
-                    Send Proposal
-                  </button>
+                  {% if enq.status == 'proposal_sent' %}
+                    <span class="text-success small fw-bold"><i class="fas fa-check-circle me-1"></i>₹{{ enq.quote_amount }} Quoted</span>
+                  {% else %}
+                    <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="openProposalModal('{{ enq.id }}', '{{ enq.hall_name }}', '{{ enq.user_email }}')">
+                      Send Proposal
+                    </button>
+                  {% endif %}
                 </td>
               </tr>
               {% else %}
@@ -56,4 +61,75 @@
     </main>
   </div>
 </div>
+
+<!-- Proposal Modal -->
+<div class="modal fade" id="proposalModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Send Event Proposal Quote</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="proposalForm">
+          <input type="hidden" id="proposalEnquiryId">
+          <div class="mb-3">
+            <label class="form-label text-secondary small">Target Event & Client</label>
+            <div id="proposalTargetInfo" class="fw-semibold"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Total Proposal Quote Amount (₹)</label>
+            <input type="number" class="form-control" id="proposalAmount" placeholder="e.g. 150000" min="1000" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Inclusions / Proposal Notes</label>
+            <textarea class="form-control" id="proposalNotes" rows="3" placeholder="Includes ballroom setup, premium audio/visual equipment, and high tea."></textarea>
+          </div>
+          <button type="submit" class="btn-nh btn-nh-primary w-100">Dispatch Official Proposal</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let proposalModalInstance = null;
+function openProposalModal(id, hall, email) {
+  document.getElementById('proposalEnquiryId').value = id;
+  document.getElementById('proposalTargetInfo').textContent = `${hall} — ${email}`;
+  document.getElementById('proposalAmount').value = '';
+  document.getElementById('proposalNotes').value = '';
+  const el = document.getElementById('proposalModal');
+  if (window.bootstrap && bootstrap.Modal) {
+    proposalModalInstance = new bootstrap.Modal(el);
+    proposalModalInstance.show();
+  } else {
+    el.style.display = 'block';
+  }
+}
+
+document.getElementById('proposalForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const id = document.getElementById('proposalEnquiryId').value;
+  const quote = document.getElementById('proposalAmount').value;
+  const notes = document.getElementById('proposalNotes').value;
+
+  try {
+    const res = await fetch(`/api/events/enquiries/${id}/respond`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quote_amount: quote, notes: notes })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === 'function') showToast(data.data?.message || 'Proposal dispatched!', 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      if (typeof showToast === 'function') showToast(data.error?.message || 'Failed to send proposal', 'error');
+    }
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Network error dispatching proposal', 'error');
+  }
+});
+</script>
 {% endblock %}

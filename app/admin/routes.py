@@ -99,7 +99,8 @@ def api_invite_staff():
         log_audit_denied(None, actor_id=session.get('user_email'), actor_role=session.get('user_role'), target='/api/admin/staff/invite', details='Attempted to invite admin without super_admin privileges')
         return permission_denied(message="Only super_admin can invite admin staff.")
 
-    token = f"inv_{int(datetime.utcnow().timestamp())}"
+    import secrets
+    token = f"inv_{secrets.token_urlsafe(16)}"
     now = datetime.utcnow()
     expires_at = (now + timedelta(days=3)).isoformat() + "Z"
     invites_col().document(token).set({
@@ -112,7 +113,15 @@ def api_invite_staff():
         "expires_at": expires_at,
         "created_at": now.isoformat() + "Z"
     })
-    return api_success({"invite_token": token, "invite_id": token, "email_sent": True, "expires_at": expires_at, "message": "Invitation sent successfully"})
+    invite_url = f"{request.host_url.rstrip('/')}/invite/{token}"
+    return api_success({
+        "invite_token": token,
+        "invite_id": token,
+        "invite_url": invite_url,
+        "email_sent": False,
+        "expires_at": expires_at,
+        "message": f"Invitation generated. Share onboarding link: {invite_url}"
+    })
 
 @admin_bp.route('/admin/staff/<user_id>', methods=['GET'])
 @role_required('admin', 'super_admin')

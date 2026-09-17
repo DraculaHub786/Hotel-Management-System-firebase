@@ -5,6 +5,7 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 from app.firebase_db import maintenance_tickets_col, maintenance_orders_col, assets_col, rooms_col
 from app.auth.decorators import login_required, role_required
 from api_utils import api_success, api_error, permission_denied
+from app.core.sync_hub import sync_hub
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,15 @@ def api_maintenance_tickets():
         "status": data.get('status', 'open'),
         "created_at": datetime.utcnow().isoformat() + "Z"
     })
+    try:
+        sync_hub.publish('maintenance', 'ticket_created', {
+            "ticket_id": tref[1].id,
+            "issue_type": data.get('issue_type', 'general'),
+            "priority": data.get('priority', 'medium'),
+            "location": data.get('location')
+        })
+    except Exception as e:
+        logger.warning(f"Failed to publish ticket created sync: {e}")
     return api_success({"ticket_id": tref[1].id, "message": "Ticket created"})
 
 @maintenance_bp.route('/api/maintenance/tickets/<ticket_id>', methods=['PATCH', 'POST'])
@@ -78,6 +88,12 @@ def api_update_ticket(ticket_id):
             for rdoc in rooms_col().where('number', '==', str(rnum)).stream():
                 rdoc.reference.update({"status": "available"})
 
+        try:
+            sync_hub.publish('front_desk', 'room_unblocked', {"status": "available", "room_id": room_id, "room_number": rnum})
+            sync_hub.publish('housekeeping', 'room_unblocked', {"status": "available", "room_id": room_id, "room_number": rnum})
+        except Exception as e:
+            logger.warning(f"Failed to publish room unblock sync: {e}")
+
     if doc.exists:
         doc.reference.update(updates)
         rdata = doc.to_dict()
@@ -85,6 +101,15 @@ def api_update_ticket(ticket_id):
         rdata['id'] = ticket_id
     else:
         rdata = {"ticket_id": ticket_id, "id": ticket_id, **updates}
+
+    try:
+        sync_hub.publish('maintenance', 'ticket_updated', {
+            "ticket_id": ticket_id,
+            "status": new_status,
+            "updates": updates
+        })
+    except Exception as e:
+        logger.warning(f"Failed to publish ticket updated sync: {e}")
 
     return api_success(rdata)
 

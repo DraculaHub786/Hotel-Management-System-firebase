@@ -35,6 +35,9 @@ class ProductionConfig(Config):
     DEBUG = False
     SESSION_COOKIE_SECURE = True
 
+    if os.getenv('FLASK_ENV') == 'production' and not os.getenv('SECRET_KEY'):
+        raise RuntimeError("SECRET_KEY environment variable is required in production environment.")
+
 class TestingConfig(Config):
     TESTING = True
     DEBUG = True

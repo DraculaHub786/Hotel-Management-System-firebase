@@ -66,17 +66,15 @@ def calculate_order_pricing(items, db, is_member=False):
     facilities_col = db.collection('facilities')
     menu_col = db.collection('menu_items')
 
+    from app.firebase_db import resolve_room_doc, resolve_menu_item_doc
+
     for itm in items:
         item_type = itm.get('type')
         ref_id = itm.get('ref_id')
         qty = int(itm.get('qty', 1))
 
         if item_type == 'room':
-            doc = rooms_col.document(str(ref_id)).get()
-            if not doc.exists:
-                # search by number or id
-                matches = list(rooms_col.where('number', '==', str(ref_id)).limit(1).get())
-                doc = matches[0] if matches else None
+            doc = resolve_room_doc(ref_id)
             
             price_per_night = 3500.0
             name = f"Room {ref_id}"
@@ -132,7 +130,7 @@ def calculate_order_pricing(items, db, is_member=False):
             })
 
         elif item_type == 'menu':
-            doc = menu_col.document(str(ref_id)).get()
+            doc = resolve_menu_item_doc(ref_id)
             price = 450.0
             name = f"Menu Item {ref_id}"
             if doc and doc.exists:

@@ -34,7 +34,7 @@
             </div>
             <div class="d-flex justify-content-between align-items-center pt-3 border-top">
               <span class="fw-bold fs-5 text-primary">₹{{ p.price_per_plate }} <span class="small text-secondary fw-normal">/ plate</span></span>
-              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="showToast('Catering package selected for event quotation.', 'success')">
+              <button class="btn-nh btn-nh-primary btn-nh-sm" onclick="selectCateringPackage('{{ p.name }}', {{ p.price_per_plate }})">
                 Select Package
               </button>
             </div>
@@ -45,4 +45,32 @@
     </main>
   </div>
 </div>
+
+<script>
+async function selectCateringPackage(packageName, pricePerPlate) {
+  try {
+    const res = await fetch('/api/events/catering/select', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ package_name: packageName, price_per_plate: pricePerPlate })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === 'function') {
+        showToast(data.data?.message || 'Catering package selected!', 'success');
+      } else {
+        alert(data.data?.message || 'Catering package selected!');
+      }
+    } else {
+      if (typeof showToast === 'function') {
+        showToast(data.error?.message || 'Failed to select package', 'error');
+      } else {
+        alert(data.error?.message || 'Failed to select package');
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Network error selecting package', 'error');
+  }
+}
+</script>
 {% endblock %}

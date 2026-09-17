@@ -14,6 +14,9 @@
           <h1 class="h3 fw-bold mb-1">Resort Events & Conventions Calendar (SCR-61)</h1>
           <p class="text-secondary small mb-0">Master schedule of weddings, symposiums, wellness retreats, and pool galas.</p>
         </div>
+        <button class="btn-nh btn-nh-primary" data-bs-toggle="modal" data-bs-target="#scheduleEventModal">
+          <i class="fas fa-plus me-1"></i> Schedule Event
+        </button>
       </div>
 
       <div class="nh-card">
@@ -30,20 +33,19 @@
                 <th>Banquet Status</th>
               </tr>
             </thead>
-            <tbody>
-              {% set sample_events = [
-                {"date": "2026-09-20", "hall": "Grand Kohinoor Ballroom", "type": "Global Tech Leadership Summit", "host": "Nasscom", "guests": 350, "status": "confirmed"},
-                {"date": "2026-09-24", "hall": "Palm Lawn & Pool Deck", "type": "Destination Sangeet & Cocktail Soiree", "host": "Mehta & Singhania Wedding", "guests": 280, "status": "confirmed"},
-                {"date": "2026-10-02", "hall": "Sapphire Conference Suite", "type": "Cardiology CME Conference", "host": "Indian Medical Association", "guests": 110, "status": "in_progress"}
-              ] %}
-              {% for e in sample_events %}
+            <tbody id="eventsTableBody">
+              {% for e in events %}
               <tr>
                 <td class="fw-bold">{{ e.date }}</td>
                 <td class="fw-semibold">{{ e.hall }}</td>
-                <td>{{ e.type }}</td>
+                <td>{{ e.event_type }}</td>
                 <td>{{ e.host }}</td>
                 <td><span class="badge-pill priority-medium">{{ e.guests }} Guests</span></td>
                 <td><span class="badge-pill status-{{ e.status }}">{{ e.status }}</span></td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="6" class="text-center text-secondary py-4">No scheduled events found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -53,4 +55,75 @@
     </main>
   </div>
 </div>
+
+<!-- Schedule Event Modal -->
+<div class="modal fade" id="scheduleEventModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Schedule New Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="scheduleEventForm">
+          <div class="mb-3">
+            <label class="form-label">Venue / Hall</label>
+            <select class="form-select" id="eventHall" required>
+              <option value="Grand Kohinoor Ballroom">Grand Kohinoor Ballroom</option>
+              <option value="Sapphire Conference Suite">Sapphire Conference Suite</option>
+              <option value="Palm Lawn & Poolside Deck">Palm Lawn & Poolside Deck</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Event Type / Name</label>
+            <input type="text" class="form-control" id="eventType" placeholder="e.g. Annual Tech Symposium" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Event Date</label>
+            <input type="date" class="form-control" id="eventDate" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Estimated Attendees</label>
+            <input type="number" class="form-control" id="eventGuests" value="100" min="1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Host Name / Email</label>
+            <input type="text" class="form-control" id="eventHost" placeholder="organizer@example.com" required>
+          </div>
+          <button type="submit" class="btn-nh btn-nh-primary w-100">Confirm Schedule</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('scheduleEventForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const payload = {
+    hall_name: document.getElementById('eventHall').value,
+    event_type: document.getElementById('eventType').value,
+    event_date: document.getElementById('eventDate').value,
+    guest_count: parseInt(document.getElementById('eventGuests').value),
+    host: document.getElementById('eventHost').value
+  };
+
+  try {
+    const res = await fetch('/api/events/calendar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === 'function') showToast(data.data?.message || 'Event scheduled successfully!', 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      if (typeof showToast === 'function') showToast(data.error?.message || 'Failed to schedule event', 'error');
+    }
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Network error while scheduling event', 'error');
+  }
+});
+</script>
 {% endblock %}

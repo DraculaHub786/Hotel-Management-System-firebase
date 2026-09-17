@@ -5,11 +5,12 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from app.firebase_db import (
     menu_col, orders_col, restaurant_tables_col, mini_bar_orders_col,
-    inventory_col, transactions_col
+    inventory_col, transactions_col, resolve_menu_item_doc
 )
 from app.auth.decorators import login_required, role_required
 from api_utils import api_success, api_error, permission_denied
 from guest_service import generate_qr_base64
+from app.core.sync_hub import sync_hub
 
 logger = logging.getLogger(__name__)
 
@@ -87,19 +88,14 @@ def api_menu_items():
 @role_required('admin', 'manager', 'chef', 'kitchen')
 def api_toggle_item_availability(item_id):
     data = request.get_json() or {}
-    new_status = data.get('available', True)
+    new_status = data.get('available') if 'available' in data else data.get('is_available', True)
 
-    doc = menu_col().document(str(item_id)).get()
-    if not doc.exists:
-        # Search by id field
-        matches = list(menu_col().where('id', '==', str(item_id)).limit(1).get())
-        if matches: doc = matches[0]
-
+    doc = resolve_menu_item_doc(item_id)
     if not doc or not doc.exists:
         return api_error(message="Menu item not found", status=404)
 
-    doc.reference.update({"available": new_status})
-    return api_success({"item_id": item_id, "available": new_status})
+    doc.reference.update({"available": new_status, "is_available": new_status})
+    return api_success({"item_id": doc.id, "available": new_status, "is_available": new_status})
 
 # 2. Cart & Ordering
 @dining_bp.route('/cart', methods=['GET'])
@@ -177,6 +173,23 @@ def api_orders():
                 "order_id": order_no
             })
 
+    try:
+        sync_hub.publish('kitchen', 'new_order', {
+            "order_id": oref[1].id if oref else order_no,
+            "order_no": order_no,
+            "room_number": room_number,
+            "table_number": table_number,
+            "items": items,
+            "total": total_amt
+        })
+        if table_number:
+            sync_hub.publish('pos', 'table_occupied', {
+                "table_number": table_number,
+                "order_no": order_no
+            })
+    except Exception as e:
+        logger.warning(f"Could not publish kitchen order sync event: {e}")
+
     return api_success({
         "order_id": oref[1].id,
         "order_no": order_no,
@@ -243,6 +256,25 @@ def api_update_order_status(order_id):
 
     if doc and doc.exists:
         doc.reference.update(updates)
+
+    try:
+        r_num = odata.get('room_number')
+        sync_payload = {
+            "order_id": order_id,
+            "order_no": odata.get('order_no', order_id),
+            "status": new_status,
+            "room_number": r_num,
+            "table_number": odata.get('table_number')
+        }
+        sync_hub.publish('pos', 'order_status_updated', sync_payload)
+        sync_hub.publish('kitchen', 'order_status_updated', sync_payload)
+        if r_num:
+            sync_hub.publish(f"guest:{r_num}", 'order_status_updated', sync_payload)
+        if odata.get('user_email'):
+            sync_hub.publish(f"guest:{odata.get('user_email')}", 'order_status_updated', sync_payload)
+    except Exception as e:
+        logger.warning(f"Could not publish order status sync: {e}")
+
     return api_success({"order_id": order_id, "status": new_status})
 
 # Table Management APIs
@@ -253,6 +285,7 @@ def api_dining_tables():
     tables.sort(key=lambda t: t.get('table_no', ''))
     return api_success(tables)
 
+@dining_bp.route('/api/dining/tables/<table_id>', methods=['PATCH', 'POST'])
 @dining_bp.route('/api/dining/tables/<table_id>/status', methods=['PATCH', 'POST'])
 @role_required('admin', 'manager', 'waiter', 'cashier')
 def api_update_table_status(table_id):

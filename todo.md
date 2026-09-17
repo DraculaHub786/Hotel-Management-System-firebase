@@ -1,708 +1,222 @@
-# Hotel Management SaaS — Detailed Spec (Screens, Forms, API Contracts, UI States)
+# Nur-e-Haya — Master Plan: From Demo App to Real Multi-Tenant SaaS
 
-This extends the architecture/build-order plan with the level of detail needed to actually build against: every screen per role, field-level form specs, JSON API contracts, and the UI states each screen must handle. Wireframes are described as text layouts (regions + content), not images — translate directly into your component shell.
+**Audit date:** September 2026
+**Current repo:** `DraculaHub786/Hotel-Management-System-firebase` (main, commit `7deb730`)
+**Current stack:** Flask 3 (monolith, Blueprint-per-module) + Firestore + Jinja2 + vanilla JS, deployed on Render free tier via the Flask dev server.
 
----
-
-<!--
-## A. Shared Conventions (apply everywhere, referenced instead of repeated) - COMPLETED
-
-### A.1 Standard UI states — every list/table/detail screen must implement all five
-1. **Loading** — skeleton rows/cards matching the real layout (not a spinner-only screen) for anything expected to take >300ms.
-2. **Empty** — icon + one-line message + a primary action if one exists (e.g. "No tasks assigned yet" / "No bookings for this date").
-3. **Error** — message + "Retry" button; never a blank white screen or raw error text.
-4. **Success (transient)** — toast, 3–4s auto-dismiss, top-right; used after create/update/delete actions.
-5. **Permission-denied** — shown when a role-gated screen is hit directly by URL without permission: short message + "Return to dashboard" link, logged to `audit_logs` as a denied-access attempt.
-
-### A.2 Standard list/table screen shape
-Every "queue" or "board" screen (tasks, orders, tickets, bookings) shares this layout region set unless noted otherwise:
-```
-[Topbar: title | search input | filter chips | + New button (if applicable)]
-[Filter bar: status tabs/pills, date range, assignee dropdown — only fields relevant to that entity]
-[Content: table (desktop) / stacked cards (tablet-friendly, ≤1024px)]
-[Pagination or infinite scroll footer]
-```
-
-### A.3 Standard form conventions
-- Required fields marked with `*`, validated on blur (not only on submit).
-- Submit button disabled until required fields are valid; shows inline spinner while submitting, then either closes/redirects or shows field-level error(s) returned from the API.
-- Every form has a `Cancel`/`Back` action that discards changes with a confirm dialog only if the form is dirty.
-- Server-side validation errors map to specific fields by key name (see API contracts — error responses always return `{ "errors": { "field_name": "message" } }`).
-
-### A.4 Standard API envelope
-```json
-// Success
-{ "ok": true, "data": { ... } }
-
-// Error
-{ "ok": false, "errors": { "field_name": "Human readable message" }, "message": "Optional top-level message" }
-```
-All endpoints below follow this envelope; only the `data` shape is documented per-endpoint from here on.
-
-### A.5 Standard permission-denied API response
-```json
-// HTTP 403
-{ "ok": false, "message": "You do not have permission to perform this action." }
-```
--->
-
+This plan is split into three parts:
+1. Security fixes (do these regardless of anything else — some are exploitable today)
+2. The real-time / cross-role sync architecture you asked for
+3. The phased roadmap to turn this into an actual multi-tenant SaaS product
 
 ---
 
-<!--
-## B. Auth Screens (shared by all roles) - COMPLETED
+## Part 0 — Confirmed Bugs & Root Causes (re-audited 2026-09-17, commit `8fe71db`)
 
-### B.1 Screen inventory
-| Screen | Route | Roles |
-|---|---|---|
-| Login | `/login` | all |
-| Guest Signup | `/signup` | guest only (staff have no public signup) |
-| Staff Invite Accept (set password) | `/invite/<token>` | invited staff only, token-gated |
-| Forgot Password | `/forgot-password` | all |
-| Reset Password | `/reset-password/<token>` | all |
+The earlier version of this section listed symptoms. Tracing them further turned up root causes that explain why they keep recurring, and why the test suite doesn't catch them.
 
-### B.2 Login form — field-level spec
-| Field | Type | Validation | Notes |
+### 0.1 Root cause: rooms are seeded as duplicate documents
+`data_seeder.py` writes **two separate Firestore documents per physical room**:
+```
+rooms_col.document(f"room_{number}").set(doc_data)      # e.g. "room_301"
+rooms_col.document(f"rm_{flat_code}").set(doc_data)      # e.g. "rm_RW-301"
+```
+Nothing links these two documents after creation. Any endpoint that resolves a room by number/flat-code and updates it (front desk mark-clean, housekeeping task completion, room status board, night audit) may be reading or writing whichever of the two documents its particular fallback lookup happens to hit — while every *other* screen keeps reading the untouched copy. This is why an update can report success while the room's status appears unchanged elsewhere: it isn't one room with a lying UI, it's genuinely two database records for one room.
+**Fix:** pick one canonical document ID per room (recommend the `flat_code`, since it's the human-meaningful, collision-proof identifier), migrate all existing data onto it, and delete the seeding duplication. Every route that currently does "try `.document(id)`, fall back to `.where(field, '==', id)`" should instead resolve to the canonical ID *once*, in a shared helper, not re-implemented per endpoint with slightly different field-name guesses each time.
+
+### 0.2 Root cause: the test mock doesn't match real Firestore semantics
+`MockDocumentReference.update()` in `app/firebase_db.py` silently **creates the document if it doesn't exist**. Real Firestore's `update()` does the opposite — it raises `NotFound` when the document isn't there. Every test that exercises an "update" endpoint is therefore validated against a database that is strictly more forgiving than production. This is a second, independent reason "it passes locally, breaks live" keeps happening — the safety net has a hole shaped exactly like this bug class.
+**Fix:** make the mock's `update()` raise on a missing document, matching real Firestore, then re-run the full suite — expect more tests to fail immediately, which is the point: it means the suite starts catching what it's currently blind to. Longer term, run integration tests against the real Firebase emulator (not a hand-rolled mock) before this goes further.
+
+### 0.3 Root cause: three different ID schemes for the same entity type
+Menu items get zero-padded seed IDs (`item_001`), auto-generated Firestore IDs when added via the admin UI (`menu_col().add(data)`), and the test suite expects unpadded IDs (`item_1`) that no code path actually produces. None of these are reconciled, which is why the availability-toggle endpoint 404s on real data — same underlying problem as 0.1, just without the duplicate-document twist.
+**Fix:** one ID generation strategy per collection, used everywhere that collection is written to — seeding, admin CRUD, and imports alike.
+
+### 0.4 Broadcasting: persists and role-filters correctly, but isn't live
+Announcements are written to Firestore and read back with genuinely correct role-targeting logic (`/api/announcements/active` filters by role sensibly). The gap is delivery: the frontend calls that endpoint exactly once, on `DOMContentLoaded`, and never again — no polling interval, no push, no "seen" state, and no expiry (an announcement from weeks ago is shown until it's pushed out of the most-recent-15 window). It functions like an inbox that never auto-refreshes, not a live broadcast.
+**Fix (short-term, no new infra):** add a `setInterval` re-fetch (e.g. every 30–60s) and a `read_by` array on the announcement doc so a viewed announcement stops re-appearing per user. **Fix (real fix):** this is one of the first things that should ride on the websocket/pub-sub layer in Part 2 — a manager posting an announcement should push to every connected relevant-role client within a second, not wait for their next poll or reload.
+
+### 0.5 Admin → staff invite: dispatch is fully fake
+- `api_invite_staff()` hardcodes `"email_sent": True` — no email, SMS, or any delivery ever happens.
+- `templates/admin/staff_invite.html` shows the admin a success toast ("Invitation dispatched to ...") and redirects away, **without ever surfacing the invite link/token anywhere in the UI** — there is currently no way for an admin to get the link to the new hire even manually.
+- The invite token is `f"inv_{int(datetime.utcnow().timestamp())}"` — second-resolution only, so two invites created in the same second silently overwrite each other in Firestore.
+**Fix:** (1) wire real delivery through the email provider from Part 3.4 (SendGrid/Postmark), (2) until that's live, surface the generated link in the admin UI with a copy button as an honest interim state instead of a fake success message, (3) generate the token with `secrets.token_urlsafe()` instead of a timestamp.
+
+### 0.6 Confirmed test failures (symptoms of 0.1/0.3)
+1. `POST /api/front-desk/mark-clean` — returns success, room status doc never actually flips (see 0.1). Confirmed by `test_e2e_workflows.py::test_frontdesk_mark_clean_endpoint`.
+2. `PATCH /api/menu-items/<id>/availability` — 404s on real items (see 0.3). Confirmed by `test_sections_e_to_l.py::test_section_h_menu_availability_toggle`.
+
+**Priority order for this section:** 0.1 and 0.2 first (they're the same disease behind most "it says success but nothing changed" bugs across *any* module, not just rooms/menu — audit every collection for the double-ID pattern and every mock method for real-vs-fake semantic drift before writing any more endpoints), then 0.3, then 0.4 and 0.5 in parallel since they're independent of the data-layer fix.
+
+Also still unresolved from the original audit: **Google auth remains spoofable** (`/api/auth/google` trusts a client-supplied email; `google-auth` is installed but never called to verify a token).
+
+---
+
+## Part 1 — Security Fix List (pre-launch blockers)
+
+| # | Issue | File | Fix |
 |---|---|---|---|
-| `email` | text | required, valid email format | autofocus |
-| `password` | password | required, min 8 chars | show/hide toggle icon |
-| — | checkbox | "Remember me" (optional, extends session cookie lifetime) | |
+| 1 | Google auth accepts any client-supplied email with no token verification | `app/auth/routes.py::google_auth_api` | Verify the `id_token` server-side via `google.oauth2.id_token.verify_oauth2_token`, using `GOOGLE_CLIENT_ID` as audience. Never trust a client-passed `email`. |
+| 2 | `/api/transactions/<id>/simulate-pay` has no auth | `app/payments/routes.py` | Add `@login_required`, and restrict to the transaction's own owner or staff role. |
+| 3 | Payment `amount` trusted from client | `app/payments/routes.py` | Recompute amount server-side from the booking/order record; never accept a client-supplied total for anything that finalizes a payment. |
+| 4 | No CSRF protection | global | Add `Flask-WTF`'s CSRF extension (or a custom double-submit token) to every state-changing POST/PUT/DELETE. |
+| 5 | Wide-open CORS, unused `ALLOWED_ORIGINS` | `app/__init__.py` | Read `ALLOWED_ORIGINS` from env and pass explicitly to `CORS(app, origins=[...], supports_credentials=True)`. |
+| 6 | OTP returned in API response | `app/auth/otp_service.py`, `app/auth/routes.py` | Keep it in logs only (already done) behind a `DEMO_MODE=true` flag; strip `dev_otp` from the JSON response entirely once a real SMS/email provider is wired in. |
+| 7 | No rate limit on OTP resend/verify | `app/auth/routes.py` | Add per-email/IP limits (5 OTP requests / 15 min) via Flask-Limiter backed by Redis. |
+| 8 | Dead plaintext/SHA-256 fallback in password check | `app/auth/routes.py::verify_password` | Delete the fallback branches; bcrypt only. |
+| 9 | In-memory rate limiting | `app/auth/routes.py` | Move to Redis so it survives restarts and works across multiple workers/instances. |
+| 10 | Dev server used as the production server | `Procfile`, `render.yaml` | Run behind Gunicorn (`gunicorn -w 4 -k gthread app:app`) or Uvicorn+ASGI if you migrate to FastAPI. |
+| 11 | `SECRET_KEY` randomized per process if unset | `config.py` | Require it from env in production; fail startup if missing. |
 
-States: default → submitting (button spinner) → error (`Invalid email or password` — never say which field is wrong) → 5 failed attempts in 10 min triggers a rate-limit error (`Too many attempts, try again in N minutes`) per Section 10 rate-limiting.
-
-**Layout:**
-```
-[Centered card, 400px wide]
-  [Logo]
-  [Heading: "Sign in"]
-  [Email input]
-  [Password input]
-  [Remember me checkbox]  [Forgot password? link]
-  [Sign in button — full width]
-  [Divider "or"]
-  [Continue with Google button]
-  [Don't have an account? Sign up — hidden if role param indicates staff-only context]
-```
-
-### B.3 API — `POST /api/auth/login`
-Request:
-```json
-{ "email": "guest@example.com", "password": "••••••••" }
-```
-Response `data`:
-```json
-{
-  "user": { "uid": "abc123", "name": "Jane Doe", "role": "guest", "property_id": "prop_1" },
-  "redirect": "/dashboard"
-}
-```
-Sets an httpOnly session cookie; role and property_id are never accepted from the client on this call — derived server-side from the stored user doc.
-
-### B.4 Staff Invite Accept — field-level spec
-| Field | Type | Validation |
-|---|---|---|
-| `name` (pre-filled, editable) | text | required |
-| `password` | password | required, min 10 chars, 1 number, 1 symbol (staff accounts held to a stricter policy than guests) |
-| `confirm_password` | password | must match `password` |
-
-Invalid/expired token state: full-page message "This invite link has expired — ask your admin to resend it," no form shown.
-
-### B.5 API — `POST /api/auth/invite/accept`
-Request:
-```json
-{ "token": "inv_9f2...", "name": "Ravi Kumar", "password": "••••••••••" }
-```
-Response `data`:
-```json
-{ "user": { "uid": "xyz789", "role": "housekeeping", "department_id": "dept_hsk" }, "redirect": "/staff/housekeeping" }
-```
-Server validates: token exists in an `invites` collection (not yet modeled above — add `invites/{invite_id}: { email, role, department_id, property_id, invited_by, expires_at, used: bool }`), not expired, not already used, marks `used: true` on success.
--->
-
+None of these require an architecture change — they're a focused 1–2 week hardening sprint before Part 3 even starts.
 
 ---
 
-<!--
-## C. Guest Screens - COMPLETED
+## Part 2 — Real-Time Cross-Role Sync Architecture
 
-### C.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Home / Dashboard | `/dashboard` |
-| 2 | Rooms Browse | `/rooms` |
-| 3 | Room Detail | `/rooms/<room_id>` |
-| 4 | Facilities Browse | `/facilities` |
-| 5 | Facility Detail + Slot Picker | `/facilities/<facility_id>` |
-| 6 | Menu Browse | `/menu` |
-| 7 | Cart | `/cart` |
-| 8 | Checkout | `/checkout` |
-| 9 | Payment — QR Display | `/pay/<txn_id>` |
-| 10 | Payment — OTP Entry | `/pay/<txn_id>/otp` |
-| 11 | Booking Confirmation | `/confirmation/<booking_id>` |
-| 12 | My Bookings / Orders (history) | `/my-bookings` |
-| 13 | Booking Detail (cancel action here) | `/my-bookings/<id>` |
-| 14 | Support / Chat | `/support` |
-| 15 | Profile / Account Settings | `/account` |
+Right now every screen (guest, front desk, kitchen, housekeeping, admin, etc.) is a server-rendered Jinja page that only updates on reload/polling. To make "all screens and user types synced for fast data updates" actually true, you need a push layer, not more polling.
 
-### C.2 Room Detail — layout
-```
-[Image gallery — main image + thumbnail strip, left 60%]
-[Right 40%: Room name, price/night, capacity, amenities list (icons+labels),
- date-range picker, guest count stepper, "Add to cart" button (disabled until dates chosen)]
-[Below fold: description, policies (cancellation, check-in/out times), reviews (if in scope)]
-```
-States: Loading → skeleton gallery + text bars. Room unavailable for chosen dates → date picker shows disabled dates in red, "Add to cart" stays disabled with helper text "Not available for these dates."
+**Recommended pattern: Firestore realtime listeners → WebSocket fan-out → thin reactive frontend**
 
-### C.3 Cart — field-level spec
-Cart is a single object holding 3 line-item types. Each line item row shows: thumbnail, name, date/qty selector (editable inline), unit price, line total, remove (×) icon.
 ```
-CartItem:
-  - type: "room" | "facility" | "menu"
-  - ref_id
-  - qty (menu only; rooms/facilities are qty=1 per date range/slot)
-  - date_range or slot (room/facility)
-  - unit_price
-```
-Empty state: "Your cart is empty" + "Browse rooms" button.
-
-### C.4 Checkout — field-level spec
-| Field | Type | Validation |
-|---|---|---|
-| Guest name | text (pre-filled from profile) | required |
-| Phone | tel | required, valid format |
-| Special requests | textarea | optional, max 500 chars |
-| Delivery vs Dine-in (menu items only) | radio | required if cart has menu items |
-| — | line-item summary (read-only) | subtotal, tax %, service charge %, total |
-| Terms checkbox | checkbox | required to enable Pay button |
-
-### C.5 API — `POST /api/cart/checkout`
-Request:
-```json
-{
-  "items": [
-    { "type": "room", "ref_id": "room_204", "check_in": "2026-09-20", "check_out": "2026-09-22" },
-    { "type": "menu", "ref_id": "item_12", "qty": 2 }
-  ],
-  "delivery_mode": "in_room",
-  "special_requests": "Late check-in around 11pm"
-}
-```
-Response `data`:
-```json
-{
-  "order_summary": {
-    "subtotal": 8200.00,
-    "tax": 410.00,
-    "service_charge": 205.00,
-    "total": 8815.00,
-    "currency": "INR"
-  },
-  "txn_id": "txn_88f2a1"
-}
-```
-Server recalculates all prices from the DB (never trusts client-sent prices), applies `pricing_rules` config, creates a `transactions` doc with `status: "pending"`.
-
-### C.6 Payment QR screen — layout
-```
-[Centered card]
-  [Total amount, large]
-  [QR code image — base64 PNG from server]
-  [Instruction: "Scan with your phone to confirm payment"]
-  [Countdown timer — QR expires in 10 min, then auto-refreshes payload]
-  [Small text link: "Trouble scanning? Use this link instead" → same confirm URL]
-[Below: live status poll/listener — "Waiting for payment confirmation..." spinner, auto-navigates to OTP screen the instant `transactions.status` flips to "paid"]
+Firestore (source of truth)
+   │  onSnapshot listeners (server-side, per collection)
+   ▼
+Sync Service (Node/Python worker)
+   │  publishes typed events: booking.created, order.status_changed,
+   │                          room.status_changed, payment.completed, ...
+   ▼
+WebSocket Gateway (Socket.IO or native WS, one gateway, room-scoped)
+   │  rooms = tenant_id + role (e.g. "prop_1:kitchen", "prop_1:frontdesk",
+   │           "prop_1:guest:<user_id>")
+   ▼
+Frontend clients subscribe to their own room(s) only
 ```
 
-### C.7 API — `POST /api/payment/create-qr`
-Request:
-```json
-{ "txn_id": "txn_88f2a1" }
-```
-Response `data`:
-```json
-{
-  "qr_image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
-  "qr_payload": "https://yourapp.com/pay/confirm/txn_88f2a1",
-  "expires_at": "2026-09-08T14:32:00Z"
-}
-```
+Concretely:
+- Keep Firestore as the durable store (it already has good realtime primitives — you're just not using them yet).
+- Add a lightweight **event bus**: either (a) use Firestore's own `onSnapshot` from a small always-on Node/Python service that re-publishes changes to Socket.IO, or (b) move truly hot paths (order queue, room status board, kitchen KDS) into **Firebase Realtime Database** or **Redis Pub/Sub**, which are cheaper to fan out than Firestore snapshot listeners at scale.
+- Every role dashboard (kitchen queue, housekeeping board, front desk board, guest "my booking" page) subscribes only to the events relevant to its `property_id` + role — this is what keeps it fast: nobody receives updates they don't need.
+- For the guest side specifically: a booking status change, payment confirmation, or order update should push to the guest's open tab within under a second, not on next page load.
+- Keep a REST/JSON API (what you already have) for all writes and initial page loads; use the WebSocket layer purely for push notifications of state changes, not as the primary data path. This keeps the system debuggable and lets you degrade gracefully to polling if a socket drops.
 
-### C.8 API — `POST /api/otp/verify`
-Request:
-```json
-{ "txn_id": "txn_88f2a1", "otp": "482913" }
-```
-Response `data` (success):
-```json
-{
-  "booking_id": "bk_5521",
-  "confirmation_code": "HTL-5521-AX",
-  "receipt_url": "/api/receipt/txn_88f2a1"
-}
-```
-Response (wrong OTP, attempt 2 of 5):
-```json
-{ "ok": false, "errors": { "otp": "Incorrect code. 3 attempts remaining." } }
-```
-Response (locked out):
-```json
-{ "ok": false, "message": "Too many incorrect attempts. Request a new code." }
-```
-
-### C.9 My Bookings — list screen
-Columns/cards: booking ref, room/facility name, dates, status badge (`confirmed`/`checked_in`/`checked_out`/`cancelled`), total paid, action menu (View, Cancel — cancel only visible if `status: confirmed` and check-in is >24h away, per cancellation policy).
--->
+This is the single biggest architectural gap in the current app, and it's also the most valuable one to fix, since it's what makes the product feel like a real hotel PMS instead of a form-and-refresh app.
 
 ---
 
-<!--
-## D. Front Desk Screens - COMPLETED
+## Part 3 — SaaS Transformation Roadmap
 
-### D.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Today's Arrivals/Departures | `/staff/front-desk` |
-| 2 | Room Status Board | `/staff/front-desk/rooms` |
-| 3 | Booking Detail / Check-in action | `/staff/front-desk/bookings/<id>` |
-| 4 | Check-out action | (modal from Room Status Board) |
+### 3.1 Multi-tenancy (the core SaaS shift)
+The schema already has a `property_id` field on users (`prop_1`), which means someone was already thinking about this — but it isn't enforced anywhere. Every collection query (`rooms_col()`, `bookings_col()`, etc.) currently returns data across *all* properties.
 
-### D.2 Room Status Board — layout
-Grid of room cards, one per room, color-coded: green=available, blue=occupied, yellow=dirty/needs cleaning, orange=cleaning in progress, red=maintenance block.
-```
-[Filter bar: floor selector, status filter chips]
-[Grid: room number, status color, guest name if occupied, quick-action button
- (Check-in / Check-out / Mark Clean — button changes based on status)]
-```
-Clicking a card opens a side-drawer with full room + current booking detail rather than navigating away (keeps the board in context).
+- Add `tenant_id` (rename/reuse `property_id`) to every document in every collection.
+- Enforce it at the query layer: build a `scoped_collection(tenant_id, name)` helper that every route uses instead of calling `*_col()` directly, so it's structurally impossible to forget the filter.
+- Add a `tenants` collection: plan tier, billing status, feature flags, branding (logo/colors), custom domain/subdomain.
+- Route resolution: `hotelname.yourapp.com` or `/t/<tenant_slug>/...` → resolves `tenant_id` before anything else runs.
 
-### D.3 Check-in form — field-level spec
-| Field | Type | Validation |
-|---|---|---|
-| Booking reference (search/select) | typeahead | required |
-| ID verification confirmed | checkbox | required to enable Confirm |
-| Room assignment (if not pre-assigned) | dropdown of available rooms | required |
-| Notes | textarea | optional |
+### 3.2 Backend architecture
+- Move off the Flask dev server → Gunicorn/Uvicorn with multiple workers, behind a reverse proxy (Nginx or the platform's built-in one).
+- Introduce **Redis** for: session store (so sessions survive restarts and scale across workers), rate limiting, and pub/sub for the realtime layer above.
+- Introduce a **background job queue** (Celery or RQ) for anything that shouldn't block a request: sending emails/SMS OTPs, generating invoices/PDFs, nightly audits, report generation.
+- Keep the current Blueprint-per-module structure — it maps cleanly to your 13 modules — but tighten it into a proper layered structure per module: `routes.py` (HTTP only) → `service.py` (business logic) → `repository.py` (Firestore access). Right now routes talk to Firestore directly, which makes testing and reuse harder as it grows.
+- Add structured logging (JSON logs) and error tracking (Sentry) — right now errors only go to stdout.
 
-### D.4 API — `POST /api/front-desk/checkin`
-Request:
-```json
-{ "booking_id": "bk_5521", "room_id": "room_204", "id_verified": true, "notes": "" }
-```
-Response `data`:
-```json
-{ "booking_id": "bk_5521", "status": "checked_in", "checked_in_at": "2026-09-08T13:05:00Z" }
-```
+### 3.3 Payments (real, not simulated)
+- Integrate a real gateway for the Indian market: **Razorpay** or **Cashfree** (both have UPI, cards, netbanking, and India-specific compliance out of the box) instead of the fake QR/UPI string generator.
+- Server creates an order via the gateway API → client completes payment via their SDK/checkout → gateway sends a **signed webhook** back to you → you verify the signature and only then mark the transaction complete. This closes vulnerability #2/#3 above by construction — the server never trusts client-reported payment status.
+- Keep a `DEMO_MODE` flag that swaps in the current simulate-pay flow for staging/demo environments, gated behind the auth fix from Part 1.
 
-### D.5 API — `POST /api/front-desk/checkout`
-Request:
-```json
-{ "booking_id": "bk_5521" }
-```
-Response `data`:
-```json
-{
-  "booking_id": "bk_5521",
-  "status": "checked_out",
-  "checked_out_at": "2026-09-08T15:40:00Z",
-  "housekeeping_task_id": "task_9911"
-}
-```
-Server-side side effect (not client-triggered): auto-creates a `housekeeping_tasks` doc with `type: "checkout_clean"`, `status: "pending"`, `room_id`, `created_from: "booking_checkout"` — this is the automation link called out in the original plan.
--->
+### 3.4 OTP / notifications (real, not simulated)
+- Swap the "log it and return it" OTP delivery for a real provider: **MSG91** or **Twilio Verify** for SMS, **SendGrid/Postmark** for email — both are trivial to drop into `otp_service.py` since it already isolates generation/verification from delivery.
+- Same `DEMO_MODE` pattern: in demo/staging, keep logging + returning it for convenience; in production, delivery goes out over the real channel and the code is never in the response body.
 
+### 3.5 Data & search
+- Firestore is fine as the primary store, but add **Algolia** or **Meilisearch** for guest-facing room/facility search and admin search-across-bookings — Firestore's query model doesn't do full-text or multi-field ranked search well.
+- Add a nightly export to a warehouse (BigQuery, since you're already GCP-adjacent) once you need real analytics/reporting beyond simple sums — the current revenue dashboard just streams every transaction document and sums in Python, which won't scale past a few thousand rows.
+
+### 3.6 Testing & CI/CD
+- You already have `test_*.py` files and a GitHub Actions workflow — extend it: add a staging Firebase project, run the full suite against it on every PR, and add contract tests for the payment webhook and OTP flow specifically since those are the highest-risk paths.
+- Add pre-commit hooks (linting, secret-scanning) so credentials/API keys can't land in a commit — the repo history shows several commits specifically fixing Firebase-credential handling, which suggests this has already bitten you once.
+
+### 3.7 Frontend
+- Current Jinja2 + vanilla JS is fine for staff back-office screens (fast to build, low overhead) — don't rewrite those.
+- For guest-facing and any screen that needs the realtime sync from Part 2 (booking status, kitchen queue, housekeeping board, front desk board), migrate incrementally to a small reactive layer — Alpine.js or htmx if you want to stay lightweight and keep server-rendered HTML, or React/Vue islands if you want a richer client. Given the scope (90 screens), htmx + Alpine.js is the pragmatic choice: it lets you keep 90% of your existing templates and just add live-update behavior where it matters, rather than a full SPA rewrite.
+
+### 3.8 Ops & observability
+- Move off Render free tier for anything beyond demo: it sleeps on inactivity and the free plan doesn't give you the persistent Redis/worker processes the above needs. Render's paid tier, Railway, or Fly.io all work; a full move to AWS/GCP only makes sense once you have real multi-region or compliance requirements.
+- Add uptime monitoring + alerting (UptimeRobot/Better Uptime) on `/api/health`, and dashboards for: request latency, error rate, OTP delivery success rate, payment webhook success rate.
 
 ---
 
-<!--
-## E. Housekeeping Screens - COMPLETED
+## Part 4 — Employee Coverage & Screen Completeness Audit
 
-### E.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Task Board (Kanban) | `/staff/housekeeping` |
-| 2 | Task Detail | `/staff/housekeeping/tasks/<id>` |
-| 3 | Report Issue modal | (opened from Task Detail) |
+This part addresses two specific gaps found in the current build: missing digital onboarding for several real hotel employee types, and screens that render but don't actually save anything.
 
-### E.2 Task Board — layout
-```
-[Columns: Pending | In Progress | Done]
-[Each card: room number, task type badge, priority flag (VIP/guest-waiting/standard), assigned-to avatar]
-[Drag-and-drop between columns OR tap card → status dropdown (tablet-friendly fallback, since drag-drop is unreliable on touch)]
-```
+### 4.1 The real staff roster a hotel needs (vs. what's wired today)
 
-### E.3 Report Issue modal — field-level spec
-| Field | Type | Validation |
-|---|---|---|
-| Issue type | dropdown (Plumbing, Electrical, AC/Heating, Furniture, Other) | required |
-| Description | textarea | required, max 500 chars |
-| Photo | file upload, image only | optional, max 5MB |
-| Priority | radio (Low/Medium/High) | required |
+| Employee type | Route/permission exists? | Seed account exists? | Can actually get a login today? |
+|---|---|---|---|
+| Admin / Super Admin | Yes | Yes | Yes |
+| Manager | Yes | Yes | Yes |
+| Front Desk | Yes | Yes | Yes |
+| Housekeeping | Yes | Yes | Yes |
+| Laundry | Yes | Yes | Yes |
+| Maintenance / Engineering | Yes | Yes | Yes |
+| Concierge | Yes | Yes | Yes |
+| Accountant | Yes | Yes | Yes |
+| Chef | Yes | Yes | Yes |
+| **Kitchen staff (non-chef)** | Yes (`role_required` accepts `kitchen`) | **No** | **No** |
+| **Waiter** | Yes (`/dining/tables`, `/staff/room-service`) | **No** | **No** |
+| **Room service staff** | Yes | **No** | **No** |
+| **Security** | Yes (`/staff/security`) | **No** | **No** |
+| **Cashier** | Yes (`/dining/tables` permission) | **No** | **No** |
+| Bellhop / Porter | Not modeled at all | No | No |
+| Spa / Gym / Wellness staff | Screens exist (guest-facing booking), no staff-side operator role | No | No |
+| Valet / Parking attendant | Screen exists (`/security/parking`) but folded under `security` role only | No | No |
 
-### E.4 API — `PATCH /api/housekeeping/tasks/<id>`
-Request:
-```json
-{ "status": "in_progress" }
-```
-Response `data`:
-```json
-{ "task_id": "task_9911", "status": "in_progress", "updated_at": "2026-09-08T13:10:00Z" }
-```
+**Root cause:** account creation is only wired for two paths — (1) guest self-registration, hardcoded to `role in ['member','guest','user']`, and (2) manual Firestore seeding at app startup. The admin "invite staff" endpoint writes a token but nothing ever redeems it.
 
-### E.5 API — `POST /api/housekeeping/tasks/<id>/report-issue`
-Request:
-```json
-{ "issue_type": "ac_heating", "description": "AC unit leaking water near window", "priority": "high" }
-```
-Response `data`:
-```json
-{ "maintenance_ticket_id": "tkt_4432", "room_id": "room_204" }
-```
--->
+**Fix — build the missing half of the invite flow:**
+1. `GET /invite/<token>` — public page: shows the invited email + assigned role, lets them set a name + password.
+2. `POST /api/invite/<token>/accept` — validates the token (unused, not expired), creates the actual `users` doc with the invited `role`/`staff_role`, marks the invite `used: true`, logs the person in.
+3. Send the invite link by email (same provider you wire in for OTP delivery — Part 3.4) instead of only generating a token silently.
+4. Extend `init_seed_users()` (or better, a one-time `scripts/seed_demo_staff.py`) to add demo accounts for `kitchen`, `waiter`, `room_service`, `security`, `cashier` so every role in the permission matrix is actually testable today, not just in theory.
+5. Add the missing roles that aren't modeled at all yet — bellhop/porter, spa/gym operator, valet/parking attendant as its own `staff_role` distinct from general `security` — each gets its own task queue screen following the same pattern as housekeeping/laundry (see 4.2).
 
----
+### 4.2 Standard "screen contract" — so nothing stays half-built again
 
-<!--
-## F. Laundry Screens - COMPLETED
+The uneven quality isn't random — every *fully working* module (housekeeping, laundry, maintenance, security incidents, kitchen orders) follows the same shape, and every *hollow* one (dining tables, events calendar/catering/enquiries, manager calendar, CRM loyalty/memberships) skips part of it. Standardize this as a checklist every module must satisfy before it's considered "done," and re-run it against the confirmed hollow screens:
 
-### F.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Task Board (Kanban: Collected → Washing → Ready → Delivered) | `/staff/laundry` |
-| 2 | Task Detail | `/staff/laundry/tasks/<id>` |
+A screen is only complete when it has all four:
+1. **GET route** that renders real Firestore data (not just a hardcoded fallback list).
+2. **POST/PATCH API route** that persists the action the UI offers (status change, assignment, approval, etc.).
+3. **Frontend JS that calls that API** and only shows a success toast after a real 200 response — never a fake `setTimeout` + reload.
+4. **Role-gated + audit-logged**, consistent with `role_required` and `log_audit_denied` already used elsewhere.
 
-### F.2 Task Detail — field-level spec (create/edit)
-| Field | Type | Validation |
-|---|---|---|
-| Room/Guest | typeahead | required |
-| Items (repeatable: name, qty) | dynamic list | at least 1 item required |
-| Pickup time | datetime | required |
-| Delivery time (est.) | datetime | optional until status=ready |
+**Known screens currently failing this checklist (fix in this order — highest guest/staff visibility first):**
+1. `/dining/tables` — waiter table status (needs `PATCH /api/dining/tables/<table_no>`)
+2. `/events/calendar` — event scheduling (needs create/update endpoints for banquet/spa/gym bookings feeding the calendar)
+3. `/manager/calendar` — likely just needs to read from the same events data once 4.2.2 is fixed
+4. `/events/catering`, `/events/enquiries` — needs POST endpoints for creating/responding to enquiries and selecting catering packages
+5. `/crm/loyalty`, `/crm/memberships` — needs POST endpoints for manually adjusting points/tier (staff-initiated) and a proper points-accrual hook on completed bookings/orders (system-initiated)
 
-### F.3 API — `PATCH /api/laundry/tasks/<id>`
-Request:
-```json
-{ "status": "ready", "delivery_time": "2026-09-08T18:00:00Z" }
-```
-Response `data`:
-```json
-{ "task_id": "lt_221", "status": "ready" }
-```
--->
+Treat this table as a living checklist — run it against every screen in `todo.md` before marking a module "done," not just the ones flagged here.
 
 ---
 
-<!--
-## G. Room Service Screens - COMPLETED
+## Suggested Phasing
 
-### G.1 Screen inventory
-| # | Screen | Route |
+| Phase | Focus | Rough effort |
 |---|---|---|
-| 1 | Incoming Orders Queue | `/staff/room-service` |
-| 2 | Order Detail | `/staff/room-service/orders/<id>` |
+| 0 | Security fix list (Part 1) | 1–2 weeks |
+| 0.5 | Finish staff invite-accept flow + seed missing roles (Part 4.1); fix the 5 hollow screens (Part 4.2) | 1–2 weeks |
+| 1 | Redis (sessions, rate limits) + Gunicorn + structured logging | 1 week |
+| 2 | Realtime sync layer (Part 2) for the highest-value screens: kitchen queue, front desk board, housekeeping board, guest booking status | 2–3 weeks |
+| 3 | Multi-tenancy enforcement (`tenant_id` everywhere + scoped queries) | 2 weeks |
+| 4 | Real payment gateway integration + webhook verification | 1–2 weeks |
+| 5 | Real OTP/notification delivery | 3–5 days |
+| 6 | Background jobs (Celery/RQ) for invoices, night audit, reports | 1 week |
+| 7 | Search (Algolia/Meilisearch) + analytics export | 1–2 weeks |
+| 8 | CI/CD hardening, monitoring, staging environment | ongoing |
 
-### G.2 Order Detail — layout
-```
-[Order items list with qty]
-[Room number, delivery notes]
-[Status stepper: Received → Preparing → Ready → Delivering → Delivered]
-[If order value > threshold: "Require OTP at delivery" toggle (admin-configured default)]
-```
-
-### G.3 API — `PATCH /api/orders/<id>/status`
-Request:
-```json
-{ "status": "delivering" }
-```
-Response `data`:
-```json
-{ "order_id": "ord_771", "status": "delivering" }
-```
-If OTP required and status transitions to `delivered`, request must include `otp`:
-```json
-{ "status": "delivered", "otp": "119284" }
-```
--->
-
----
-
-<!--
-## H. Kitchen Screens - COMPLETED
-
-### H.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Combined Orders Queue (room service + restaurant) | `/staff/kitchen` |
-| 2 | Menu Availability Toggle list | `/staff/kitchen/menu` |
-
-### H.2 Menu Availability — layout
-Simple table: item name, category, price, `Available` toggle switch (instant save on toggle, optimistic UI with rollback on error).
-
-### H.3 API — `PATCH /api/menu-items/<id>/availability`
-Request:
-```json
-{ "available": false }
-```
-Response `data`:
-```json
-{ "item_id": "item_12", "available": false }
-```
-This write is shared/visible identically on the guest `/menu` page (same source doc) and on Admin's menu management screen.
--->
-
----
-
-<!--
-## I. Security Screens - COMPLETED
-
-### I.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Incident Log List | `/staff/security` |
-| 2 | New Incident form | `/staff/security/new` |
-| 3 | Incident Detail | `/staff/security/<id>` |
-| 4 | Check-in Verification Flags | `/staff/security/flags` |
-
-### I.2 New Incident — field-level spec
-| Field | Type | Validation |
-|---|---|---|
-| Type | dropdown (Disturbance, Theft, Unauthorized access, Medical, Other) | required |
-| Location | text or room typeahead | required |
-| Description | textarea | required, max 1000 chars |
-| Severity | radio (Low/Medium/High/Critical) | required |
-| Photo/evidence | file upload | optional |
-
-`Critical` severity auto-fires a high-priority notification to Admin (per Section 5.7 panic-button behavior).
-
-### I.3 API — `POST /api/security/incidents`
-Request:
-```json
-{ "type": "disturbance", "location_room_id": "room_309", "description": "Loud argument reported by neighboring guest", "severity": "medium" }
-```
-Response `data`:
-```json
-{ "incident_id": "inc_331", "status": "open", "created_at": "2026-09-08T22:15:00Z" }
-```
--->
-
----
-
-<!--
-## J. Maintenance Screens - COMPLETED
-
-### J.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Ticket Queue | `/staff/maintenance` |
-| 2 | Ticket Detail | `/staff/maintenance/tickets/<id>` |
-
-### J.2 Ticket Detail — status flow
-`Reported → Assigned → In Progress → Resolved`. Resolving requires a resolution note (required textarea) and auto-clears any maintenance block on the linked room's availability (server-side side effect).
-
-### J.3 API — `PATCH /api/maintenance/tickets/<id>`
-Request:
-```json
-{ "status": "resolved", "resolution_note": "Replaced AC compressor unit" }
-```
-Response `data`:
-```json
-{ "ticket_id": "tkt_4432", "status": "resolved", "room_unblocked": true }
-```
--->
-
----
-
-<!--
-## K. Admin Screens - COMPLETED
-
-### K.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Overview / Home | `/admin` |
-| 2 | Staff List | `/admin/staff` |
-| 3 | Invite Staff form | `/admin/staff/invite` |
-| 4 | Staff Detail (deactivate/reassign) | `/admin/staff/<id>` |
-| 5 | Rooms List | `/admin/rooms` |
-| 6 | Room Create/Edit form | `/admin/rooms/<id>` or `/new` |
-| 7 | Facilities List + Create/Edit | `/admin/facilities` |
-| 8 | Menu List + Create/Edit | `/admin/menu` |
-| 9 | Bookings & Orders Oversight | `/admin/bookings` |
-| 10 | Revenue Dashboard | `/admin/revenue` |
-| 11 | Incident/Maintenance Rollup | `/admin/incidents` |
-| 12 | Refund Approval Queue | `/admin/refunds` |
-
-### K.2 Invite Staff — field-level spec
-| Field | Type | Validation |
-|---|---|---|
-| Name | text | required |
-| Email | email | required, valid format, must not already exist as a user |
-| Role | dropdown (all staff roles) | required |
-| Department | dropdown (filtered by selected role) | required |
-| Employee ID | text | optional, auto-generated if blank (`{DEPT}-{seq}`) |
-| Shift start/end/days | time + multi-select days | optional at invite time, editable later |
-
-### K.3 API — `POST /api/admin/staff/invite`
-Request:
-```json
-{ "name": "Ravi Kumar", "email": "ravi@example.com", "role": "housekeeping", "department_id": "dept_hsk" }
-```
-Response `data`:
-```json
-{ "invite_id": "inv_9f2a", "email_sent": true, "expires_at": "2026-09-11T00:00:00Z" }
-```
-Server rejects (403) if `role` in payload is `admin` or `super_admin` and caller is not `super_admin` — admins cannot self-elevate or create other admins.
-
-### K.4 Room Create/Edit — field-level spec
-| Field | Type | Validation |
-|---|---|---|
-| Room number | text | required, unique per property |
-| Type | dropdown (Single/Double/Suite/Deluxe...) | required |
-| Price/night | number | required, > 0 |
-| Capacity | number stepper | required, ≥ 1 |
-| Amenities | multi-select chips | optional |
-| Images | multi-file upload, drag-reorder | at least 1 required |
-| Floor | number | required |
-| Status | dropdown (available/maintenance) | required, default available |
-
-### K.5 API — `POST /api/admin/rooms`
-Request:
-```json
-{
-  "number": "204",
-  "type": "deluxe",
-  "price_per_night": 4500,
-  "capacity": 3,
-  "amenities": ["wifi", "minibar", "balcony"],
-  "floor": 2
-}
-```
-Response `data`:
-```json
-{ "room_id": "room_204" }
-```
-(Image upload is a separate multipart endpoint `POST /api/admin/rooms/<id>/images` returning uploaded URLs.)
-
-### K.6 Revenue Dashboard — layout
-```
-[Date range selector: Today / 7d / 30d / Custom]
-[KPI row: Total Revenue, Occupancy Rate %, Avg Order Value, Bookings Count]
-[Line chart: revenue over time]
-[Bar chart: top 10 menu items by revenue]
-[Table: revenue breakdown by category — rooms / facilities / menu]
-```
-
-### K.7 API — `GET /api/admin/revenue?range=30d`
-Response `data`:
-```json
-{
-  "total_revenue": 812400.00,
-  "occupancy_rate": 0.78,
-  "avg_order_value": 3120.50,
-  "bookings_count": 143,
-  "revenue_over_time": [{ "date": "2026-08-10", "amount": 24500 }, "..."],
-  "top_menu_items": [{ "item_id": "item_12", "name": "Club Sandwich", "revenue": 18400 }]
-}
-```
-
-### K.8 Refund Approval — field-level spec
-List screen: guest name, booking ref, requested amount, reason, requested date, Approve/Reject buttons. Approve opens a confirm dialog (irreversible, logged to `audit_logs` with before/after).
-
-### K.9 API — `POST /api/admin/refunds/<id>/approve`
-Response `data`:
-```json
-{ "refund_id": "rf_88", "status": "approved", "transaction_status": "refunded" }
-```
--->
-
----
-
-<!--
-## L. Super Admin Screens - COMPLETED
-
-### L.1 Screen inventory
-| # | Screen | Route |
-|---|---|---|
-| 1 | Admin Management | `/super-admin/admins` |
-| 2 | Create Admin form | `/super-admin/admins/new` |
-| 3 | Property Management | `/super-admin/properties` |
-| 4 | Property Create/Edit form | `/super-admin/properties/<id>` |
-| 5 | Global Settings | `/super-admin/settings` |
-| 6 | Audit Log Viewer | `/super-admin/audit-log` |
-| 7 | Impersonation launcher (optional) | `/super-admin/impersonate` |
-
-### L.2 Global Settings — field-level spec (tabbed sections)
-- **Payment**: gateway provider dropdown, API key (masked input, write-only — never returned by GET), webhook secret.
-- **OTP**: provider (Twilio/SendGrid), OTP length (default 6), expiry minutes (default 5), max attempts (default 5).
-- **Pricing defaults**: tax %, service charge %.
-- **Feature flags**: toggles, e.g. `facility_booking_enabled`, `dark_mode_enabled`.
-
-### L.3 API — `GET /api/super-admin/settings`
-Response `data` (secrets masked):
-```json
-{
-  "payment": { "provider": "razorpay", "api_key": "rzp_live_••••1234" },
-  "otp": { "provider": "twilio", "length": 6, "expiry_minutes": 5, "max_attempts": 5 },
-  "pricing": { "tax_percent": 5, "service_charge_percent": 2.5 },
-  "feature_flags": { "facility_booking_enabled": true, "dark_mode_enabled": false }
-}
-```
-
-### L.4 Audit Log Viewer — layout
-```
-[Filter bar: actor dropdown, action-type dropdown, date range]
-[Table: timestamp, actor name+role, action, target type/id, "View diff" link]
-[View diff opens a modal with before/after JSON side-by-side]
-```
-
-### L.5 API — `GET /api/super-admin/audit-log?actor=...&action=...&from=...&to=...`
-Response `data`:
-```json
-{
-  "logs": [
-    {
-      "log_id": "log_5591",
-      "actor_id": "uid_admin1",
-      "actor_role": "admin",
-      "action": "refund_approved",
-      "target_type": "transaction",
-      "target_id": "txn_88f2a1",
-      "before": { "status": "pending_refund" },
-      "after": { "status": "refunded" },
-      "timestamp": "2026-09-08T16:02:00Z"
-    }
-  ],
-  "next_cursor": "cursor_abc"
-}
-```
--->
-
----
-
-<!--
-## M. Cross-Cutting: Shared Shell Layout (all authenticated roles) - COMPLETED
-
-```
-[Sidebar — left, 240px, collapsible on tablet]
-  [Logo]
-  [Nav items — filtered server-side per role, never just hidden in CSS]
-  [Bottom: user avatar + name + role badge, logout]
-
-[Topbar — full width above content]
-  [Search (context-aware: searches rooms/guests/tasks depending on role)]
-  [Notification bell — badge count, dropdown of last 10 notifications]
-  [Shift clock-in/out widget — staff roles only]
-
-[Content area — role-specific screen renders here]
-```
-
-Responsive rule: at ≤1024px, sidebar collapses to icon-only; at ≤768px, sidebar becomes a bottom nav bar or hamburger drawer — test both explicitly per Section 8.
-
----
-
-## N. What's Still Needed Before Build (per-screen, not yet done here)
-
-This document brings every screen to a buildable level of detail for the *core* flows. Two things intentionally left out, to be done just-in-time per phase rather than all upfront (they'll drift if written 6 phases early):
-
-- **Actual pixel-level wireframes/mockups** (Figma-equivalent) — once Section H (design tokens) is picked, I can generate visual mockups per screen using the design system, rather than text layouts like above.
-- **Full API contract for every remaining CRUD endpoint** (facilities, menu items, shifts, notifications) — same pattern as Rooms (K.5) and Staff Invite (K.3) above; can be generated in bulk once you confirm the pattern here is right, rather than hand-writing ~40 more near-identical CRUD contracts now.
--->
-
+This keeps the current module structure and 13-domain design intact — it's genuinely a solid product scope — while replacing the parts that were built as demo shortcuts (in-memory rate limits, fake payment confirmation, unauthenticated Google login, dev server) with the equivalents a real SaaS needs.

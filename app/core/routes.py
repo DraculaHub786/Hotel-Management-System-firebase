@@ -280,3 +280,79 @@ def chatbot_transfer():
         "success": True,
         "message": "Transfer request submitted to concierge."
     })
+
+# SCR-SYNC: Real-Time Cross-Role SSE Stream
+@core_bp.route('/api/sync/stream', methods=['GET'])
+def sync_stream():
+    import json
+    import time
+    from flask import Response
+    from app.core.sync_hub import sync_hub
+
+    user_role = session.get('user_role', 'guest')
+    staff_role = session.get('staff_role')
+    user_email = session.get('user_email')
+    room_number = session.get('room_number')
+
+    raw_channels = request.args.get('channels', 'announcements').split(',')
+    requested_channels = [c.strip() for c in raw_channels if c.strip()]
+
+    # Validate channel permissions
+    allowed = set()
+    for ch in requested_channels:
+        if ch == 'announcements':
+            allowed.add(ch)
+        elif user_role in ('admin', 'super_admin', 'manager'):
+            allowed.add(ch)
+        elif user_role == 'guest':
+            if room_number and ch == f"guest:{room_number}":
+                allowed.add(ch)
+            elif user_email and ch == f"guest:{user_email}":
+                allowed.add(ch)
+        else:
+            # Staff roles
+            effective_role = staff_role or user_role
+            role_channel_map = {
+                'front_desk': {'front_desk', 'housekeeping', 'pos'},
+                'kitchen': {'kitchen', 'pos'},
+                'chef': {'kitchen', 'pos'},
+                'housekeeping': {'housekeeping', 'front_desk'},
+                'pos': {'pos', 'kitchen'},
+                'maintenance': {'maintenance'},
+                'events': {'events', 'banquets'},
+                'concierge': {'concierge', 'guest:*'}
+            }
+            permitted = role_channel_map.get(effective_role, set())
+            if ch in permitted:
+                allowed.add(ch)
+
+    if not allowed:
+        allowed.add('announcements')
+
+    sub = sync_hub.subscribe(list(allowed))
+
+    def generate_events():
+        try:
+            # Welcome handshake
+            init_msg = json.dumps({"status": "connected", "channels": list(allowed)})
+            yield f"event: connected\ndata: {init_msg}\n\n"
+
+            while True:
+                try:
+                    event = sub.queue.get(timeout=15.0)
+                    evt_name = event.get('event', 'message')
+                    evt_id = event.get('id', '')
+                    payload_json = json.dumps(event)
+                    yield f"id: {evt_id}\nevent: {evt_name}\ndata: {payload_json}\n\n"
+                except Exception:
+                    # 15s heartbeat to maintain connection
+                    yield ": ping\n\n"
+        finally:
+            sync_hub.unsubscribe(sub)
+
+    resp = Response(generate_events(), mimetype='text/event-stream')
+    resp.headers['Cache-Control'] = 'no-cache, no-transform'
+    resp.headers['X-Accel-Buffering'] = 'no'
+    resp.headers['Connection'] = 'keep-alive'
+    return resp
+

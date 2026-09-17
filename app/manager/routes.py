@@ -1,14 +1,16 @@
 import io
 import csv
 import logging
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for, Response
 from app.firebase_db import (
     rooms_col, bookings_col, transactions_col, housekeeping_tasks_col,
-    maintenance_tickets_col, announcements_col, settings_col, users_col
+    maintenance_tickets_col, announcements_col, settings_col, users_col,
+    resolve_room_doc
 )
 from app.auth.decorators import login_required, role_required
 from api_utils import api_success, api_error, permission_denied
+from app.core.sync_hub import sync_hub
 
 logger = logging.getLogger(__name__)
 
@@ -77,8 +79,8 @@ def rate_management():
     data = request.get_json() or {}
     room_id = data.get('room_id')
     new_price = float(data.get('price', 3500))
-    doc = rooms_col().document(str(room_id)).get()
-    if doc.exists:
+    doc = resolve_room_doc(room_id)
+    if doc and doc.exists:
         doc.reference.update({"price": new_price})
         return api_success({"message": "Base rate updated"})
     return api_error(message="Room not found", status=404)
@@ -88,8 +90,61 @@ def rate_management():
 @role_required('admin', 'manager')
 def availability_calendar():
     rooms = [d.to_dict() for d in rooms_col().stream()]
-    bookings = [d.to_dict() for d in bookings_col().limit(100).stream()]
-    return render_template('manager/availability_calendar.html', rooms=rooms, bookings=bookings)
+    rooms.sort(key=lambda r: str(r.get('number', '')))
+
+    bookings = [d.to_dict() for d in bookings_col().limit(200).stream()]
+    today = date.today()
+    days = [today + timedelta(days=i) for i in range(7)]
+    days_labels = [
+        {"key": d.strftime("%Y-%m-%d"), "label": "Today" if i == 0 else f"+{i}d ({d.strftime('%b %d')})"}
+        for i, d in enumerate(days)
+    ]
+
+    calendar_matrix = []
+    for r in rooms:
+        r_num = str(r.get('number', ''))
+        row = {
+            "number": r_num,
+            "type": r.get('type', 'Deluxe Room'),
+            "status": r.get('status', 'available'),
+            "days": []
+        }
+        for d in days:
+            d_str = d.strftime("%Y-%m-%d")
+            is_occupied = False
+            booking_match = None
+            for b in bookings:
+                if str(b.get('room_number', '')) == r_num and b.get('status') in ('confirmed', 'checked_in', 'active', 'booked'):
+                    cin = str(b.get('check_in', ''))[:10]
+                    cout = str(b.get('check_out', ''))[:10]
+                    if cin and cout:
+                        if cin <= d_str < cout or (cin == d_str == cout):
+                            is_occupied = True
+                            booking_match = b
+                            break
+
+            if d == today and r.get('status') == 'occupied':
+                is_occupied = True
+
+            if is_occupied:
+                status_text = "Booked"
+                status_class = "status-occupied"
+            elif d == today and r.get('status') == 'maintenance':
+                status_text = "Maintenance"
+                status_class = "status-maintenance"
+            else:
+                status_text = "Available"
+                status_class = "status-available"
+
+            row["days"].append({
+                "date": d_str,
+                "status": status_text,
+                "class": status_class,
+                "guest": booking_match.get('guest_name', '') if booking_match else ''
+            })
+        calendar_matrix.append(row)
+
+    return render_template('manager/availability_calendar.html', rooms=rooms, days_labels=days_labels, matrix=calendar_matrix)
 
 # SCR-69: Operations Reports + CSV Export
 @manager_bp.route('/manager/reports', methods=['GET', 'POST'])
@@ -148,17 +203,44 @@ def announcements():
         "created_at": datetime.utcnow().isoformat() + "Z"
     }
     announcements_col().add(new_doc)
+    try:
+        sync_hub.publish('announcements', 'new_announcement', new_doc)
+    except Exception as e:
+        logger.warning(f"Failed to publish announcement sync: {e}")
     return api_success({"message": "Announcement broadcasted successfully."})
 
 @manager_bp.route('/api/announcements/active', methods=['GET'])
 @login_required
 def api_active_announcements():
     user_role = session.get('user_role', 'guest')
+    user_email = session.get('user_email', '')
     active = []
+    now = datetime.utcnow()
+    seven_days_ago = (now - timedelta(days=7)).isoformat()
+
     try:
         for d in announcements_col().stream():
             item = d.to_dict()
             item['id'] = d.id
+
+            # Filter already read by this user
+            read_by = item.get('read_by', [])
+            if user_email and user_email in read_by:
+                continue
+
+            # Expiry check: ignore older than 7 days or past explicit expires_at
+            created_at = item.get('created_at', '')
+            if created_at and created_at < seven_days_ago and not item.get('priority') == 'urgent':
+                continue
+            expires_at = item.get('expires_at')
+            if expires_at:
+                try:
+                    exp_dt = datetime.fromisoformat(expires_at.replace('Z', ''))
+                    if now > exp_dt:
+                        continue
+                except Exception:
+                    pass
+
             target = str(item.get('target_role', 'all')).lower()
             u_role = str(user_role).lower()
 
@@ -185,6 +267,20 @@ def api_active_announcements():
         logger.warning(f"Error streaming active announcements: {e}")
 
     return api_success(active[:15])
+
+@manager_bp.route('/api/announcements/<announcement_id>/read', methods=['POST'])
+@login_required
+def api_mark_announcement_read(announcement_id):
+    user_email = session.get('user_email')
+    doc = announcements_col().document(str(announcement_id)).get()
+    if doc.exists:
+        data = doc.to_dict()
+        read_by = data.get('read_by', [])
+        if user_email and user_email not in read_by:
+            read_by.append(user_email)
+            doc.reference.update({"read_by": read_by})
+        return api_success({"message": "Marked as read", "announcement_id": announcement_id})
+    return api_error(message="Announcement not found", status=404)
 
 # SCR-71: Staff Shifts & Attendance
 @manager_bp.route('/manager/shifts', methods=['GET', 'POST'])

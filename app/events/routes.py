@@ -175,12 +175,106 @@ def catering_packages():
     ]
     return render_template('events/catering.html', packages=packages)
 
+@events_bp.route('/api/events/catering/select', methods=['POST'])
+def api_select_catering_package():
+    data = request.get_json() or {}
+    package_name = data.get('package_name')
+    price_per_plate = data.get('price_per_plate', 0)
+    
+    if not package_name:
+        return api_error("Package name is required", 400)
+        
+    session['selected_catering'] = {
+        "package_name": package_name,
+        "price_per_plate": price_per_plate,
+        "selected_at": datetime.utcnow().isoformat() + "Z"
+    }
+    return api_success({
+        "message": f"Catering package '{package_name}' successfully selected.",
+        "package": session['selected_catering']
+    })
+
 # SCR-61: Events Calendar
 @events_bp.route('/events/calendar', methods=['GET'])
 @role_required('admin', 'manager', 'front_desk', 'events')
 def events_calendar():
-    events = [d.to_dict() for d in banquet_bookings_col().stream()]
+    events = []
+    try:
+        for d in banquet_bookings_col().stream():
+            data = d.to_dict()
+            data['id'] = d.id
+            events.append({
+                'id': d.id,
+                'type': 'banquet',
+                'event_type': data.get('event_type') or 'Banquet / Gala',
+                'hall': data.get('hall_name') or 'Grand Kohinoor Ballroom',
+                'date': data.get('event_date') or data.get('date') or 'Upcoming',
+                'host': data.get('user_email') or data.get('guest_name', 'Host Organizer'),
+                'guests': data.get('guest_count', 50),
+                'status': data.get('status', 'confirmed')
+            })
+        for d in spa_bookings_col().stream():
+            data = d.to_dict()
+            events.append({
+                'id': d.id,
+                'type': 'spa',
+                'event_type': 'Wellness Retreat',
+                'hall': f"Spa Suite ({data.get('slot_time', data.get('time_slot', 'Morning'))})",
+                'date': data.get('date') or data.get('slot_date', 'Today'),
+                'host': data.get('guest_name') or data.get('user_email', 'Valued Guest'),
+                'guests': 1,
+                'status': data.get('status', 'confirmed')
+            })
+        for d in pool_bookings_col().stream():
+            data = d.to_dict()
+            events.append({
+                'id': d.id,
+                'type': 'pool',
+                'event_type': 'Aquatics & Pool',
+                'hall': f"Palm Lawn & Pool Deck ({data.get('time_slot', 'All Day')})",
+                'date': data.get('date', 'Today'),
+                'host': data.get('user_email', 'Resort Guest'),
+                'guests': 1,
+                'status': data.get('status', 'confirmed')
+            })
+    except Exception as e:
+        logger.warning(f"Error compiling calendar events: {e}")
+
+    if not events:
+        events = [
+            {"id": "ev_seed_1", "date": "2026-09-20", "hall": "Grand Kohinoor Ballroom", "event_type": "Global Tech Leadership Summit", "host": "Nasscom", "guests": 350, "status": "confirmed"},
+            {"id": "ev_seed_2", "date": "2026-09-24", "hall": "Palm Lawn & Poolside Deck", "event_type": "Destination Sangeet & Cocktail Soiree", "host": "Mehta & Singhania Wedding", "guests": 280, "status": "confirmed"},
+            {"id": "ev_seed_3", "date": "2026-10-02", "hall": "Sapphire Conference Suite", "event_type": "Cardiology CME Conference", "host": "Indian Medical Association", "guests": 110, "status": "in_progress"}
+        ]
+
     return render_template('events/calendar.html', events=events)
+
+@events_bp.route('/api/events/calendar', methods=['POST'])
+@role_required('admin', 'manager', 'front_desk', 'events')
+def api_schedule_event():
+    data = request.get_json() or {}
+    hall_name = data.get('hall_name')
+    event_type = data.get('event_type', 'Private Gala')
+    event_date = data.get('event_date')
+    guest_count = data.get('guest_count', 50)
+    host = data.get('host') or data.get('user_email') or session.get('user_email', 'admin@nur-e-haya.com')
+
+    if not hall_name or not event_date:
+        return api_error("Hall name and event date are required", 400)
+
+    record = {
+        "hall_name": hall_name,
+        "event_type": event_type,
+        "event_date": event_date,
+        "guest_count": int(guest_count),
+        "user_email": host,
+        "status": "confirmed",
+        "created_at": datetime.utcnow().isoformat() + "Z"
+    }
+    bref = banquet_bookings_col().add(record)
+    doc_id = bref[1].id if bref else f"evt_{int(time.time())}"
+    record['id'] = doc_id
+    return api_success({"message": "Event scheduled successfully.", "event": record})
 
 # SCR-62 / SCR-63: Spa & Fitness Booking
 @events_bp.route('/wellness/spa', methods=['GET', 'POST'])
@@ -217,5 +311,33 @@ def pool_gym_booking():
 @events_bp.route('/events/enquiries', methods=['GET'])
 @role_required('admin', 'manager', 'front_desk')
 def enquiries_inbox():
-    enquiries = [d.to_dict() for d in banquet_bookings_col().stream()]
+    enquiries = []
+    try:
+        for d in banquet_bookings_col().stream():
+            data = d.to_dict()
+            data['id'] = d.id
+            enquiries.append(data)
+    except Exception as e:
+        logger.warning(f"Error fetching enquiries: {e}")
     return render_template('events/enquiries.html', enquiries=enquiries)
+
+@events_bp.route('/api/events/enquiries/<enquiry_id>/respond', methods=['POST'])
+@role_required('admin', 'manager', 'front_desk')
+def api_respond_enquiry(enquiry_id):
+    data = request.get_json() or {}
+    quote_amount = data.get('quote_amount')
+    proposal_notes = data.get('notes', '')
+
+    try:
+        banquet_bookings_col().document(enquiry_id).update({
+            "quote_amount": quote_amount,
+            "proposal_notes": proposal_notes,
+            "status": "proposal_sent",
+            "responded_at": datetime.utcnow().isoformat() + "Z"
+        })
+    except Exception as e:
+        logger.error(f"Error updating enquiry proposal: {e}")
+        return api_error("Failed to record proposal", 500)
+
+    return api_success({"message": f"Proposal of ₹{quote_amount} dispatched to client."})
+

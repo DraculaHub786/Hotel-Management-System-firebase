@@ -310,7 +310,7 @@ def seed_all_data(db_client=None):
 
     seeded_menu_count = 0
     for idx, item in enumerate(all_menu, 1):
-        item_id = f"item_{idx:03d}"
+        item_id = f"item_{idx}"
         doc_data = dict(item)
         doc_data['id'] = item_id
         doc_data['image_url'] = item.get('img') or item.get('image_url')
@@ -320,21 +320,22 @@ def seed_all_data(db_client=None):
         menu_col.document(item_id).set(doc_data)
         seeded_menu_count += 1
 
-    # 2. Seed Rooms
+    # 2. Seed Rooms (Single Canonical Document per Room - Part 0.1)
     rooms_col = db_client.collection('rooms')
     seeded_room_count = 0
     for r in ROOMS_CATALOG:
-        doc_id = f"room_{r['number']}"
+        doc_id = f"rm_{r['flat_code']}" if r.get('flat_code') else f"rm_{r['number']}"
         doc_data = dict(r)
         doc_data['id'] = doc_id
+        doc_data['canonical_id'] = doc_id
+        doc_data['flat_code'] = r.get('flat_code', f"FL-{r['number']}")
         doc_data['flat_no'] = r.get('flat_code', f"FL-{r['number']}")
+        doc_data['number'] = str(r['number'])
         doc_data['is_active'] = True
         doc_data['amenities'] = ["High-Speed WiFi", "Climate Control AC", "Smart 4K TV", "Marble Ensuite Bath", "Signature Bathrobes", "Nespresso Bar"]
         if "Suite" in r['type'] or "Penthouse" in r['type'] or "Villa" in r['type']:
             doc_data['amenities'].extend(["Private Butler Service", "Jacuzzi Spa Tub", "Walk-in Wardrobe", "Chauffeured Airport Transfer"])
         rooms_col.document(doc_id).set(doc_data)
-        if r.get('flat_code'):
-            rooms_col.document(f"rm_{r['flat_code']}").set(doc_data)
         seeded_room_count += 1
 
     # 3. Seed Restaurant Tables

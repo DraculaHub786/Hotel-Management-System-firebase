@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="user-role" content="{{ session.get('user_role', 'guest') }}">
+    <meta name="staff-role" content="{{ session.get('staff_role', '') }}">
+    <meta name="room-number" content="{{ session.get('room_number', '') }}">
+    <meta name="user-email" content="{{ session.get('user_email', '') }}">
     <title>{% block title %}Hotel Management System{% endblock %}</title>
     
     
@@ -894,10 +898,13 @@
             }
 
             notifList.innerHTML = items.map(a => `
-                <li class="px-2 py-2 mb-2 rounded" style="background: rgba(255,255,255,0.04); border-left: 3px solid ${a.priority === 'urgent' ? '#c70039' : '#d4af37'};">
+                <li class="px-2 py-2 mb-2 rounded position-relative" style="background: rgba(255,255,255,0.04); border-left: 3px solid ${a.priority === 'urgent' ? '#c70039' : '#d4af37'};">
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <strong style="color: #fff9e6; font-size: 12.5px;">${a.title || 'Announcement'}</strong>
-                        <span class="badge ${a.priority === 'urgent' ? 'bg-danger' : 'bg-secondary'}" style="font-size: 8.5px; text-transform: uppercase;">${a.priority || 'info'}</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <span class="badge ${a.priority === 'urgent' ? 'bg-danger' : 'bg-secondary'}" style="font-size: 8.5px; text-transform: uppercase;">${a.priority || 'info'}</span>
+                            <button type="button" class="btn btn-link p-0 text-secondary" style="font-size: 11px; text-decoration: none;" onclick="dismissAnnouncement('${a.id}')" title="Dismiss">&times;</button>
+                        </div>
                     </div>
                     <div class="small text-secondary" style="font-size: 11.5px; line-height: 1.35;">${a.message || ''}</div>
                     <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 10px;">
@@ -920,7 +927,20 @@
             console.warn('Failed to load live announcements', e);
         }
     }
-    document.addEventListener('DOMContentLoaded', loadLiveAnnouncements);
+
+    async function dismissAnnouncement(announcementId) {
+        try {
+            await fetch(`/api/announcements/${announcementId}/read`, { method: 'POST' });
+            loadLiveAnnouncements();
+        } catch (e) {
+            console.warn('Failed to mark announcement as read', e);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadLiveAnnouncements();
+        setInterval(loadLiveAnnouncements, 30000);
+    });
     </script>
     {% else %}
     <!-- Unauthenticated Navigation & Public Layout -->
@@ -949,6 +969,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/conventions.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sync.js') }}"></script>
     
     {% block extra_js %}{% endblock %}
 </body>

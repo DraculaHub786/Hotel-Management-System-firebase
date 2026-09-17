@@ -47,7 +47,7 @@
             <div class="p-3 border rounded-3 text-center">
               <h5 class="fw-bold fs-6 mb-1">Complimentary Airport Limousine Transfer</h5>
               <p class="text-secondary small mb-3">Redeem 150 points for a luxury airport pickup or drop-off.</p>
-              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="showToast('Voucher redeemed and added to your profile!', 'success')">
+              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="redeemLoyaltyPerk('Airport Limousine Transfer', 150)">
                 Redeem (150 Pts)
               </button>
             </div>
@@ -56,7 +56,7 @@
             <div class="p-3 border rounded-3 text-center">
               <h5 class="fw-bold fs-6 mb-1">60-Min Ayur Spa Aroma Massage</h5>
               <p class="text-secondary small mb-3">Redeem 200 points for full body relaxation treatment.</p>
-              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="showToast('Spa voucher redeemed!', 'success')">
+              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="redeemLoyaltyPerk('Ayur Spa Aroma Massage', 200)">
                 Redeem (200 Pts)
               </button>
             </div>
@@ -65,7 +65,7 @@
             <div class="p-3 border rounded-3 text-center">
               <h5 class="fw-bold fs-6 mb-1">Gourmet Dinner Chef Tasting Menu for 2</h5>
               <p class="text-secondary small mb-3">Redeem 300 points for a 5-course beachfront dinner.</p>
-              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="showToast('Dining voucher issued!', 'success')">
+              <button class="btn-nh btn-nh-primary btn-nh-sm w-100" onclick="redeemLoyaltyPerk('Dinner Chef Tasting Menu', 300)">
                 Redeem (300 Pts)
               </button>
             </div>
@@ -75,4 +75,33 @@
     </main>
   </div>
 </div>
+
+<script>
+async function redeemLoyaltyPerk(perkName, pointsCost) {
+  try {
+    const res = await fetch('/api/crm/loyalty/redeem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ perk_name: perkName, points_cost: pointsCost })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === 'function') {
+        showToast(data.data?.message || 'Voucher redeemed successfully!', 'success');
+      } else {
+        alert(data.data?.message || 'Voucher redeemed successfully!');
+      }
+      setTimeout(() => location.reload(), 900);
+    } else {
+      if (typeof showToast === 'function') {
+        showToast(data.error?.message || 'Failed to redeem voucher', 'error');
+      } else {
+        alert(data.error?.message || 'Failed to redeem voucher');
+      }
+    }
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Network error redeeming points', 'error');
+  }
+}
+</script>
 {% endblock %}

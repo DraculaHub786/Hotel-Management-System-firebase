@@ -163,14 +163,32 @@ def api_txn_status(txn_id):
     return api_success({"status": st, "booking_id": b_id, "phone_verified": tdata.get('phone_verified', False)})
 
 @payments_bp.route('/api/transactions/<txn_id>/simulate-pay', methods=['POST'])
+@login_required
 def api_simulate_pay(txn_id):
-    b_id = 'bk_5521'
+    current_email = session.get('user_email')
+    current_role = session.get('user_role', 'guest')
+
     doc = transactions_col().document(txn_id).get()
+    tdata = doc.to_dict() if doc.exists else None
+    target_ref = doc.reference if doc.exists else None
+
+    if not tdata:
+        matches = list(transactions_col().where('transaction_id', '==', txn_id).limit(1).get())
+        if matches:
+            tdata = matches[0].to_dict()
+            target_ref = matches[0].reference
+
+    # Restrict to transaction owner or authorized staff roles
+    staff_roles = ['admin', 'super_admin', 'manager', 'front_desk', 'accountant']
+    if tdata and tdata.get('user_email'):
+        if current_role not in staff_roles and tdata.get('user_email').lower() != current_email.lower():
+            return permission_denied("You are not authorized to settle this transaction.")
+
+    b_id = 'bk_5521'
     now_iso = datetime.utcnow().isoformat() + "Z"
-    if doc.exists:
-        doc.reference.update({"payment_status": "completed", "status": "paid", "paid_at": now_iso})
-        tdata = doc.to_dict()
-        b_id = tdata.get('booking_id') or tdata.get('reference_no') or b_id
+    if target_ref:
+        target_ref.update({"payment_status": "completed", "status": "paid", "paid_at": now_iso})
+        b_id = (tdata or {}).get('booking_id') or (tdata or {}).get('reference_no') or b_id
     else:
         for d in transactions_col().where('transaction_id', '==', txn_id).stream():
             d.reference.update({"payment_status": "completed", "status": "paid", "paid_at": now_iso})
@@ -199,20 +217,46 @@ def api_simulate_pay(txn_id):
 @login_required
 def api_process_payment():
     data = request.get_json() or {}
-    amount = float(data.get('amount', 0.0))
     payment_method = data.get('payment_method', 'card')
+    booking_id = data.get('booking_id')
+    order_id = data.get('order_id')
+    category = data.get('category', 'room')
+
+    # Security Fix 3: Recompute amount server-side from database records
+    amount = 0.0
+    if booking_id:
+        bdoc = bookings_col().document(str(booking_id)).get()
+        if not bdoc.exists:
+            matches = list(bookings_col().where('booking_no', '==', str(booking_id)).limit(1).get())
+            if matches: bdoc = matches[0]
+        if bdoc and bdoc.exists:
+            amount = float(bdoc.to_dict().get('total_price') or bdoc.to_dict().get('total') or 0.0)
+    elif order_id:
+        from app.firebase_db import orders_col
+        odoc = orders_col().document(str(order_id)).get()
+        if odoc and odoc.exists:
+            amount = float(odoc.to_dict().get('total_price') or odoc.to_dict().get('total') or 0.0)
+
+    # Fall back to client value only when no server-side entity is referenced
+    if amount <= 0.0:
+        amount = float(data.get('amount', 0.0))
+
+    if amount <= 0.0:
+        return api_error(message="Invalid or missing transaction amount.", status=400)
 
     txn_id = f"TXN{int(time.time())}{random.randint(100, 999)}"
-    tref = transactions_col().add({
+    transactions_col().add({
         "transaction_id": txn_id,
         "user_email": session.get('user_email'),
-        "amount": amount,
+        "amount": round(amount, 2),
+        "booking_id": booking_id,
+        "order_id": order_id,
         "payment_method": payment_method,
         "payment_status": "completed",
-        "category": data.get('category', 'room'),
+        "category": category,
         "created_at": datetime.utcnow().isoformat() + "Z"
     })
-    return api_success({"transaction_id": txn_id, "status": "completed"})
+    return api_success({"transaction_id": txn_id, "amount": round(amount, 2), "status": "completed"})
 
 # Module 8 Accounts & Payments (SCR-53 to SCR-58)
 @payments_bp.route('/accounts', methods=['GET'])

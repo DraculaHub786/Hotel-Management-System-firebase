@@ -26,6 +26,11 @@
       </button>
     </div>
     {% endif %}
+    <!-- Real-Time Sync Indicator -->
+    <div class="d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style="background: rgba(255, 255, 255, 0.05); cursor: default;" title="Real-Time Sync: Connecting...">
+      <span id="sync-status-dot" class="rounded-circle" style="width: 8px; height: 8px; background-color: #f59e0b; display: inline-block; transition: background-color 0.3s ease;"></span>
+      <span class="d-none d-md-inline text-secondary" style="font-size: 11px;">Sync</span>
+    </div>
 
     <!-- Notification Bell with Dropdown per Section M -->
     <div class="dropdown">

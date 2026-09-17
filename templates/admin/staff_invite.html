@@ -97,10 +97,36 @@
             <div class="d-flex justify-content-end gap-2 pt-4 mt-3 border-top">
                 <a href="/admin/staff" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
                 <button type="submit" class="btn btn-primary rounded-pill px-4" id="sendInviteBtn">
-                    <i class="fas fa-paper-plane me-1"></i> Send Staff Invitation
+                    <i class="fas fa-paper-plane me-1"></i> Generate Staff Invitation
                 </button>
             </div>
         </form>
+
+        <!-- Result Box (Hidden by default, shown upon link generation) -->
+        <div id="inviteResultBox" class="mt-4 p-4 rounded-4 border border-success bg-success-subtle text-dark" style="display: none;">
+            <div class="d-flex align-items-center gap-2 mb-2 text-success fw-bold">
+                <i class="fas fa-check-circle fs-5"></i>
+                <span class="fs-5">Invitation Link Ready</span>
+            </div>
+            <p class="small text-muted mb-3">Share this unique, time-limited onboarding link directly with the staff member to complete their registration:</p>
+            <div class="input-group mb-3">
+                <input type="text" id="generatedInviteUrl" class="form-control font-monospace text-dark bg-white" readonly>
+                <button class="btn btn-success" type="button" onclick="copyInviteLink()" id="copyLinkBtn">
+                    <i class="fas fa-copy me-1"></i> Copy Link
+                </button>
+            </div>
+            <div class="d-flex gap-2">
+                <a id="previewInviteLink" href="#" target="_blank" class="btn btn-outline-dark btn-sm rounded-pill px-3">
+                    <i class="fas fa-external-link-alt me-1"></i> Test Link
+                </a>
+                <a href="/admin/staff" class="btn btn-dark btn-sm rounded-pill px-3">
+                    <i class="fas fa-users me-1"></i> Return to Staff Roster
+                </a>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" onclick="resetInviteForm()">
+                    <i class="fas fa-plus me-1"></i> Invite Another
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -124,7 +150,7 @@ async function submitStaffInvite(e) {
     e.preventDefault();
     const btn = document.getElementById('sendInviteBtn');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Sending Invitation...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Generating Invitation...';
 
     const payload = {
         name: document.getElementById('staffName').value.trim(),
@@ -142,24 +168,46 @@ async function submitStaffInvite(e) {
         });
         const json = await res.json();
         if (json.ok) {
+            const inviteUrl = json.data.invite_url || `${window.location.origin}/invite/${json.data.invite_token}`;
+            document.getElementById('generatedInviteUrl').value = inviteUrl;
+            document.getElementById('previewInviteLink').href = inviteUrl;
+            document.getElementById('inviteResultBox').style.display = 'block';
+            document.getElementById('inviteStaffForm').style.display = 'none';
+
             if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Invitation dispatched to ${payload.email}`);
-            } else {
-                alert(`Invitation sent: ${json.data.invite_id}`);
+                AppConventions.Toast.success(`Invitation created for ${payload.email}`);
             }
-            setTimeout(() => {
-                window.location.href = '/admin/staff';
-            }, 1000);
         } else {
-            alert(json.error?.message || 'Failed to dispatch invite');
+            alert(json.message || json.error?.message || 'Failed to dispatch invite');
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Staff Invitation';
+            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Generate Staff Invitation';
         }
     } catch (err) {
         alert('Network error sending invite');
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Send Staff Invitation';
+        btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Generate Staff Invitation';
     }
+}
+
+function copyInviteLink() {
+    const input = document.getElementById('generatedInviteUrl');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById('copyLinkBtn');
+        btn.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+        setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-copy me-1"></i> Copy Link';
+        }, 2500);
+    });
+}
+
+function resetInviteForm() {
+    document.getElementById('inviteStaffForm').reset();
+    document.getElementById('inviteStaffForm').style.display = 'block';
+    document.getElementById('inviteResultBox').style.display = 'none';
+    const btn = document.getElementById('sendInviteBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Generate Staff Invitation';
 }
 </script>
 {% endblock %}

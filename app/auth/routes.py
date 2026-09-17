@@ -25,12 +25,7 @@ def verify_password(password: str, hashed: str) -> bool:
     try:
         if hashed.startswith(('$2b$', '$2a$', '$2y$')):
             return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
-        sha_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-        if sha_hash.lower() == hashed.lower():
-            return True
-        if password == hashed:
-            return True
-        return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+        return False
     except Exception as e:
         logger.error(f"Password verification error: {str(e)}")
         return False
@@ -47,6 +42,7 @@ def is_valid_staff_password(password: str) -> bool:
 
 # Rate limiting
 failed_login_attempts = {}
+otp_request_attempts = {}
 
 def check_login_rate_limit(key: str):
     now = time.time()
@@ -70,6 +66,27 @@ def record_failed_login(key: str):
 def clear_failed_login(key: str):
     failed_login_attempts.pop(key, None)
 
+def check_otp_rate_limit(key: str):
+    now = time.time()
+    window = 900  # 15 minutes
+    max_requests = 5
+    attempts = otp_request_attempts.get(key, [])
+    valid_attempts = [t for t in attempts if now - t < window]
+    otp_request_attempts[key] = valid_attempts
+
+    if len(valid_attempts) >= max_requests:
+        oldest = valid_attempts[0]
+        remaining_seconds = window - (now - oldest)
+        minutes = max(1, int(remaining_seconds // 60) + 1)
+        return False, minutes
+    return True, 0
+
+def record_otp_request(key: str):
+    now = time.time()
+    if key not in otp_request_attempts:
+        otp_request_attempts[key] = []
+    otp_request_attempts[key].append(now)
+
 def get_role_redirect(role: str) -> str:
     r = (role or 'guest').lower()
     redirect_map = {
@@ -81,11 +98,15 @@ def get_role_redirect(role: str) -> str:
         'laundry': '/staff/laundry',
         'room_service': '/staff/room-service',
         'waiter': '/dining/tables',
+        'cashier': '/dining/tables',
         'kitchen': '/staff/kitchen',
         'chef': '/staff/kitchen',
         'security': '/staff/security',
+        'valet': '/staff/security',
         'maintenance': '/staff/maintenance',
         'concierge': '/staff/concierge',
+        'bellhop': '/staff/concierge',
+        'spa': '/wellness/spa',
         'accountant': '/accounts'
     }
     return redirect_map.get(r, '/dashboard')
@@ -129,13 +150,20 @@ def register_api():
 
     # If OTP is not provided, generate OTP and return request
     if not otp_code:
+        ok_limit, min_left = check_otp_rate_limit(email)
+        if not ok_limit:
+            return api_error(message=f"Too many OTP requests. Please wait {min_left} minute(s).", status=429)
+        record_otp_request(email)
         code = generate_and_store_otp(email, purpose='register')
-        return api_success({
+        import os
+        resp_data = {
             "requires_otp": True,
             "email": email,
-            "message": "OTP has been generated and sent to your email.",
-            "dev_otp": code # included for testing convenience
-        })
+            "message": "OTP has been generated and sent to your email."
+        }
+        if os.getenv('DEMO_MODE', 'true').lower() in ['true', '1', 'yes'] and os.getenv('FLASK_ENV') != 'production':
+            resp_data["dev_otp"] = code
+        return api_success(resp_data)
 
     # Verify OTP
     ok, msg = verify_otp(email, otp_code, purpose='register')
@@ -351,30 +379,56 @@ def resend_otp_endpoint():
             "txn_id": txn_id
         })
 
-    email = data.get('email', '').strip().lower()
-    purpose = data.get('purpose', 'register')
-
-    if not email:
-        return api_error(message="Email is required.", status=400)
-
+    ok_limit, min_left = check_otp_rate_limit(email)
+    if not ok_limit:
+        return api_error(message=f"Too many OTP requests. Please wait {min_left} minute(s).", status=429)
+    record_otp_request(email)
     code = generate_and_store_otp(email, purpose=purpose)
-    return api_success({
-        "message": "A new OTP code has been generated.",
-        "dev_otp": code
-    })
+    import os
+    resp_data = {"message": "A new OTP code has been generated."}
+    if os.getenv('DEMO_MODE', 'true').lower() in ['true', '1', 'yes'] and os.getenv('FLASK_ENV') != 'production':
+        resp_data["dev_otp"] = code
+    return api_success(resp_data)
 
 @auth_bp.route('/api/google-auth', methods=['POST'])
 @auth_bp.route('/api/auth/google', methods=['POST'])
 def google_auth_api():
+    import os
     data = request.get_json() or {}
-    credential = data.get('credential')
-    email = data.get('email')
-    
-    if not credential and not email:
-        return api_error(message="Invalid Google authentication data", status=400)
-        
-    user_email = email or data.get('user_email', 'google_user@gmail.com')
-    user_name = data.get('name', user_email.split('@')[0])
+    credential = data.get('credential') or data.get('id_token')
+
+    if not credential:
+        return api_error(message="Invalid Google authentication data. Missing credential token.", status=400)
+
+    google_client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+    is_demo = os.getenv('DEMO_MODE', 'true').lower() in ['true', '1', 'yes'] and os.getenv('FLASK_ENV') != 'production'
+
+    verified_email = None
+    verified_name = None
+
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as google_requests
+        idinfo = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            audience=google_client_id if google_client_id else None
+        )
+        verified_email = idinfo.get('email')
+        verified_name = idinfo.get('name') or (verified_email.split('@')[0] if verified_email else 'Guest')
+    except Exception as e:
+        if is_demo and (str(credential).startswith(('mock_google_', 'demo_')) or credential == 'demo_token'):
+            verified_email = data.get('email') or 'demo_guest@gmail.com'
+            verified_name = data.get('name') or verified_email.split('@')[0]
+        else:
+            logger.warning(f"Google OAuth verification failed: {e}")
+            return api_error(message="Invalid or untrusted Google ID token.", status=401)
+
+    if not verified_email:
+        return api_error(message="Could not extract verified email from Google credential", status=400)
+
+    user_email = verified_email.lower().strip()
+    user_name = verified_name
 
     col = users_col()
     docs = list(col.where('email', '==', user_email).limit(1).get())
@@ -423,12 +477,16 @@ def forgot_password_api():
     email = data.get('email', '').strip().lower()
     if not email:
         return api_error(message="Email is required.", status=400)
-    
+    ok_limit, min_left = check_otp_rate_limit(email)
+    if not ok_limit:
+        return api_error(message=f"Too many password reset requests. Please wait {min_left} minute(s).", status=429)
+    record_otp_request(email)
     code = generate_and_store_otp(email, purpose='reset')
-    return api_success({
-        "message": "Password reset code sent to your email.",
-        "dev_otp": code
-    })
+    import os
+    resp_data = {"message": "Password reset code sent to your email."}
+    if os.getenv('DEMO_MODE', 'true').lower() in ['true', '1', 'yes'] and os.getenv('FLASK_ENV') != 'production':
+        resp_data["dev_otp"] = code
+    return api_success(resp_data)
 
 @auth_bp.route('/reset-password/<token>', methods=['GET'])
 @auth_bp.route('/reset-password', methods=['GET'])
@@ -486,10 +544,11 @@ def staff_invite_view(token):
 
     return render_template('staff_invite.html', token=token, invite=invite_data)
 
+@auth_bp.route('/api/invite/<token>/accept', methods=['POST'])
 @auth_bp.route('/api/auth/invite/accept', methods=['POST'])
-def staff_invite_accept_api():
+def staff_invite_accept_api(token=None):
     data = request.get_json() or {}
-    token = data.get('token', '').strip()
+    token = (token or data.get('token', '')).strip()
     name = data.get('name', '').strip()
     password = data.get('password', '')
     confirm_password = data.get('confirm_password', '')
@@ -539,18 +598,18 @@ def staff_invite_accept_api():
         "name": name,
         "password": hash_password(password),
         "role": role,
-        "staff_role": role,
+        "staff_role": inv_data.get('staff_role') or role,
         "department_id": department_id,
         "property_id": property_id,
         "is_active": True,
         "created_at": datetime.utcnow().isoformat() + "Z"
     }
+    ucol.document(email).set(user_payload)
     if existing:
         existing[0].reference.update(user_payload)
         uid = existing[0].id
     else:
-        uref = ucol.add(user_payload)
-        uid = uref[1].id
+        uid = email
 
     # Mark invite as used
     doc.reference.update({"used": True, "accepted_at": datetime.utcnow().isoformat() + "Z"})
@@ -593,6 +652,12 @@ def init_seed_users():
         {"email": "security@nur-e-haya.com", "name": "Chief Security Officer", "role": "security", "staff_role": "security"},
         {"email": "concierge@nur-e-haya.com", "name": "Chief Concierge", "role": "concierge", "staff_role": "concierge"},
         {"email": "accountant@nur-e-haya.com", "name": "Senior Accountant", "role": "accountant", "staff_role": None},
+        {"email": "kitchen@nur-e-haya.com", "name": "Kitchen Specialist", "role": "kitchen", "staff_role": "kitchen"},
+        {"email": "roomservice@nur-e-haya.com", "name": "Room Service Attendant", "role": "room_service", "staff_role": "room_service"},
+        {"email": "cashier@nur-e-haya.com", "name": "Dining Cashier", "role": "cashier", "staff_role": "cashier"},
+        {"email": "bellhop@nur-e-haya.com", "name": "Lead Bellhop", "role": "bellhop", "staff_role": "bellhop"},
+        {"email": "spa@nur-e-haya.com", "name": "Spa & Wellness Attendant", "role": "spa", "staff_role": "spa"},
+        {"email": "valet@nur-e-haya.com", "name": "Valet Attendant", "role": "valet", "staff_role": "valet"},
         {"email": "member@nur-e-haya.com", "name": "VIP Club Member", "role": "member", "staff_role": None, "discount_percent": 5.0},
         {"email": "user@nur-e-haya.com", "name": "Guest Traveler", "role": "guest", "staff_role": None}
     ]

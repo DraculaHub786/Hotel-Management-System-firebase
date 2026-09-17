@@ -69,6 +69,7 @@
                 <th>Active Points</th>
                 <th>Discount Level</th>
                 <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -76,14 +77,22 @@
               <tr>
                 <td class="fw-bold">{{ m.name }}</td>
                 <td>{{ m.email }}</td>
-                <td><span class="badge-pill priority-high">VIP Club</span></td>
+                <td><span class="badge-pill priority-high">{{ m.membership_tier or 'Silver Traveler' }}</span></td>
                 <td class="fw-bold text-success">{{ m.loyalty_points or 150 }} pts</td>
-                <td>5% Off</td>
+                <td>{{ m.discount_pct or 5 }}% Off</td>
                 <td><span class="badge-pill status-available">Active</span></td>
+                <td>
+                  <button class="btn-nh btn-nh-outline btn-nh-sm" onclick="openTierModal('{{ m.email }}', '{{ m.membership_tier or 'Silver Traveler' }}', {{ m.discount_pct or 5 }})">
+                    Upgrade Tier
+                  </button>
+                  <button class="btn-nh btn-nh-primary btn-nh-sm ms-1" onclick="openAdjustPointsModal('{{ m.email }}', {{ m.loyalty_points or 150 }})">
+                    Adjust Pts
+                  </button>
+                </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="6" class="text-center text-secondary py-4">No registered VIP members found.</td>
+                <td colspan="7" class="text-center text-secondary py-4">No registered VIP members found.</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -93,4 +102,149 @@
     </main>
   </div>
 </div>
+
+<!-- Upgrade Tier Modal -->
+<div class="modal fade" id="tierModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Upgrade VIP Membership Tier</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="tierForm">
+          <input type="hidden" id="tierUserEmail">
+          <div class="mb-3">
+            <label class="form-label text-secondary small">Target Member</label>
+            <div id="tierMemberEmail" class="fw-semibold"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Select Membership Tier</label>
+            <select class="form-select" id="tierSelect" required>
+              <option value="Silver Traveler">Silver Traveler (5% discount)</option>
+              <option value="VIP Gold Club">VIP Gold Club (10% discount)</option>
+              <option value="Presidential Platinum">Presidential Platinum (15% discount)</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Discount Percentage (%)</label>
+            <input type="number" class="form-control" id="tierDiscount" min="0" max="50" required>
+          </div>
+          <button type="submit" class="btn-nh btn-nh-primary w-100">Apply Tier Upgrade</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Adjust Points Modal -->
+<div class="modal fade" id="adjustPointsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Adjust Loyalty Points</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="adjustPointsForm">
+          <input type="hidden" id="adjustUserEmail">
+          <div class="mb-3">
+            <label class="form-label text-secondary small">Target Member</label>
+            <div id="adjustMemberEmail" class="fw-semibold"></div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Points Adjustment (+/-)</label>
+            <input type="number" class="form-control" id="pointsDelta" placeholder="e.g. 50 or -25" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Reason / Notes</label>
+            <input type="text" class="form-control" id="adjustReason" placeholder="Managerial goodwill reward" required>
+          </div>
+          <button type="submit" class="btn-nh btn-nh-primary w-100">Submit Adjustment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let tierModalInstance = null;
+let adjustModalInstance = null;
+
+function openTierModal(email, currentTier, currentDiscount) {
+  document.getElementById('tierUserEmail').value = email;
+  document.getElementById('tierMemberEmail').textContent = email;
+  document.getElementById('tierSelect').value = currentTier;
+  document.getElementById('tierDiscount').value = currentDiscount;
+  const el = document.getElementById('tierModal');
+  if (window.bootstrap && bootstrap.Modal) {
+    tierModalInstance = new bootstrap.Modal(el);
+    tierModalInstance.show();
+  } else {
+    el.style.display = 'block';
+  }
+}
+
+function openAdjustPointsModal(email, currentPoints) {
+  document.getElementById('adjustUserEmail').value = email;
+  document.getElementById('adjustMemberEmail').textContent = `${email} (Current: ${currentPoints} pts)`;
+  document.getElementById('pointsDelta').value = '';
+  document.getElementById('adjustReason').value = '';
+  const el = document.getElementById('adjustPointsModal');
+  if (window.bootstrap && bootstrap.Modal) {
+    adjustModalInstance = new bootstrap.Modal(el);
+    adjustModalInstance.show();
+  } else {
+    el.style.display = 'block';
+  }
+}
+
+document.getElementById('tierForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const email = document.getElementById('tierUserEmail').value;
+  const tier = document.getElementById('tierSelect').value;
+  const discount = parseInt(document.getElementById('tierDiscount').value);
+
+  try {
+    const res = await fetch('/api/crm/memberships/tier', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_email: email, tier: tier, discount_pct: discount })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === 'function') showToast(data.data?.message || 'Tier updated!', 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      if (typeof showToast === 'function') showToast(data.error?.message || 'Failed to update tier', 'error');
+    }
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Network error updating tier', 'error');
+  }
+});
+
+document.getElementById('adjustPointsForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const email = document.getElementById('adjustUserEmail').value;
+  const delta = parseInt(document.getElementById('pointsDelta').value);
+  const reason = document.getElementById('adjustReason').value;
+
+  try {
+    const res = await fetch('/api/crm/loyalty/adjust', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_email: email, points_delta: delta, reason: reason })
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (typeof showToast === 'function') showToast(data.data?.message || 'Points adjusted!', 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      if (typeof showToast === 'function') showToast(data.error?.message || 'Failed to adjust points', 'error');
+    }
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('Network error adjusting points', 'error');
+  }
+});
+</script>
 {% endblock %}

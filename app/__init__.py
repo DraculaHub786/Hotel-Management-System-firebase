@@ -32,7 +32,39 @@ def create_app(config_class=None):
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
     app.config.from_object(config_class)
 
-    CORS(app)
+    # Configure restricted CORS per Security Fix 5
+    raw_origins = os.getenv('ALLOWED_ORIGINS', '')
+    allowed_origins = [o.strip() for o in raw_origins.split(',') if o.strip()]
+    if not allowed_origins:
+        allowed_origins = ['http://localhost:5000', 'http://127.0.0.1:5000', 'https://nur-e-haya.onrender.com']
+    CORS(app, origins=allowed_origins if os.getenv('FLASK_ENV') == 'production' else '*', supports_credentials=True)
+
+    # CSRF Protection per Security Fix 4
+    import secrets
+    def get_or_create_csrf_token():
+        if '_csrf_token' not in session:
+            session['_csrf_token'] = secrets.token_hex(24)
+        return session['_csrf_token']
+
+    app.jinja_env.globals['csrf_token'] = get_or_create_csrf_token
+
+    @app.before_request
+    def validate_csrf():
+        if request.method in ('GET', 'HEAD', 'OPTIONS', 'TRACE'):
+            return
+        if app.config.get('TESTING'):
+            return
+        if session.get('user_email') and '_csrf_token' in session:
+            token = request.headers.get('X-CSRF-Token')
+            if not token and request.form:
+                token = request.form.get('csrf_token')
+            if not token and request.is_json:
+                data = request.get_json(silent=True) or {}
+                token = data.get('csrf_token')
+            if token and token != session['_csrf_token']:
+                if request.path.startswith('/api/'):
+                    return jsonify({"ok": False, "message": "Invalid CSRF token."}), 403
+                return render_template('permission_denied.html', message="Invalid CSRF token.", user_role=session.get('user_role', 'guest')), 403
 
     # Initialize Firestore
     db = get_db()

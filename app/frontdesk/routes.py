@@ -6,11 +6,12 @@ from flask import Blueprint, render_template, request, jsonify, session, redirec
 from app.firebase_db import (
     get_db, rooms_col, bookings_col, users_col, transactions_col, orders_col,
     housekeeping_tasks_col, night_audits_col, audit_logs_col, service_requests_col,
-    spa_bookings_col, pool_bookings_col, gym_bookings_col
+    spa_bookings_col, pool_bookings_col, gym_bookings_col, resolve_room_doc
 )
 from app.auth.decorators import login_required, role_required
 from api_utils import api_success, api_error, permission_denied
 from guest_service import generate_qr_base64, calculate_order_pricing
+from app.core.sync_hub import sync_hub
 
 logger = logging.getLogger(__name__)
 
@@ -32,11 +33,7 @@ def rooms_catalog():
 
 @frontdesk_bp.route('/rooms/<room_id>', methods=['GET'])
 def room_detail(room_id):
-    doc = rooms_col().document(str(room_id)).get()
-    if not doc.exists:
-        matches = list(rooms_col().where('number', '==', str(room_id)).limit(1).get())
-        if matches:
-            doc = matches[0]
+    doc = resolve_room_doc(room_id)
     if not doc or not doc.exists:
         return render_template('permission_denied.html', message="Room not found", user_role="guest"), 404
     rdata = doc.to_dict()
@@ -89,21 +86,16 @@ def api_guest_room_service_request():
 
     req_id = f"REQ{int(time.time())}{random.randint(10, 99)}"
 
-    # Helper for updating room status across various identifiers (RW-301, 301, room_301, rm_RW-301)
+    # Helper for updating room status across various identifiers using canonical resolver
     def _apply_room_updates(fields):
-        num_part = room_number.split('-')[-1]
-        for rdoc in rooms_col().where('number', '==', room_number).stream():
-            rdoc.reference.update(fields)
-        for rdoc in rooms_col().where('number', '==', num_part).stream():
-            rdoc.reference.update(fields)
-        for rdoc in rooms_col().where('flat_code', '==', room_number).stream():
-            rdoc.reference.update(fields)
-        for rdoc in rooms_col().where('flat_no', '==', room_number).stream():
-            rdoc.reference.update(fields)
-        for doc_key in [f"rm_{room_number}", f"room_{room_number}", f"room_{num_part}", f"rm_{num_part}", room_number]:
-            rd = rooms_col().document(doc_key).get()
-            if rd.exists:
-                rd.reference.update(fields)
+        rd = resolve_room_doc(room_number)
+        if rd and rd.exists:
+            rd.reference.update(fields)
+            try:
+                sync_hub.publish('front_desk', 'room_updated', {"room_number": room_number, **fields})
+                sync_hub.publish('housekeeping', 'room_updated', {"room_number": room_number, **fields})
+            except Exception as e:
+                logger.warning(f"Failed to publish room update sync: {e}")
 
     # Handle express checkout / leaving
     if service_type in ['checkout_leaving', 'leaving']:
@@ -623,11 +615,7 @@ def api_tape_chart():
 @frontdesk_bp.route('/api/front-desk/rooms/<room_id>/drawer', methods=['GET'])
 @role_required('admin', 'manager', 'front_desk', 'housekeeping')
 def api_room_drawer(room_id):
-    doc = rooms_col().document(str(room_id)).get()
-    if not doc.exists:
-        matches = list(rooms_col().where('number', '==', str(room_id)).limit(1).get())
-        if matches: doc = matches[0]
-
+    doc = resolve_room_doc(room_id)
     if not doc or not doc.exists:
         return api_error(message="Room not found", status=404)
 
@@ -765,16 +753,14 @@ def api_mark_room_clean():
     if not room_id:
         return api_error(message="room_id or room_number is required", status=400)
 
-    doc = rooms_col().document(str(room_id)).get()
-    if not doc.exists:
-        for field in ['number', 'flat_code', 'flat_no']:
-            matches = list(rooms_col().where(field, '==', str(room_id)).limit(1).get())
-            if matches:
-                doc = matches[0]
-                break
-
+    doc = resolve_room_doc(room_id)
     if doc and doc.exists:
         doc.reference.update({"status": "available"})
+        try:
+            sync_hub.publish('front_desk', 'room_cleaned', {"room_id": doc.id, "status": "available"})
+            sync_hub.publish('housekeeping', 'room_cleaned', {"room_id": doc.id, "status": "available"})
+        except Exception as e:
+            logger.warning(f"Failed to publish room clean sync: {e}")
         return api_success({"message": "Room status updated to available", "room_id": doc.id})
     return api_error(message="Room not found", status=404)
 

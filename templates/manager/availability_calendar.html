@@ -23,28 +23,43 @@
             <thead>
               <tr>
                 <th class="text-start">Room</th>
-                <th>Today</th>
-                <th>+1 Day</th>
-                <th>+2 Days</th>
-                <th>+3 Days</th>
-                <th>+4 Days</th>
-                <th>+5 Days</th>
-                <th>+6 Days</th>
+                {% if days_labels %}
+                  {% for dl in days_labels %}
+                  <th>{{ dl.label }}</th>
+                  {% endfor %}
+                {% else %}
+                  <th>Today</th>
+                  <th>+1 Day</th>
+                  <th>+2 Days</th>
+                  <th>+3 Days</th>
+                  <th>+4 Days</th>
+                  <th>+5 Days</th>
+                  <th>+6 Days</th>
+                {% endif %}
               </tr>
             </thead>
             <tbody>
-              {% for r in rooms %}
-              <tr>
-                <td class="text-start fw-bold">Room {{ r.number }} ({{ r.type }})</td>
-                <td><span class="badge-pill {% if r.status == 'occupied' %}status-occupied{% else %}status-available{% endif %}">{% if r.status == 'occupied' %}Occupied{% else %}Available{% endif %}</span></td>
-                <td><span class="badge-pill status-available">Available</span></td>
-                <td><span class="badge-pill status-occupied">Booked</span></td>
-                <td><span class="badge-pill status-occupied">Booked</span></td>
-                <td><span class="badge-pill status-available">Available</span></td>
-                <td><span class="badge-pill status-available">Available</span></td>
-                <td><span class="badge-pill status-available">Available</span></td>
-              </tr>
-              {% endfor %}
+              {% if matrix %}
+                {% for row in matrix %}
+                <tr>
+                  <td class="text-start fw-bold">Room {{ row.number }} ({{ row.type }})</td>
+                  {% for day in row.days %}
+                  <td>
+                    <span class="badge-pill {{ day.class }}" title="{{ day.guest }}">
+                      {{ day.status }}
+                    </span>
+                  </td>
+                  {% endfor %}
+                </tr>
+                {% endfor %}
+              {% else %}
+                {% for r in rooms %}
+                <tr>
+                  <td class="text-start fw-bold">Room {{ r.number }} ({{ r.type }})</td>
+                  <td colspan="7"><span class="badge-pill status-available">Available</span></td>
+                </tr>
+                {% endfor %}
+              {% endif %}
             </tbody>
           </table>
         </div>

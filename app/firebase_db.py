@@ -44,7 +44,11 @@ class MockDocumentReference:
 
     def update(self, data):
         if self.id not in self._collection._docs:
-            self._collection._docs[self.id] = {}
+            try:
+                from google.cloud.exceptions import NotFound
+                raise NotFound(f"No document to update: {self.id}")
+            except ImportError:
+                raise KeyError(f"No document to update: {self.id}")
         self._collection._docs[self.id].update(copy.deepcopy(data))
 
     def delete(self):
@@ -274,6 +278,84 @@ def linen_col(): return get_collection('linen')
 def restaurant_tables_col(): return get_collection('restaurant_tables')
 def mini_bar_orders_col(): return get_collection('mini_bar_orders')
 def invites_col(): return get_collection('invites')
+def staff_invites_col(): return invites_col()
 def password_resets_col(): return get_collection('password_resets')
 def logs_col(): return get_collection('logs')
 def chat_history_col(): return get_collection('chat_history')
+
+
+def resolve_room_doc(room_identifier):
+    """
+    Resolves any room identifier (canonical ID, flat_code, number, etc.) to the
+    single canonical room document snapshot/reference.
+    Eliminates the duplicate-document ambiguity (Part 0.1).
+    """
+    if not room_identifier:
+        return None
+
+    col = rooms_col()
+    r_str = str(room_identifier).strip()
+
+    # 1. Direct document ID lookup
+    doc = col.document(r_str).get()
+    if doc.exists:
+        return doc
+
+    # 2. Try prefixed canonical patterns (e.g. 'rm_HW-101', 'rm_101')
+    candidates = [
+        f"rm_{r_str}",
+        f"room_{r_str}"
+    ]
+    for c in candidates:
+        d = col.document(c).get()
+        if d.exists:
+            return d
+
+    # 3. Query by fields: flat_code, number, flat_no, id
+    for f in ['flat_code', 'number', 'flat_no', 'id']:
+        matches = list(col.where(f, '==', r_str).limit(1).get())
+        if matches and matches[0].exists:
+            return matches[0]
+
+    # 4. If numeric part was passed, try matching number
+    num_part = ''.join(filter(str.isdigit, r_str))
+    if num_part and num_part != r_str:
+        matches = list(col.where('number', '==', num_part).limit(1).get())
+        if matches and matches[0].exists:
+            return matches[0]
+
+    return None
+
+
+def resolve_menu_item_doc(item_id):
+    """
+    Resolves menu item identifier (e.g. 'item_1', 'item_001', numeric '1')
+    to its canonical document snapshot. (Part 0.3)
+    """
+    if not item_id:
+        return None
+    col = menu_col()
+    i_str = str(item_id).strip()
+
+    # 1. Direct document lookup
+    doc = col.document(i_str).get()
+    if doc.exists:
+        return doc
+
+    # 2. Try unpadded and zero-padded variants
+    num_part = ''.join(filter(str.isdigit, i_str))
+    if num_part:
+        val = int(num_part)
+        for variant in [f"item_{val}", f"item_{val:03d}", f"item_{val:02d}"]:
+            d = col.document(variant).get()
+            if d.exists:
+                return d
+
+    # 3. Field query
+    for f in ['id', 'name']:
+        matches = list(col.where(f, '==', i_str).limit(1).get())
+        if matches and matches[0].exists:
+            return matches[0]
+
+    return None
+
