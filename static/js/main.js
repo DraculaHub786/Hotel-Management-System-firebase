@@ -82,15 +82,51 @@
     };
   };
 
+  // 2.5 Global CSRF Interceptor for same-origin state-changing fetches
+  const originalFetch = window.fetch;
+  window.fetch = function(resource, init = {}) {
+    try {
+      const method = ((init && init.method) || 'GET').toUpperCase();
+      if (!['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method)) {
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        const token = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        if (token) {
+          init = init || {};
+          if (init.headers instanceof Headers) {
+            if (!init.headers.has('X-CSRF-Token')) init.headers.set('X-CSRF-Token', token);
+          } else if (Array.isArray(init.headers)) {
+            if (!init.headers.some(([k]) => k.toLowerCase() === 'x-csrf-token')) init.headers.push(['X-CSRF-Token', token]);
+          } else {
+            init.headers = init.headers || {};
+            if (!init.headers['X-CSRF-Token'] && !init.headers['x-csrf-token']) {
+              init.headers['X-CSRF-Token'] = token;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('CSRF interceptor note:', e);
+    }
+    return originalFetch.call(this, resource, init);
+  };
+
   // 3. Unified API Fetch Wrapper
   window.api = async function(url, options = {}) {
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+    const headers = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    };
+    const method = (options.method || 'GET').toUpperCase();
+    if (csrfToken && !['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method)) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+
     const fetchOptions = {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
-      },
-      method: options.method || 'GET',
+      headers,
+      method,
       ...options
     };
 

@@ -25,12 +25,14 @@ services:
         value: 10000
       - key: SECRET_KEY
         scope: secret
-      - key: FIREBASE_CREDENTIALS_PATH
-        value: firebase-credentials.json
+      - key: FIREBASE_CREDENTIALS_BASE64
+        scope: secret
+      - key: ALLOWED_ORIGINS
+        value: https://nur-e-haya.onrender.com,http://localhost:5000
     
     # Health check
     healthCheckPath: /api/health
 
-# Note: Set environment variables securely via Render Dashboard
-# - Add FIREBASE_CREDENTIALS_PATH and SECRET_KEY as secrets
-# - Copy firebase-credentials.json to the instance
+# Note: Set environment variables securely via Render Dashboard:
+# - Add FIREBASE_CREDENTIALS_BASE64 (base64 encoded firebase service account key)
+# - Add SECRET_KEY (cryptographic session key)

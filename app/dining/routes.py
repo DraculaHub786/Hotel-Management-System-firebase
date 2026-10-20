@@ -8,7 +8,7 @@ from app.firebase_db import (
     inventory_col, transactions_col, resolve_menu_item_doc
 )
 from app.auth.decorators import login_required, role_required
-from api_utils import api_success, api_error, permission_denied
+from api_utils import api_success, api_error, permission_denied, safe_sort_key
 from guest_service import generate_qr_base64
 from app.core.sync_hub import sync_hub
 
@@ -122,7 +122,7 @@ def api_orders():
             d['id'] = doc.id
             if not status_filter or d.get('status') == status_filter:
                 orders.append(d)
-        orders.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        orders.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
         return api_success(orders)
 
     # Place Order
@@ -199,6 +199,7 @@ def api_orders():
     })
 
 @dining_bp.route('/api/orders/<order_id>/status', methods=['PATCH', 'POST'])
+@dining_bp.route('/api/dining/orders/<order_id>/status', methods=['PATCH', 'POST'])
 def api_update_order_status(order_id):
     data = request.get_json() or {}
     new_status = data.get('status')
@@ -222,8 +223,16 @@ def api_update_order_status(order_id):
     updates = {"status": new_status, "updated_at": now_iso}
     if new_status == 'preparing':
         updates['prep_start'] = now_iso
+        tbl_num = odata.get('table_number')
+        if tbl_num:
+            for tdoc in restaurant_tables_col().where('table_no', '==', str(tbl_num)).stream():
+                tdoc.reference.update({"order_status": "preparing"})
     elif new_status == 'ready':
         updates['ready_at'] = now_iso
+        tbl_num = odata.get('table_number')
+        if tbl_num:
+            for tdoc in restaurant_tables_col().where('table_no', '==', str(tbl_num)).stream():
+                tdoc.reference.update({"order_status": "ready", "order_ready_at": now_iso})
     elif new_status == 'delivering':
         updates['delivering_at'] = now_iso
     elif new_status == 'delivered':
@@ -252,22 +261,27 @@ def api_update_order_status(order_id):
         tbl_num = odata.get('table_number')
         if tbl_num:
             for tdoc in restaurant_tables_col().where('table_no', '==', str(tbl_num)).stream():
-                tdoc.reference.update({"status": "busing"})
+                tdoc.reference.update({"status": "busing", "order_status": "bill_settled"})
 
     if doc and doc.exists:
         doc.reference.update(updates)
 
     try:
         r_num = odata.get('room_number')
+        tbl_num = odata.get('table_number')
         sync_payload = {
             "order_id": order_id,
             "order_no": odata.get('order_no', order_id),
             "status": new_status,
             "room_number": r_num,
-            "table_number": odata.get('table_number')
+            "table_number": tbl_num,
+            "guest_name": odata.get('guest_name', 'Guest')
         }
         sync_hub.publish('pos', 'order_status_updated', sync_payload)
         sync_hub.publish('kitchen', 'order_status_updated', sync_payload)
+        sync_hub.publish('waiter', 'order_status_updated', sync_payload)
+        if new_status == 'ready':
+            sync_hub.publish('waiter', 'order_ready', sync_payload)
         if r_num:
             sync_hub.publish(f"guest:{r_num}", 'order_status_updated', sync_payload)
         if odata.get('user_email'):
@@ -279,7 +293,7 @@ def api_update_order_status(order_id):
 
 # Table Management APIs
 @dining_bp.route('/api/dining/tables', methods=['GET'])
-@role_required('admin', 'manager', 'waiter', 'cashier', 'chef', 'kitchen')
+@role_required('admin', 'manager', 'waiter', 'cashier', 'chef', 'kitchen', 'housekeeping')
 def api_dining_tables():
     tables = [d.to_dict() for d in restaurant_tables_col().stream()]
     tables.sort(key=lambda t: t.get('table_no', ''))
@@ -287,10 +301,12 @@ def api_dining_tables():
 
 @dining_bp.route('/api/dining/tables/<table_id>', methods=['PATCH', 'POST'])
 @dining_bp.route('/api/dining/tables/<table_id>/status', methods=['PATCH', 'POST'])
-@role_required('admin', 'manager', 'waiter', 'cashier')
+@role_required('admin', 'manager', 'waiter', 'cashier', 'housekeeping', 'chef', 'kitchen')
 def api_update_table_status(table_id):
     data = request.get_json() or {}
     new_status = data.get('status', 'available')
+    now_iso = datetime.utcnow().isoformat() + "Z"
+
     doc = restaurant_tables_col().document(str(table_id)).get()
     if not doc.exists:
         matches = list(restaurant_tables_col().where('table_no', '==', str(table_id)).limit(1).get())
@@ -298,12 +314,90 @@ def api_update_table_status(table_id):
     if not doc or not doc.exists:
         return api_error(message="Table not found", status=404)
 
-    updates = {"status": new_status, "updated_at": datetime.utcnow().isoformat() + "Z"}
-    if new_status == 'available':
+    tdata = doc.to_dict()
+    table_no = tdata.get('table_no', table_id)
+    guest_name = tdata.get('guest_name', '') or data.get('guest_name', 'Guest')
+
+    updates = {"status": new_status, "updated_at": now_iso}
+
+    # If guest is leaving or table is marked busing / needs cleaning:
+    if new_status in ['busing', 'needs_cleaning']:
+        updates['status'] = 'busing'
+        updates['order_status'] = 'departed'
+        updates['departed_at'] = now_iso
+
+        # 1. Trigger cleaning staff turnover task
+        from app.firebase_db import housekeeping_tasks_col, notifications_col
+        task_id = f"tsk_tbl_{table_no}_{int(time.time())}"
+        try:
+            housekeeping_tasks_col().document(task_id).set({
+                "task_id": task_id,
+                "room_number": f"Table {table_no}",
+                "table_number": str(table_no),
+                "table_id": table_id,
+                "category": "dining_table",
+                "type": "Table Turnover & Sanitization",
+                "priority": "urgent",
+                "status": "pending",
+                "guest_name": guest_name,
+                "zone": tdata.get('zone', 'Dining Room'),
+                "notes": f"Guest {guest_name} has departed from Table {table_no}. Clear dishes, sanitize table, replace table linen and reset cutlery.",
+                "created_at": now_iso
+            })
+
+            # 2. Trigger notification for housekeeping staff
+            notifications_col().add({
+                "title": f"Turnover Alert: Table {table_no} Needs Cleaning",
+                "message": f"Guest {guest_name} has left Table {table_no}. Please sanitize and reset table.",
+                "target_role": "housekeeping",
+                "type": "table_cleaning",
+                "table_number": str(table_no),
+                "created_at": now_iso,
+                "read": False
+            })
+
+            sync_hub.publish('housekeeping', 'table_needs_cleaning', {
+                "table_no": table_no,
+                "table_id": table_id,
+                "guest_name": guest_name,
+                "task_id": task_id
+            })
+        except Exception as e:
+            logger.warning(f"Error triggering table housekeeping task: {e}")
+
+    elif new_status == 'available':
+        updates['status'] = 'available'
         updates['guest_name'] = ''
         updates['order_id'] = ''
+        updates['order_status'] = ''
+        updates['cleaned_at'] = now_iso
+        
+        # Mark all pending housekeeping tasks for this table as done!
+        try:
+            from app.firebase_db import housekeeping_tasks_col
+            for tdoc in housekeeping_tasks_col().where('table_number', '==', str(table_no)).where('status', 'in', ['pending', 'in_progress']).stream():
+                tdoc.reference.update({"status": "done", "completed_at": now_iso})
+        except Exception as e:
+            logger.warning(f"Error closing housekeeping task for table {table_no}: {e}")
+
     doc.reference.update(updates)
-    return api_success({"table_id": table_id, "status": new_status, "message": f"Table {table_id} updated to {new_status}"})
+
+    try:
+        sync_hub.publish('pos', 'table_status_updated', {"table_id": table_id, "table_no": table_no, "status": updates.get('status', new_status)})
+        sync_hub.publish('dining', 'table_status_updated', {"table_id": table_id, "table_no": table_no, "status": updates.get('status', new_status)})
+    except Exception as e:
+        logger.warning(f"Could not publish table sync: {e}")
+
+    msg = f"Table {table_no} status updated to {updates.get('status', new_status)}"
+    if new_status in ['busing', 'needs_cleaning']:
+        msg += ". Housekeeping notified for turnover."
+
+    return api_success({
+        "table_id": table_id,
+        "table_no": table_no,
+        "status": updates.get('status', new_status),
+        "message": msg
+    })
 
 # 3. Kitchen Display Queue (SCR-30)
 @dining_bp.route('/staff/kitchen', methods=['GET'])
@@ -316,7 +410,7 @@ def kitchen_queue():
         d['id'] = doc.id
         if d.get('status') in ['received', 'preparing', 'ready']:
             orders.append(d)
-    orders.sort(key=lambda x: x.get('created_at', ''))
+    orders.sort(key=lambda x: safe_sort_key(x.get('created_at')))
     return render_template('kitchen/orders_queue.html', orders=orders)
 
 @dining_bp.route('/staff/kitchen/menu', methods=['GET'])
@@ -334,6 +428,7 @@ def api_kitchen_orders():
         d['id'] = doc.id
         if d.get('status') in ['received', 'preparing', 'ready']:
             orders.append(d)
+    orders.sort(key=lambda x: safe_sort_key(x.get('created_at')))
     return api_success(orders)
 
 # 4. Room Service Staff (SCR-31)
@@ -350,10 +445,229 @@ def room_service_detail(order_id):
     odata = doc.to_dict() if doc.exists else {}
     return render_template('room_service/order_detail.html', order=odata)
 
-# 5. Tables Layout (SCR-31)
+def resolve_guest_order(order_ref, user_email):
+    """Resolve an order document by doc_id, order_no, or most recent active order for user."""
+    if not order_ref or order_ref == 'active':
+        if not user_email:
+            return None
+        # 1. Check active order assigned to user in restaurant_tables
+        try:
+            for tdoc in restaurant_tables_col().where('guest_email', '==', user_email).stream():
+                tdata = tdoc.to_dict()
+                active_oid = tdata.get('active_order_id')
+                active_ono = tdata.get('active_order_no')
+                if active_oid:
+                    doc = orders_col().document(str(active_oid)).get()
+                    if doc.exists:
+                        d = doc.to_dict()
+                        d['id'] = doc.id
+                        if not d.get('table_number'):
+                            d['table_number'] = tdata.get('table_number')
+                        return d
+                if active_ono:
+                    matches = list(orders_col().where('order_no', '==', str(active_ono)).limit(1).get())
+                    if matches:
+                        d = matches[0].to_dict()
+                        d['id'] = matches[0].id
+                        if not d.get('table_number'):
+                            d['table_number'] = tdata.get('table_number')
+                        return d
+        except Exception:
+            pass
+
+        # 2. Check orders collections by guest_email or user_email
+        orders = []
+        try:
+            for doc in orders_col().where('guest_email', '==', user_email).stream():
+                d = doc.to_dict()
+                d['id'] = doc.id
+                orders.append(d)
+        except Exception:
+            pass
+        try:
+            for doc in orders_col().where('user_email', '==', user_email).stream():
+                d = doc.to_dict()
+                d['id'] = doc.id
+                if not any(o['id'] == d['id'] for o in orders):
+                    orders.append(d)
+        except Exception:
+            pass
+        if not orders:
+            return None
+        orders.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
+        active_order = next((o for o in orders if (o.get('status') or '').lower() in ['received', 'preparing', 'ready', 'delivering', 'delivered', 'bill_pending', 'active']), orders[0])
+        return active_order
+    
+    # Check by document ID
+    doc = orders_col().document(str(order_ref)).get()
+    if doc.exists:
+        d = doc.to_dict()
+        d['id'] = doc.id
+        return d
+    
+    # Check by order_no
+    matches = list(orders_col().where('order_no', '==', str(order_ref)).limit(1).get())
+    if matches:
+        d = matches[0].to_dict()
+        d['id'] = matches[0].id
+        return d
+        
+    return None
+
+# Guest Order View & Bill Tracking
+@dining_bp.route('/dining/order/<order_ref>', methods=['GET'])
+@dining_bp.route('/dining/order/active', methods=['GET'])
+@login_required
+def guest_order_view(order_ref='active'):
+    user_email = session.get('user_email')
+    user_role = session.get('user_role', 'guest')
+    staff_roles = {'admin', 'super_admin', 'manager', 'waiter', 'cashier', 'chef', 'kitchen', 'room_service'}
+    
+    order = resolve_guest_order(order_ref, user_email)
+    if not order:
+        return render_template('guest/order_detail.html', order=None, error="No dining order found for your table.")
+    
+    order_email = (order.get('guest_email') or order.get('user_email') or '').lower()
+    if user_role not in staff_roles and order_email and order_email != (user_email or '').lower():
+        return permission_denied("You are not authorized to view this order.")
+        
+    status = (order.get('status') or '').lower()
+    pay_status = (order.get('payment_status') or '').lower()
+    if not pay_status:
+        pay_status = 'paid' if status == 'paid' else 'pending'
+    order['payment_status'] = pay_status
+
+    return render_template('guest/order_detail.html', order=order, items=order.get('items', []))
+
+@dining_bp.route('/api/dining/orders/<order_ref>', methods=['GET'])
+@login_required
+def api_get_order_detail(order_ref):
+    user_email = session.get('user_email')
+    user_role = session.get('user_role', 'guest')
+    staff_roles = {'admin', 'super_admin', 'manager', 'waiter', 'cashier', 'chef', 'kitchen', 'room_service'}
+    
+    order = resolve_guest_order(order_ref, user_email)
+    if not order:
+        return api_error(message="Order not found", status=404)
+        
+    order_email = (order.get('guest_email') or order.get('user_email') or '').lower()
+    if user_role not in staff_roles and order_email and order_email != (user_email or '').lower():
+        return permission_denied("You are not authorized to view this order.")
+        
+    status = (order.get('status') or '').lower()
+    pay_status = (order.get('payment_status') or '').lower()
+    if not pay_status:
+        pay_status = 'paid' if status == 'paid' else 'pending'
+    order['payment_status'] = pay_status
+    
+    return jsonify({
+        "ok": True,
+        "data": order,
+        "order": order
+    })
+
+@dining_bp.route('/api/dining/orders/<order_ref>/pay', methods=['POST'])
+@login_required
+def api_pay_dining_order(order_ref):
+    user_email = session.get('user_email')
+    order = resolve_guest_order(order_ref, user_email)
+    if not order:
+        return api_error(message="Order not found", status=404)
+        
+    total_amount = float(order.get('total') or 0.0)
+    if total_amount <= 0:
+        total_amount = float(order.get('subtotal', 500.0))
+        
+    data = request.get_json(silent=True) or {}
+    payment_method = data.get('payment_method', 'card')
+    phone = data.get('phone') or session.get('user_phone') or '9876543210'
+    
+    order_id = order.get('id')
+    order_no = order.get('order_no', f"ORD{int(time.time())}")
+    table_num = str(order.get('table_number') or 'T-01')
+    
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    txn_id = f"txn_dining_{int(time.time())}_{random.randint(100, 999)}"
+    dynamic_otp = f"{random.randint(100000, 999999)}"
+    
+    order_sum = {
+        "subtotal": float(order.get('subtotal') or (total_amount / 1.075)),
+        "tax": float(order.get('tax') or (total_amount * 0.05)),
+        "service_charge": float(order.get('service_charge') or (total_amount * 0.025)),
+        "total": total_amount,
+        "items": order.get('items', []),
+        "currency": "INR"
+    }
+    
+    transactions_col().document(txn_id).set({
+        "transaction_id": txn_id,
+        "user_email": user_email,
+        "phone": phone,
+        "amount": total_amount,
+        "total": total_amount,
+        "category": "dining",
+        "order_id": order_id,
+        "reference_no": order_no,
+        "table_number": table_num,
+        "payment_method": payment_method,
+        "payment_status": "pending",
+        "status": "pending",
+        "order_summary": order_sum,
+        "otp": dynamic_otp,
+        "created_at": now_iso
+    })
+    
+    if order_id:
+        orders_col().document(order_id).update({
+            "txn_id": txn_id,
+            "payment_status": "pending"
+        })
+        
+    banner = f"""
+======================================================================
+🔐 [DINING BILL PAYMENT INITIATED — STEP 1: MOBILE OTP VERIFICATION]
+   Transaction ID : {txn_id}
+   Order Reference: {order_no} (Table {table_num})
+   Guest Name     : {order.get('guest_name', user_email)} (+91 {phone})
+   Amount Payable : ₹{total_amount}
+   >>> DEMO OTP: {dynamic_otp} <<<
+   Timestamp      : {now_iso}
+   Instruction    : Enter this 6-digit OTP on /pay/{txn_id}/otp to verify phone
+======================================================================
+"""
+    logger.info(banner)
+    print(banner, flush=True)
+    
+    payload = {
+        "txn_id": txn_id,
+        "order_id": order_id,
+        "order_no": order_no,
+        "amount": total_amount,
+        "redirect_url": f"/pay/{txn_id}/otp",
+        "next_url": f"/pay/{txn_id}/qr",
+        "otp_code": dynamic_otp,
+        "message": f"Bill payment for Table {table_num} initiated! Proceeding to mobile verification..."
+    }
+    return jsonify({
+        "ok": True,
+        "data": payload,
+        **payload
+    })
+
+# 5. Tables Layout (SCR-31) & Waiter Desk
 @dining_bp.route('/dining/tables', methods=['GET'])
-@role_required('admin', 'manager', 'waiter', 'cashier', 'chef', 'kitchen')
+@dining_bp.route('/staff/waiter', methods=['GET'])
+@login_required
 def restaurant_tables():
+    user_role = session.get('user_role', 'guest')
+    staff_roles = {'admin', 'super_admin', 'manager', 'waiter', 'cashier', 'chef', 'kitchen', 'housekeeping'}
+    if user_role not in staff_roles:
+        # If guest navigates here, gracefully route them to their active dining order or dashboard!
+        email = session.get('user_email')
+        order_data = resolve_guest_order('active', email)
+        if order_data:
+            return redirect(f"/dining/order/{order_data.get('order_no') or order_data.get('id')}")
+        return redirect('/dashboard')
     tables = [d.to_dict() for d in restaurant_tables_col().stream()]
     if not tables:
         tables = [{"table_no": i, "seats": 4, "status": "available"} for i in range(1, 13)]

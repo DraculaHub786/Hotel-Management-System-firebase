@@ -83,7 +83,7 @@ def role_required(*allowed_roles, db=None):
                         "message": "Authentication required."
                     }), 401
                 from flask import redirect, url_for
-                return redirect(url_for('login'))
+                return redirect(url_for('auth.login_view', next=request.path))
 
 
             if allowed_roles and user_role not in allowed_roles:
@@ -102,3 +102,15 @@ def role_required(*allowed_roles, db=None):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+def safe_sort_key(val):
+    """
+    Safely converts any datetime, DatetimeWithNanoseconds, timestamp, or string into a uniform string
+    so that list.sort() never throws:
+    TypeError: '<' not supported between instances of 'DatetimeWithNanoseconds' and 'str'
+    """
+    if val is None:
+        return ""
+    if hasattr(val, 'isoformat'):
+        return val.isoformat()
+    return str(val)

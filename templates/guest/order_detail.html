@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+
+{% block title %}Order #{{ order.order_no if order else 'Dining' }} — Nur-e-Haya Luxury Dining{% endblock %}
+
+{% block extra_css %}
+<style>
+.order-detail-container {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 30px 15px;
+}
+
+.luxury-card {
+    background: rgba(22, 34, 54, 0.9);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    margin-bottom: 24px;
+}
+
+/* Stepper styles */
+.stepper-track {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 25px 0 15px;
+}
+.stepper-track::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 40px;
+    right: 40px;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: 1;
+}
+.stepper-node {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+.stepper-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.95);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    color: var(--text-secondary);
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+.stepper-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+@keyframes pulse-node {
+    0% {
+        box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(66, 133, 244, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(66, 133, 244, 0);
+    }
+}
+.stepper-node.active .stepper-icon {
+    border-color: #4285f4;
+    background: rgba(66, 133, 244, 0.25);
+    color: #8ab4f8;
+    animation: pulse-node 2s infinite;
+}
+.stepper-node.active .stepper-label {
+    color: #8ab4f8;
+    font-weight: 700;
+}
+.stepper-node.completed .stepper-icon {
+    border-color: var(--primary-color);
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+.stepper-node.completed .stepper-label {
+    color: var(--primary-color);
+}
+@media (max-width: 600px) {
+    .stepper-track {
+        overflow-x: auto;
+        padding-bottom: 12px;
+        scrollbar-width: thin;
+    }
+    .stepper-node {
+        min-width: 85px;
+    }
+}
+
+.table-custom {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.table-custom th {
+    padding: 12px 16px;
+    background: rgba(15, 26, 42, 0.85);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+.table-custom td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 13px;
+    color: var(--text-primary);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="order-detail-container">
+    <!-- Top Back Bar -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <a href="/dashboard" class="btn btn-secondary" style="font-size: 12px; padding: 7px 16px; border-radius: 20px;">
+            <i class="fas fa-arrow-left me-2"></i> Return to Dashboard
+        </a>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge" style="background: rgba(66,133,244,0.18); border: 1px solid #4285f4; color: #8ab4f8; font-size: 12px; padding: 6px 14px; border-radius: 20px;">
+                <i class="fas fa-chair me-1"></i> Table {{ order.table_number if order else 'T-01' }}
+            </span>
+            <span class="badge" style="background: rgba(212,175,55,0.18); border: 1px solid var(--primary-color); color: var(--primary-color); font-size: 12px; padding: 6px 14px; border-radius: 20px;">
+                Order #{{ order.order_no if order else 'ORD' }}
+            </span>
+        </div>
+    </div>
+
+    {% if error %}
+    <div class="luxury-card text-center py-5">
+        <i class="fas fa-utensils text-warning mb-3" style="font-size: 42px;"></i>
+        <h4 style="font-family: 'Cinzel', serif; color: var(--text-bright);">No Active Dining Order</h4>
+        <p class="text-secondary mb-4">{{ error }}</p>
+        <a href="/menu" class="btn btn-primary"><i class="fas fa-book-open me-2"></i> Explore Restaurant Menu</a>
+    </div>
+    {% elif order %}
+
+    <!-- Status & Fulfillment Stepper Card -->
+    {% set st = (order.status or 'received') | lower %}
+    {% set pst = (order.payment_status or 'pending') | lower %}
+    <div class="luxury-card">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div>
+                <span class="text-secondary small text-uppercase" style="letter-spacing: 1px; font-size: 10px;">Live Dining Fulfillment</span>
+                <h4 class="mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    Order #{{ order.order_no or order.id }}
+                </h4>
+            </div>
+            <div>
+                {% if pst in ['paid', 'completed'] or st == 'paid' %}
+                    <span class="badge bg-success px-3 py-2" style="font-size: 11px; border-radius: 20px;">
+                        <i class="fas fa-check-circle me-1"></i> BILL PAID IN FULL
+                    </span>
+                {% else %}
+                    <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 11px; border-radius: 20px;">
+                        <i class="fas fa-clock me-1"></i> PAYMENT PENDING
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 5-Step Visual Track -->
+        <div class="stepper-track">
+            <div class="stepper-node completed">
+                <div class="stepper-icon"><i class="fas fa-receipt"></i></div>
+                <div class="stepper-label">Received</div>
+            </div>
+            <div class="stepper-node {% if st in ['preparing', 'ready', 'delivering', 'delivered', 'paid', 'bill_pending'] %}completed{% elif st == 'received' %}active{% endif %}">
+                <div class="stepper-icon"><i class="fas fa-fire"></i></div>
+                <div class="stepper-label">In Kitchen</div>
+            </div>
+            <div class="stepper-node {% if st in ['ready', 'delivering', 'delivered', 'paid', 'bill_pending'] %}completed{% elif st == 'preparing' %}active{% endif %}">
+                <div class="stepper-icon"><i class="fas fa-bell"></i></div>
+                <div class="stepper-label">Cooked &amp; Ready</div>
+            </div>
+            <div class="stepper-node {% if st in ['delivered', 'paid', 'bill_pending'] %}completed{% elif st in ['ready', 'delivering'] %}active{% endif %}">
+                <div class="stepper-icon"><i class="fas fa-utensils"></i></div>
+                <div class="stepper-label">Food Served</div>
+            </div>
+            <div class="stepper-node {% if pst in ['paid', 'completed'] or st == 'paid' %}completed{% elif st in ['delivered', 'bill_pending'] %}active{% endif %}">
+                <div class="stepper-icon"><i class="fas fa-check-double"></i></div>
+                <div class="stepper-label">Bill Settled</div>
+            </div>
+        </div>
+
+        <div class="text-center mt-3 text-secondary small">
+            <i class="fas fa-info-circle text-info me-1"></i>
+            {% if pst in ['paid', 'completed'] or st == 'paid' %}
+                Your meal has been served and bill settled. Thank you for dining with us!
+            {% elif st == 'delivered' or st == 'bill_pending' %}
+                Your food has been served to Table <strong>{{ order.table_number }}</strong>. You can settle the dining bill below.
+            {% elif st == 'ready' %}
+                Chef has prepared your order! The waiter is on their way to deliver it to Table <strong>{{ order.table_number }}</strong>.
+            {% elif st == 'preparing' %}
+                Our master chefs are currently preparing your dishes fresh in the kitchen.
+            {% else %}
+                Your order has been acknowledged by the kitchen.
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Items & Bill Breakdown Card -->
+    <div class="luxury-card p-0 overflow-hidden">
+        <div class="p-4" style="background: rgba(15, 26, 42, 0.8); border-bottom: 1px solid rgba(212, 175, 55, 0.2);">
+            <div class="d-flex align-items-center justify-content-between">
+                <h5 class="mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">
+                    <i class="fas fa-list-ul text-warning me-2"></i> Ordered Dishes &amp; Drinks
+                </h5>
+                <span class="text-secondary small">Table {{ order.table_number }} &bull; {{ order.guest_name }}</span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-custom">
+                <thead>
+                    <tr>
+                        <th>Item Description</th>
+                        <th class="text-center" style="width: 90px;">Qty</th>
+                        <th class="text-end" style="width: 130px;">Price</th>
+                        <th class="text-end" style="width: 140px;">Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set order_items = items if items is defined and items else (order['items'] if order and 'items' in order else []) %}
+                    {% if order_items %}
+                        {% for it in order_items %}
+                        {% set i_qty = it.qty or it.quantity or 1 %}
+                        {% set i_price = (it.price or it.unit_price or 0) | float %}
+                        <tr>
+                            <td class="fw-bold">{{ it.name }}</td>
+                            <td class="text-center">{{ i_qty }}</td>
+                            <td class="text-end text-secondary">₹{{ '%.2f' | format(i_price) }}</td>
+                            <td class="text-end fw-bold" style="color: var(--primary-color);">₹{{ '%.2f' | format(i_price * (i_qty | int)) }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-secondary py-3">No individual items recorded</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bill Calculations -->
+        <div class="p-4 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+            <div class="row justify-content-end">
+                <div class="col-12 col-md-6">
+                    <div class="d-flex justify-content-between py-1 text-secondary small">
+                        <span>Items Subtotal:</span>
+                        <span class="text-white">₹{{ order.subtotal or (order.total * 0.93) | round(2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 text-secondary small">
+                        <span>GST &amp; Taxes (5%):</span>
+                        <span class="text-white">₹{{ order.tax or (order.total * 0.05) | round(2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-1 text-secondary small">
+                        <span>Hospitality Service Charge (2.5%):</span>
+                        <span class="text-white">₹{{ (order.total * 0.025) | round(2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between py-2 mt-2 border-top border-secondary border-opacity-25">
+                        <span class="fw-bold" style="font-size: 15px; color: var(--text-bright);">GRAND TOTAL:</span>
+                        <span class="fw-bold" style="font-size: 20px; color: var(--primary-color);">₹{{ order.total }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Action Card -->
+    <div class="luxury-card">
+        {% if pst in ['paid', 'completed'] or st == 'paid' %}
+            <div class="text-center py-3">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 58px; height: 58px; border-radius: 50%; background: rgba(34, 197, 94, 0.2); border: 2px solid #22c55e; color: #4ade80; font-size: 26px;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h4 style="font-family: 'Cinzel', serif; color: var(--text-bright);">Bill Settled Successfully</h4>
+                <p class="text-secondary small mb-3">Your transaction has been verified and settled. Thank you for dining at Nur-e-Haya.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="/dashboard" class="btn btn-primary" style="border-radius: 20px; padding: 8px 22px;">
+                        <i class="fas fa-home me-1"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-color); font-weight: 700;">
+                        <i class="fas fa-credit-card me-1"></i> Settle Dining Bill
+                    </div>
+                    <h4 class="mb-1" style="font-family: 'Cinzel', serif; color: #ffffff;">
+                        Amount Payable: ₹{{ order.total }}
+                    </h4>
+                    <p class="text-secondary small mb-0">Complete phone OTP verification and simulated QR checkout.</p>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-primary pulse-effect" id="btnPayBill" onclick="payThisOrder('{{ order.order_no or order.id }}')" style="padding: 10px 24px; font-weight: 700; border-radius: 25px;">
+                        <i class="fas fa-lock me-1"></i> PAY BILL NOW (₹{{ order.total }})
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function payThisOrder(orderRef) {
+    const btn = document.getElementById('btnPayBill');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status"></span> INITIATING PAYMENT...`;
+    }
+
+    try {
+        const response = await fetch(`/api/dining/orders/${orderRef}/pay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_method: 'card' })
+        });
+        const result = await response.json();
+
+        if (result.ok || result.success) {
+            const data = result.data || result;
+            if (typeof Toast !== 'undefined') {
+                Toast.success('Bill payment initiated! Proceeding to mobile verification...');
+            }
+            setTimeout(() => {
+                window.location.href = data.redirect_url || (`/pay/${data.txn_id}/otp`);
+            }, 600);
+        } else {
+            const errMsg = result.message || 'Failed to initiate bill payment';
+            if (typeof showToast === 'function') {
+                showToast(errMsg, 'error');
+            } else if (typeof Toast !== 'undefined' && Toast.error) {
+                Toast.error(errMsg);
+            } else if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.error(errMsg);
+            } else {
+                alert(errMsg);
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-lock me-1"></i> PAY BILL NOW`;
+            }
+        }
+    } catch (e) {
+        console.error('Error initiating dining bill payment:', e);
+        const netErr = 'Network error. Please try again.';
+        if (typeof showToast === 'function') {
+            showToast(netErr, 'error');
+        } else if (typeof Toast !== 'undefined' && Toast.error) {
+            Toast.error(netErr);
+        } else if (window.AppConventions && AppConventions.Toast) {
+            AppConventions.Toast.error(netErr);
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fas fa-lock me-1"></i> PAY BILL NOW`;
+        }
+    }
+}
+</script>
+{% endblock %}

@@ -14,22 +14,22 @@
    ============================================ */
 :root {
     --primary-color: #d4af37;
+    --primary-glow: rgba(212, 175, 55, 0.4);
     --secondary-color: #104e8b;
-    --dark-bg: #0a0a0a;
-    --dark-surface: #1a1a1a;
-    --medium-surface: #2a2a2a;
-    --text-primary: #e0e0e0;
-    --text-secondary: #b0b0b0;
-    --text-bright: #ffffff;
+    --dark-bg: #0f1a2a;
+    --dark-surface: #162236;
+    --medium-surface: #1d2d44;
+    --text-primary: #e8dfc1;
+    --text-secondary: #bda568;
+    --text-bright: #fff9e6;
     --success-color: #008670;
     --danger-color: #c70039;
     --warning-color: #ff9800;
     --info-color: #2196f3;
-    --primary-glow: rgba(212, 175, 55, 0.4);
     --success-glow: rgba(0, 134, 112, 0.4);
     --danger-glow: rgba(199, 0, 57, 0.4);
     --warning-glow: rgba(255, 152, 0, 0.4);
-    --glass-bg: rgba(26, 26, 26, 0.8);
+    --glass-bg: rgba(22, 34, 54, 0.85);
     --glass-border: 1px solid rgba(212, 175, 55, 0.2);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
@@ -3949,6 +3949,67 @@ button.chat-bubble .chat-badge {
         </header>
 
         <div class="container">
+            <!-- Active Room & Table Indicators -->
+            <div id="dashboardActiveStaySection" style="margin-bottom: 25px;">
+                <div class="row g-3" id="dashboardActiveStayRow">
+                    {% if active_room %}
+                    <div class="{% if active_dining %}col-md-6{% else %}col-12{% endif %}" id="dashActiveRoomCol">
+                        <div style="background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(22,34,54,0.95)); border: 1.5px solid rgba(212,175,55,0.55); border-radius: 14px; padding: 18px 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(212,175,55,0.25); border: 1px solid var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary-color);">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary-color); font-weight: 700;">Reserved &amp; Paid Accommodation</div>
+                                    <h3 style="margin: 2px 0 0 0; font-size: 22px; font-weight: 800; color: #ffffff;">Your room: {{ active_room.room_number }}</h3>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
+                                        Booking #{{ active_room.booking_no or 'Confirmed' }} &bull; Status: <span class="badge bg-success" style="font-size: 10px;">{{ (active_room.status or 'Paid') | upper }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="/my-bookings" class="btn btn-sm btn-outline-warning" style="font-size: 11px; padding: 6px 14px; border-radius: 20px; text-decoration: none;">
+                                <i class="fas fa-key me-1"></i> Key &amp; Stay
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if active_dining %}
+                    <div class="{% if active_room %}col-md-6{% else %}col-12{% endif %}" id="dashActiveTableCol">
+                        <div style="background: linear-gradient(135deg, rgba(66,133,244,0.2), rgba(22,34,54,0.95)); border: 1.5px solid rgba(66,133,244,0.55); border-radius: 14px; padding: 18px 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(66,133,244,0.25); border: 1px solid #4285f4; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #4285f4;">
+                                    <i class="fas fa-chair"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #4285f4; font-weight: 700;">Dining Reservation &amp; Order</div>
+                                    <h3 style="margin: 2px 0 0 0; font-size: 22px; font-weight: 800; color: #ffffff;">Your table: {{ active_dining.table_number }}</h3>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
+                                        Order #{{ active_dining.order_no or 'Active' }} &bull; Status: <span class="badge bg-info text-dark" style="font-size: 10px;">{{ (active_dining.status or 'In-Kitchen') | upper }}</span>
+                                        {% if active_dining.payment_status in ['paid', 'completed'] or active_dining.status == 'paid' %}
+                                        <span class="badge bg-success ms-1" style="font-size: 10px;">PAID</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">PAYMENT PENDING</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button type="button" onclick="openGuestOrderModal('{{ active_dining.order_no or active_dining.id or 'active' }}')" class="btn btn-sm btn-outline-primary" style="font-size: 11px; padding: 6px 14px; border-radius: 20px;">
+                                    <i class="fas fa-utensils me-1"></i> View Order
+                                </button>
+                                {% if active_dining.payment_status not in ['paid', 'completed'] and active_dining.status != 'paid' %}
+                                <button type="button" onclick="payDiningOrder('{{ active_dining.order_no or active_dining.id or 'active' }}')" class="btn btn-sm btn-primary" style="font-size: 11px; padding: 6px 14px; border-radius: 20px;">
+                                    <i class="fas fa-credit-card me-1"></i> Pay Now
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Statistics Grid -->
             <section class="stats-grid" id="statsGrid" aria-label="Booking statistics">
                 <article class="stat-card">
@@ -4362,7 +4423,7 @@ button.chat-bubble .chat-badge {
                             <i class="fas fa-arrow-left"></i> BACK
                         </button>
                         <button type="submit" class="btn btn-primary pulse-effect" id="confirmBookingBtn" style="flex: 1;">
-                            <i class="fas fa-check-circle"></i> CONFIRM BOOKING
+                            <i class="fas fa-lock"></i> CONFIRM &amp; PROCEED TO PAYMENT
                         </button>
                     </div>
                 </div>
@@ -5079,6 +5140,23 @@ button.chat-bubble .chat-badge {
                     <h3>Third-Party Sharing</h3>
                     <p>We do not sell or share your personal information with third parties except as required for payment processing.</p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guest Dining Order Modal -->
+    <div id="guestOrderModal" class="modal" role="dialog" aria-labelledby="guestOrderModalTitle" aria-modal="true">
+        <div class="modal-content" style="max-width: 580px; background: #162236; border: 1px solid rgba(212,175,55,0.4); box-shadow: 0 15px 40px rgba(0,0,0,0.8);">
+            <div class="modal-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 class="modal-title" id="guestOrderModalTitle" style="font-size: 20px; font-weight: 800; color: var(--primary-color, #d4af37); margin: 0; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-utensils"></i> DINING ORDER DETAILS
+                </h2>
+                <button class="modal-close" onclick="closeGuestOrderModal()" aria-label="Close Order Details" style="background: none; border: none; color: #a0aec0; font-size: 20px; cursor: pointer;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="guestOrderModalBody">
+                <!-- Loaded dynamically -->
             </div>
         </div>
     </div>
@@ -5933,16 +6011,83 @@ async function loadAvailableRooms() {
     
     try {
         const cacheBuster = new Date().getTime();
-        const response = await fetch(`/api/rooms/available?check_in=${checkIn}&check_out=${checkOut}&_=${cacheBuster}`);
-        const raw = await response.json();
-        const rooms = Array.isArray(raw) ? raw : (raw.data || raw.rooms || []);
+        // Fetch all rooms in hotel catalog & date-filtered availability
+        const [allRoomsRes, availRoomsRes] = await Promise.all([
+            fetch(`/api/rooms?_=${cacheBuster}`),
+            fetch(`/api/rooms/available?check_in=${checkIn}&check_out=${checkOut}&_=${cacheBuster}`)
+        ]);
+        
+        const allRaw = await allRoomsRes.json();
+        const availRaw = await availRoomsRes.json();
+        
+        const allList = Array.isArray(allRaw) ? allRaw : (allRaw.data || allRaw.rooms || []);
+        const availList = Array.isArray(availRaw) ? availRaw : (availRaw.data || availRaw.rooms || []);
+        
+        // Build set of available room identifiers
+        const availSet = new Set();
+        availList.forEach(r => {
+            if (r.id) availSet.add(String(r.id));
+            if (r.number) availSet.add(String(r.number));
+            if (r.room_number) availSet.add(String(r.room_number));
+            const digits = String(r.number || r.room_number || r.id).replace(/\D/g, '');
+            if (digits) availSet.add(digits);
+        });
+
+        // Deduplicate all rooms by room number (e.g. 101, 102...)
+        const seenNumbers = new Set();
+        const catalogRooms = [];
+        
+        const getImageForType = (type, existingImg) => {
+            if (existingImg && typeof existingImg === 'string' && !existingImg.includes('placeholder')) {
+                return existingImg;
+            }
+            const t = (type || '').toLowerCase();
+            if (t.includes('suite')) return '/static/images/suite-room.webp';
+            if (t.includes('luxury') || t.includes('presidential')) return '/static/images/luxury-room.jpg';
+            if (t.includes('double')) return '/static/images/double-room.webp';
+            if (t.includes('family')) return '/static/images/single-room.jpg';
+            return '/static/images/single-room.jpg';
+        };
+
+        for (const r of allList) {
+            const num = String(r.number || r.room_number || r.id || '').trim();
+            const cleanNum = num.replace(/\D/g, '') || num;
+            if (!cleanNum || seenNumbers.has(cleanNum)) continue;
+            seenNumbers.add(cleanNum);
+            
+            const rType = r.type || r.room_type || 'Deluxe Room';
+            const rPrice = parseFloat(r.price || r.rate || 3500);
+            const rMaxGuests = parseInt(r.max_guests || r.maxGuests || (rType.toLowerCase().includes('suite') ? 4 : (rType.toLowerCase().includes('single') ? 1 : 2)));
+            const rAmenities = (Array.isArray(r.amenities) && r.amenities.length > 0) 
+                ? r.amenities 
+                : ['WiFi', 'AC', 'TV', 'Room Service'];
+            const rImage = getImageForType(rType, r.image);
+            
+            const isAvail = availSet.size === 0 
+                ? (r.status !== 'occupied' && r.status !== 'maintenance' && r.status !== 'blocked') 
+                : (availSet.has(cleanNum) || availSet.has(String(r.id)) || availSet.has(String(r.number)));
+            
+            catalogRooms.push({
+                id: r.id || ('room_' + cleanNum),
+                number: cleanNum,
+                type: rType,
+                price: rPrice,
+                maxGuests: rMaxGuests,
+                amenities: rAmenities,
+                image: rImage,
+                isAvailable: isAvail && r.status !== 'blocked'
+            });
+        }
+        
+        // Sort catalog numerically
+        catalogRooms.sort((a, b) => parseInt(a.number, 10) - parseInt(b.number, 10));
         
         if (roomsLoader) roomsLoader.style.display = 'none';
-        displayAvailableRooms(rooms);
+        displayAvailableRooms(catalogRooms);
     } catch (error) {
         console.error('Error loading available rooms:', error);
         if (roomsLoader) roomsLoader.style.display = 'none';
-        NotificationSystem.error('Could not load available rooms', 'Connection Error');
+        NotificationSystem.error('Could not load hotel rooms catalog', 'Connection Error');
     }
 }
 
@@ -5950,36 +6095,22 @@ function displayAvailableRooms(rooms) {
     const container = document.getElementById('availableRooms');
     if (!container) return;
     
-    const roomDetails = {
-        '101': { type: 'Single', price: 2500, image: '/static/images/single-room.jpg', maxGuests: 1, amenities: ['WiFi', 'AC', 'TV'] },
-        '102': { type: 'Suite', price: 5000, image: '/static/images/suite-room.webp', maxGuests: 3, amenities: ['WiFi', 'AC', 'TV', 'Mini Bar'] },
-        '103': { type: 'Luxury', price: 8000, image: '/static/images/luxury-room.jpg', maxGuests: 4, amenities: ['WiFi', 'AC', 'TV', 'Jacuzzi', 'Mini Bar'] },
-        '104': { type: 'Double', price: 4000, image: '/static/images/double-room.webp', maxGuests: 2, amenities: ['WiFi', 'AC', 'TV'] },
-        '105': { type: 'Family', price: 2000, image: '/static/images/single-room.jpg', maxGuests: 4, amenities: ['WiFi', 'AC', 'TV'] }
-    };
+    if (!rooms || rooms.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-secondary);">
+                <i class="fas fa-bed" style="font-size: 32px; margin-bottom: 12px; color: var(--primary-color);"></i>
+                <p>No rooms found for the selected dates. Please adjust your check-in or check-out dates.</p>
+            </div>
+        `;
+        return;
+    }
     
-    // Normalize room numbers to string for safe comparison
-    const availableRoomNumbers = rooms.length === 0 
-        ? Object.keys(roomDetails) 
-        : rooms.map(r => String(r.number ?? r.room_number ?? r.id));
-    
-    const allRoomNumbers = Object.keys(roomDetails);
-    
-    container.innerHTML = allRoomNumbers.map(roomNumber => {
-        const details = roomDetails[roomNumber];
-        const isAvailable = rooms.length === 0 ? true : availableRoomNumbers.includes(String(roomNumber));
-        const room = rooms.find(r => String(r.number ?? r.room_number ?? r.id) === String(roomNumber)) || { 
-            number: roomNumber, 
-            id: roomNumber,
-            amenities: details.amenities
-        };
-        
-        room.type = details.type;
-        room.price = details.price;
-        room.maxGuests = details.maxGuests;
+    container.innerHTML = rooms.map(room => {
+        const isAvailable = room.isAvailable;
+        const isSelected = selectedRoom && String(selectedRoom.number) === String(room.number);
         
         let bookingSummaryHTML = '';
-        if (selectedRoom?.number === room.number) {
+        if (isSelected) {
             const checkInInput = document.getElementById('checkIn');
             const checkOutInput = document.getElementById('checkOut');
             const guestsInput = document.getElementById('guests');
@@ -5991,7 +6122,7 @@ function displayAvailableRooms(rooms) {
                 
                 const checkInDate = new Date(checkIn);
                 const checkOutDate = new Date(checkOut);
-                const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+                const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
                 const totalPrice = nights * room.price;
                 
                 bookingSummaryHTML = `
@@ -6022,26 +6153,30 @@ function displayAvailableRooms(rooms) {
             }
         }
         
+        const safeRoomJson = JSON.stringify(room).replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+        
         return `
             <div class="room-card-container">
-                <div class="room-card ${selectedRoom?.number === room.number ? 'selected' : ''} ${!isAvailable ? 'unavailable' : ''}" 
-                     onclick='${isAvailable ? `selectRoom(${JSON.stringify(room).replace(/"/g, "&quot;")})` : ''}' 
-                     style="${!isAvailable ? 'cursor: not-allowed;' : ''}"
+                <div class="room-card ${isSelected ? 'selected' : ''} ${!isAvailable ? 'unavailable' : ''}" 
+                     onclick='${isAvailable ? `selectRoom(${safeRoomJson})` : ''}' 
+                     style="${!isAvailable ? 'cursor: not-allowed; opacity: 0.65;' : 'cursor: pointer;'}"
                      role="button"
                      tabindex="${isAvailable ? '0' : '-1'}"
-                     ${isAvailable ? `onkeypress="if(event.key==='Enter') selectRoom(${JSON.stringify(room).replace(/"/g, "&quot;")})"` : ''}>
-                    <div class="room-image">
-                        <img src="${details.image}" alt="${details.type} Room" loading="lazy">
-                        ${!isAvailable ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 5px; color: var(--danger-color); font-weight: 700; text-align: center; z-index: 2;">NOT AVAILABLE</div>' : ''}
+                     ${isAvailable ? `onkeypress="if(event.key==='Enter') selectRoom(${safeRoomJson})"` : ''}>
+                    <div class="room-image" style="position: relative;">
+                        <img src="${room.image}" alt="${room.type} Room" loading="lazy">
+                        ${!isAvailable 
+                            ? '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); border: 1px solid var(--danger-color); padding: 8px 16px; border-radius: 6px; color: var(--danger-color); font-weight: 700; font-size: 11px; letter-spacing: 1px; text-align: center; z-index: 2;">NOT AVAILABLE</div>' 
+                            : '<div style="position: absolute; top: 10px; right: 10px; background: rgba(22, 101, 52, 0.9); border: 1px solid #22c55e; color: #86efac; font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px;">AVAILABLE</div>'}
                     </div>
                     <div class="room-details">
-                        <div class="room-type">${room.number}: ${details.type}</div>
-                        <div class="room-price">₹${details.price.toLocaleString('en-IN')}<span>/night</span></div>
-                        <div style="font-size: 12px; color: var(--text-secondary); margin: 8px 0;">
-                            <i class="fas fa-users"></i> Max ${details.maxGuests} ${details.maxGuests === 1 ? 'Guest' : 'Guests'}
+                        <div class="room-type" style="font-weight: 700; font-size: 15px;">Room ${room.number}: ${room.type}</div>
+                        <div class="room-price" style="color: var(--primary-color); font-size: 17px; font-weight: 700;">₹${room.price.toLocaleString('en-IN')}<span style="font-size: 12px; color: var(--text-secondary); font-weight: 400;">/night</span></div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin: 6px 0;">
+                            <i class="fas fa-users"></i> Max ${room.maxGuests} ${room.maxGuests === 1 ? 'Guest' : 'Guests'}
                         </div>
-                        <div class="room-amenities">
-                            ${room.amenities.map(amenity => `<span class="amenity-tag">${amenity.toUpperCase()}</span>`).join('')}
+                        <div class="room-amenities" style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px;">
+                            ${(room.amenities || []).slice(0, 4).map(amenity => `<span class="amenity-tag" style="font-size: 10px; padding: 2px 6px; border-radius: 3px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.2); color: var(--text-secondary);">${amenity.toUpperCase()}</span>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -6065,19 +6200,23 @@ function selectRoom(room) {
         return;
     }
     
-    if (selectedRoom && selectedRoom.number === room.number) {
+    if (selectedRoom && String(selectedRoom.number) === String(room.number)) {
         selectedRoom = null;
     } else {
         selectedRoom = room;
     }
     
-    loadAvailableRooms();
-    
-    const summaryEl = document.getElementById('bookingSummary');
-    if (summaryEl) summaryEl.style.display = 'none';
-    
     const nextBtn = document.getElementById('nextToReview');
     if (nextBtn) nextBtn.disabled = !selectedRoom;
+    
+    if (selectedRoom) {
+        updateBookingSummary();
+    } else {
+        const summaryEl = document.getElementById('bookingSummary');
+        if (summaryEl) summaryEl.style.display = 'none';
+    }
+    
+    loadAvailableRooms();
 }
 
 function updateBookingSummary() {
@@ -6257,7 +6396,7 @@ function decrementGuests() {
 // ============================================
 // BOOKING SUBMISSION
 // ============================================
-function submitBooking(event) {
+async function submitBooking(event) {
     event.preventDefault();
     
     if (!selectedRoom) {
@@ -6270,6 +6409,7 @@ function submitBooking(event) {
     const checkOutInput = document.getElementById('checkOut');
     const guestsInput = document.getElementById('guests');
     const termsAccept = document.getElementById('termsAccept');
+    const confirmBtn = document.getElementById('confirmBookingBtn');
     
     if (!checkInInput || !checkOutInput || !guestsInput) return;
     
@@ -6295,22 +6435,66 @@ function submitBooking(event) {
     
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
-    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
     const totalPrice = nights * selectedRoom.price;
     
-    const bookingData = {
-        room_id: selectedRoom.id,
-        room_number: selectedRoom.number,
-        room_type: selectedRoom.type,
-        check_in: checkIn,
-        check_out: checkOut,
-        guests: guests,
-        total_price: totalPrice,
-        special_requests: document.getElementById('specialRequests')?.value || ''
-    };
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> CREATING RESERVATION...`;
+    }
     
-    closeBookingModal();
-    openPaymentModal(bookingData);
+    try {
+        const bookingData = {
+            room_id: selectedRoom.id || ('room_' + selectedRoom.number),
+            room_number: selectedRoom.number,
+            room_type: selectedRoom.type,
+            check_in: checkIn,
+            check_out: checkOut,
+            guests: guests,
+            total_price: totalPrice,
+            special_requests: document.getElementById('specialRequests')?.value || '',
+            billing_name: (window.currentUser && (window.currentUser.name || window.currentUser.username)) || '',
+            phone: (window.currentUser && window.currentUser.phone) || ''
+        };
+        
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(bookingData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.ok || result.success) {
+            const data = result.data || result;
+            const txnId = data.txn_id;
+            const redirectUrl = data.redirect_url || (`/pay/${txnId}/otp`);
+            
+            NotificationSystem.success(
+                `Reservation created for Room ${selectedRoom.number} (${selectedRoom.type})!\nProceeding to mobile OTP verification...`,
+                '🎉 Booking Initiated!'
+            );
+            
+            closeBookingModal();
+            
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 600);
+        } else {
+            NotificationSystem.error(result.message || 'Failed to initiate room booking', 'Booking Error');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = `<i class="fas fa-lock"></i> CONFIRM &amp; PROCEED TO PAYMENT`;
+            }
+        }
+    } catch (error) {
+        console.error('Error submitting booking:', error);
+        NotificationSystem.error('Network error while creating booking. Please try again.', 'Connection Error');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = `<i class="fas fa-lock"></i> CONFIRM &amp; PROCEED TO PAYMENT`;
+        }
+    }
 }
 
 // Enable/disable confirm button based on terms checkbox
@@ -6653,231 +6837,76 @@ async function loadCities() {
 function initiatePayment() {
     processPayment();
     async function processPayment() {
-    if (window.isProcessingPayment) return;
-    
-    // Validate billing information
-    const billingFields = {
-        billingName: document.getElementById('billingName'),
-        billingEmail: document.getElementById('billingEmail'),
-        billingPhone: document.getElementById('billingPhone'),
-        billingAddress: document.getElementById('billingAddress'),
-        billingCity: document.getElementById('billingCity'),
-        billingState: document.getElementById('billingState'),
-        billingZipcode: document.getElementById('billingZipcode'),
-        billingCountry: document.getElementById('billingCountry')
-    };
-    
-    for (const [key, field] of Object.entries(billingFields)) {
-        if (!field || !field.value.trim()) {
-            NotificationSystem.error('Please fill in all billing information fields', 'Incomplete Information');
-            field?.focus();
-            return;
-        }
-    }
-    
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(billingFields.billingEmail.value)) {
-        NotificationSystem.error('Please enter a valid email address', 'Invalid Email');
-        billingFields.billingEmail.focus();
-        return;
-    }
-    
-    // Phone validation
-    const phoneRegex = /^[\d\s\+\-\(\)]+$/;
-    const phoneDigits = billingFields.billingPhone.value.replace(/\D/g, '');
-    if (!phoneRegex.test(billingFields.billingPhone.value) || phoneDigits.length < 10) {
-        NotificationSystem.error('Please enter a valid phone number', 'Invalid Phone');
-        billingFields.billingPhone.focus();
-        return;
-    }
-    
-    const roomCharges = pendingBookingData.total_price;
-    const taxes = Math.round(roomCharges * 0.18);
-    const totalAmount = roomCharges + taxes;
-    
-    let paymentMethodData = {};
-    
-    // Validate payment method
-    if (currentPaymentMethod === 'card') {
-        const cardNumber = document.getElementById('cardNumber')?.value.replace(/\s/g, '');
-        const cardName = document.getElementById('cardName')?.value.trim();
-        const expiryMonth = document.getElementById('expiryMonth')?.value;
-        const expiryYear = document.getElementById('expiryYear')?.value;
-        const cvv = document.getElementById('cardCVV')?.value.trim();
-        const cardType = document.getElementById('cardType')?.value;
+        if (window.isProcessingPayment) return;
         
-        if (!cardNumber || cardNumber.length < 13) {
-            NotificationSystem.error('Please enter a valid card number', 'Invalid Card');
-            return;
-        }
-        if (!cardName) {
-            NotificationSystem.error('Please enter cardholder name', 'Missing Information');
-            return;
-        }
-        if (!expiryMonth || !expiryYear) {
-            NotificationSystem.error('Please select card expiry date', 'Missing Information');
-            return;
-        }
-        if (!cvv || cvv.length < 3) {
-            NotificationSystem.error('Please enter a valid CVV', 'Invalid CVV');
+        if (!pendingBookingData) {
+            NotificationSystem.error('No booking details found. Please select a room first.', 'Booking Error');
             return;
         }
         
-        paymentMethodData = {
-            card_number: cardNumber,
-            card_name: cardName,
-            expiry_month: expiryMonth,
-            expiry_year: expiryYear,
-            cvv: cvv,
-            card_type: cardType
+        const billingFields = {
+            billingName: document.getElementById('billingName'),
+            billingEmail: document.getElementById('billingEmail'),
+            billingPhone: document.getElementById('billingPhone')
         };
         
-    } else if (currentPaymentMethod === 'netbanking') {
-        if (!selectedBankName) {
-            NotificationSystem.error('Please select your bank', 'Bank Not Selected');
-            return;
-        }
-        paymentMethodData = { bank: selectedBankName };
+        const nameVal = (billingFields.billingName && billingFields.billingName.value.trim()) || (window.currentUser && (window.currentUser.name || window.currentUser.username)) || 'Guest';
+        const emailVal = (billingFields.billingEmail && billingFields.billingEmail.value.trim()) || (window.currentUser && window.currentUser.email) || '';
+        const phoneVal = (billingFields.billingPhone && billingFields.billingPhone.value.trim()) || (window.currentUser && window.currentUser.phone) || '9876543210';
         
-    } else if (currentPaymentMethod === 'upi') {
-        if (currentUPIMethod === 'id') {
-            const upiId = document.getElementById('upiId')?.value.trim();
-            const upiRegex = /^[\w.-]+@[\w.-]+$/;
+        window.isProcessingPayment = true;
+        NotificationSystem.info('Initiating secure reservation & payment...', 'Please Wait');
+        
+        try {
+            const payload = {
+                room_id: pendingBookingData.room_id || ('room_' + pendingBookingData.room_number),
+                room_number: pendingBookingData.room_number,
+                room_type: pendingBookingData.room_type,
+                check_in: pendingBookingData.check_in,
+                check_out: pendingBookingData.check_out,
+                guests: pendingBookingData.guests || 1,
+                total_price: pendingBookingData.total_price,
+                special_requests: pendingBookingData.special_requests || '',
+                billing_name: nameVal,
+                email: emailVal,
+                phone: phoneVal,
+                payment_method: currentPaymentMethod || 'card'
+            };
             
-            if (!upiId || !upiRegex.test(upiId)) {
-                NotificationSystem.error('Please enter a valid UPI ID (e.g., 9876543210@paytm)', 'Invalid UPI ID');
-                return;
+            const response = await fetch('/api/bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if (result.ok || result.success) {
+                const data = result.data || result;
+                const txnId = data.txn_id;
+                const redirectUrl = data.redirect_url || (`/pay/${txnId}/otp`);
+                
+                NotificationSystem.success(
+                    `Reservation initiated for Room ${pendingBookingData.room_number}!\nProceeding to mobile OTP verification...`,
+                    '🎉 Proceeding to Verification'
+                );
+                
+                closePaymentModal();
+                closeBookingModal();
+                
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 600);
+            } else {
+                NotificationSystem.error(result.message || 'Failed to initiate booking payment', 'Payment Error');
             }
-            paymentMethodData = { upi_id: upiId };
-        } else {
-            paymentMethodData = { upi_method: 'qr' };
-        }
-        
-    } else if (currentPaymentMethod === 'wallet') {
-        if (!selectedWalletName) {
-            NotificationSystem.error('Please select your wallet', 'Wallet Not Selected');
-            return;
-        }
-        paymentMethodData = { wallet: selectedWalletName };
-    }
-    
-    window.isProcessingPayment = true;
-    
-    // Show processing message
-    NotificationSystem.info('Processing your payment...', 'Please Wait');
-    
-    try {
-        // Simulate payment processing delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Process payment
-        const paymentData = {
-            billing_name: billingFields.billingName.value,
-            email: billingFields.billingEmail.value,
-            phone: billingFields.billingPhone.value,
-            address: billingFields.billingAddress.value,
-            city: billingFields.billingCity.value,
-            state: billingFields.billingState.value,
-            zipcode: billingFields.billingZipcode.value,
-            country: billingFields.billingCountry.value,
-            payment_method: currentPaymentMethod,
-            amount: totalAmount,
-            booking_data: pendingBookingData,
-            ...paymentMethodData
-        };
-        
-        const paymentResponse = await fetch('/api/process-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(paymentData)
-        });
-        
-        const paymentResult = await paymentResponse.json();
-        
-        if (!paymentResult.success) {
-            NotificationSystem.error(
-                paymentResult.message || 'Payment processing failed', 
-                'Payment Error'
-            );
+        } catch (error) {
+            console.error('Error initiating payment:', error);
+            NotificationSystem.error('Network error. Please try again.', 'Connection Error');
+        } finally {
             window.isProcessingPayment = false;
-            return;
         }
-        
-        // Get transaction ID
-        const transactionId = paymentResult.transaction_id;
-        
-        console.log('✅ Payment Successful');
-        console.log('Transaction ID:', transactionId);
-        console.log('Amount:', `₹${totalAmount.toLocaleString('en-IN')}`);
-        
-        // Create booking
-        const bookingData = {
-            room_id: pendingBookingData.room_id,
-            room_number: pendingBookingData.room_number,
-            check_in: pendingBookingData.check_in,
-            check_out: pendingBookingData.check_out,
-            guests: pendingBookingData.guests,
-            total_price: totalAmount,
-            payment_method: currentPaymentMethod,
-            payment_status: 'completed',
-            transaction_id: transactionId,
-            special_requests: pendingBookingData.special_requests || ''
-        };
-        
-        const bookingResponse = await fetch('/api/bookings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(bookingData)
-        });
-        
-        const bookingResult = await bookingResponse.json();
-        
-        if (bookingResult.success) {
-            // Success notification
-            NotificationSystem.success(
-                `Payment of ₹${totalAmount.toLocaleString('en-IN')} completed successfully!\n\n` +
-                `Transaction ID: ${transactionId}\n\n` +
-                `Your booking for ${pendingBookingData.room_type} Room (${pendingBookingData.room_number}) has been confirmed.`,
-                '🎉 Booking Confirmed!'
-            );
-            
-            // Close modals
-            closePaymentModal();
-            closeBookingModal();
-            
-            // Reload data
-            await loadBookings();
-            await loadDashboardStats();
-            
-            // Show dashboard
-            showDashboard();
-            
-            // Reset forms
-            document.getElementById('paymentForm')?.reset();
-            document.getElementById('bookingForm')?.reset();
-            currentPaymentMethod = 'card';
-            selectedBankName = '';
-            selectedWalletName = '';
-            selectedRoom = null;
-            
-        } else {
-            NotificationSystem.error(
-                bookingResult.message || 'Booking creation failed. Contact support with Transaction ID: ' + transactionId,
-                'Booking Error'
-            );
-        }
-        
-    } catch (error) {
-        console.error('Error processing payment:', error);
-        NotificationSystem.error(
-            'Error connecting to the server. Please try again.',
-            'Connection Error'
-        );
-    } finally {
-        window.isProcessingPayment = false;
     }
-}
 }
 
 // ============================================
@@ -8154,7 +8183,291 @@ window.sendChatMessage = sendChatMessage;
     document.head.appendChild(style);
 })();
 
+// Active Stay & Dining Auto-Refresh
+async function refreshDashboardActiveStay() {
+    try {
+        const res = await fetch('/api/user/active-stay-dining');
+        const json = await res.json();
+        if (json.ok && json.data) {
+            const row = document.getElementById('dashboardActiveStayRow');
+            if (!row) return;
+            const hasRoom = json.data.has_active_stay && json.data.active_room;
+            const hasDining = json.data.has_active_dining && json.data.active_dining;
+            if (!hasRoom && !hasDining) return;
+            let html = '';
+            const colClass = (hasRoom && hasDining) ? 'col-md-6' : 'col-12';
+            if (hasRoom) {
+                const r = json.data.active_room;
+                html += `
+                    <div class="${colClass}" id="dashActiveRoomCol">
+                        <div style="background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(22,34,54,0.95)); border: 1.5px solid rgba(212,175,55,0.55); border-radius: 14px; padding: 18px 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(212,175,55,0.25); border: 1px solid var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary-color);">
+                                    <i class="fas fa-bed"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary-color); font-weight: 700;">Reserved &amp; Paid Accommodation</div>
+                                    <h3 style="margin: 2px 0 0 0; font-size: 22px; font-weight: 800; color: #ffffff;">Your room: ${r.room_number}</h3>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
+                                        Booking #${r.booking_no || 'Confirmed'} &bull; Status: <span class="badge bg-success" style="font-size: 10px;">${(r.status || 'Paid').toUpperCase()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="/my-bookings" class="btn btn-sm btn-outline-warning" style="font-size: 11px; padding: 6px 14px; border-radius: 20px; text-decoration: none;">
+                                <i class="fas fa-key me-1"></i> Key &amp; Stay
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+            if (hasDining) {
+                const d = json.data.active_dining;
+                const isPaid = (d.payment_status === 'paid' || d.payment_status === 'completed' || d.status === 'paid');
+                const orderRef = d.order_no || d.id || 'active';
+                const payBadge = isPaid 
+                    ? '<span class="badge bg-success ms-1" style="font-size: 10px;">PAID</span>'
+                    : '<span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">PAYMENT PENDING</span>';
+                const payBtn = !isPaid 
+                    ? `<button type="button" onclick="payDiningOrder('${orderRef}')" class="btn btn-sm btn-primary" style="font-size: 11px; padding: 6px 14px; border-radius: 20px;">
+                         <i class="fas fa-credit-card me-1"></i> Pay Now
+                       </button>`
+                    : '';
 
+                html += `
+                    <div class="${colClass}" id="dashActiveTableCol">
+                        <div style="background: linear-gradient(135deg, rgba(66,133,244,0.2), rgba(22,34,54,0.95)); border: 1.5px solid rgba(66,133,244,0.55); border-radius: 14px; padding: 18px 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(66,133,244,0.25); border: 1px solid #4285f4; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #4285f4;">
+                                    <i class="fas fa-chair"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #4285f4; font-weight: 700;">Dining Reservation &amp; Order</div>
+                                    <h3 style="margin: 2px 0 0 0; font-size: 22px; font-weight: 800; color: #ffffff;">Your table: ${d.table_number}</h3>
+                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
+                                        Order #${d.order_no || 'Active'} &bull; Status: <span class="badge bg-info text-dark" style="font-size: 10px;">${(d.status || 'In-Kitchen').toUpperCase()}</span>
+                                        ${payBadge}
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                <button type="button" onclick="openGuestOrderModal('${orderRef}')" class="btn btn-sm btn-outline-primary" style="font-size: 11px; padding: 6px 14px; border-radius: 20px;">
+                                    <i class="fas fa-utensils me-1"></i> View Order
+                                </button>
+                                ${payBtn}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            row.innerHTML = html;
+        }
+    } catch(e) {}
+}
+document.addEventListener('DOMContentLoaded', refreshDashboardActiveStay);
+
+let currentGuestOrderRef = null;
+
+async function openGuestOrderModal(orderRef) {
+    currentGuestOrderRef = orderRef || 'active';
+    const modal = document.getElementById('guestOrderModal');
+    if (!modal) {
+        window.location.href = `/dining/order/${encodeURIComponent(currentGuestOrderRef)}`;
+        return;
+    }
+    modal.classList.add('active');
+    
+    const body = document.getElementById('guestOrderModalBody');
+    if (body) {
+        body.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px;">
+                <div class="spinner-border text-warning" role="status" style="width: 2.5rem; height: 2.5rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div style="margin-top: 15px; color: #a0aec0; font-size: 14px;">Fetching dining order details...</div>
+            </div>
+        `;
+    }
+
+    try {
+        const res = await fetch(`/api/dining/orders/${encodeURIComponent(currentGuestOrderRef)}`);
+        const data = await res.json();
+        if (data.ok && data.order) {
+            renderOrderModalContent(data.order);
+        } else {
+            if (body) {
+                body.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #fc8181;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 32px; margin-bottom: 10px;"></i>
+                        <p>${data.message || 'Unable to load order details.'}</p>
+                        <a href="/dining/order/active" class="btn btn-sm btn-outline-warning mt-2">Open Full Page Tracker</a>
+                    </div>
+                `;
+            }
+        }
+    } catch (err) {
+        if (body) {
+            body.innerHTML = `
+                <div style="text-align: center; padding: 30px; color: #fc8181;">
+                    <i class="fas fa-wifi" style="font-size: 32px; margin-bottom: 10px;"></i>
+                    <p>Network error loading order.</p>
+                </div>
+            `;
+        }
+    }
+}
+
+function closeGuestOrderModal() {
+    const modal = document.getElementById('guestOrderModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function renderOrderModalContent(order) {
+    const body = document.getElementById('guestOrderModalBody');
+    if (!body) return;
+
+    const isPaid = (order.payment_status === 'paid' || order.payment_status === 'completed' || order.status === 'paid');
+    const items = order.items || [];
+
+    let itemsHtml = '';
+    if (items.length === 0) {
+        itemsHtml = '<tr><td colspan="4" style="text-align: center; color: #718096; padding: 15px;">No item details available</td></tr>';
+    } else {
+        items.forEach(item => {
+            const qty = item.qty || item.quantity || 1;
+            const price = parseFloat(item.price || item.unit_price || 0);
+            const total = qty * price;
+            itemsHtml += `
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+                    <td style="padding: 10px 8px; color: #ffffff; font-weight: 500;">${item.name || 'Gourmet Dish'}</td>
+                    <td style="padding: 10px 8px; text-align: center; color: #cbd5e0;">${qty}</td>
+                    <td style="padding: 10px 8px; text-align: right; color: #cbd5e0;">₹${price.toFixed(2)}</td>
+                    <td style="padding: 10px 8px; text-align: right; color: var(--primary-color, #d4af37); font-weight: 600;">₹${total.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+    }
+
+    const subtotal = parseFloat(order.subtotal || 0);
+    const tax = parseFloat(order.tax || 0);
+    const total = parseFloat(order.total || 0);
+
+    const statusBadge = isPaid 
+        ? '<span class="badge bg-success" style="font-size: 11px; padding: 5px 10px;"><i class="fas fa-check-circle me-1"></i> PAID</span>'
+        : '<span class="badge bg-warning text-dark" style="font-size: 11px; padding: 5px 10px;"><i class="fas fa-clock me-1"></i> PAYMENT PENDING</span>';
+
+    const orderStatusBadge = `<span class="badge bg-info text-dark" style="font-size: 11px; padding: 5px 10px;">${(order.status || 'Active').toUpperCase()}</span>`;
+
+    const payBtnHtml = isPaid
+        ? `<div style="display: flex; align-items: center; justify-content: center; gap: 8px; color: #48bb78; font-weight: 700; background: rgba(72,187,120,0.12); border: 1px solid rgba(72,187,120,0.3); border-radius: 10px; padding: 12px;">
+             <i class="fas fa-check-double"></i> Bill Settled &amp; Paid in Full
+           </div>`
+        : `<button type="button" class="btn btn-warning w-100" style="padding: 12px 20px; font-weight: 800; border-radius: 10px; font-size: 15px; box-shadow: 0 4px 15px rgba(212,175,55,0.4);" onclick="payDiningOrder('${order.order_no || order.id || 'active'}')">
+             <i class="fas fa-credit-card me-2"></i> PAY BILL NOW &bull; ₹${total.toFixed(2)}
+           </button>`;
+
+    body.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 16px;">
+                <div style="font-size: 11px; color: #a0aec0; text-transform: uppercase;">Table Assigned</div>
+                <div style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 2px;">
+                    <i class="fas fa-chair me-1 text-info"></i> ${order.table_number || 'T-01'}
+                </div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 16px;">
+                <div style="font-size: 11px; color: #a0aec0; text-transform: uppercase;">Order Number</div>
+                <div style="font-size: 16px; font-weight: 700; color: var(--primary-color, #d4af37); margin-top: 2px;">
+                    #${order.order_no || order.id || 'ORD-ACTIVE'}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05);">
+            <div>
+                <span style="font-size: 12px; color: #a0aec0;">Kitchen Status:</span>
+                ${orderStatusBadge}
+            </div>
+            <div>
+                <span style="font-size: 12px; color: #a0aec0;">Payment:</span>
+                ${statusBadge}
+            </div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <h4 style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-color, #d4af37); margin-bottom: 8px; font-weight: 700;">
+                <i class="fas fa-receipt me-1"></i> Order Items
+            </h4>
+            <div style="overflow-x: auto; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); max-height: 180px; overflow-y: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <th style="padding: 8px 10px; text-align: left; color: #a0aec0; font-weight: 600;">Item</th>
+                            <th style="padding: 8px 10px; text-align: center; color: #a0aec0; font-weight: 600;">Qty</th>
+                            <th style="padding: 8px 10px; text-align: right; color: #a0aec0; font-weight: 600;">Price</th>
+                            <th style="padding: 8px 10px; text-align: right; color: #a0aec0; font-weight: 600;">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${itemsHtml}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e0; margin-bottom: 4px;">
+                <span>Subtotal</span>
+                <span>₹${subtotal.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #cbd5e0; margin-bottom: 6px;">
+                <span>Taxes &amp; Service Charges</span>
+                <span>₹${tax.toFixed(2)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; color: #ffffff; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px;">
+                <span>Total Amount</span>
+                <span style="color: var(--primary-color, #d4af37);">₹${total.toFixed(2)}</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+            ${payBtnHtml}
+        </div>
+
+        <div style="text-align: center;">
+            <a href="/dining/order/${encodeURIComponent(order.order_no || order.id || 'active')}" class="btn btn-link btn-sm" style="color: #a0aec0; text-decoration: none; font-size: 12px;">
+                <i class="fas fa-external-link-alt me-1"></i> Open Full Tracking &amp; Digital Invoice Page
+            </a>
+        </div>
+    `;
+}
+
+async function payDiningOrder(orderRef) {
+    try {
+        const btn = event?.target?.closest('button');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing Payment...';
+        }
+
+        const res = await fetch(`/api/dining/orders/${encodeURIComponent(orderRef || 'active')}/pay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+
+        if (data.ok && data.redirect_url) {
+            window.location.href = data.redirect_url;
+        } else {
+            alert(data.message || 'Payment initiation failed. Please try again.');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-credit-card me-1"></i> Pay Now';
+            }
+        }
+    } catch (e) {
+        console.error('Error starting dining payment:', e);
+        alert('Failed to initiate payment. Please check your connection.');
+    }
+}
 
 </script>
 {% endblock %}

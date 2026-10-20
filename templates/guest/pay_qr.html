@@ -183,6 +183,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (txn.status === 'paid' || txn.status === 'completed') {
                     clearInterval(pollInterval);
                     clearInterval(timerInterval);
+                    if (txn.category === 'dining' || txn.order_id) {
+                        Toast.success('Dining payment received! Bill settled.');
+                        setTimeout(() => {
+                            window.location.href = `/dining/order/${txn.order_id || txn.reference_no || 'active'}`;
+                        }, 500);
+                        return;
+                    }
                     Toast.success('Payment received! Finalizing booking...');
                     setTimeout(() => {
                         const bId = txn.booking_id || defaultBookingId;
@@ -199,7 +206,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         simulateBtn.innerHTML = `<span class="btn-spinner"></span> Confirming Payment...`;
         const res = await fetch(`/api/transactions/${txnId}/simulate-pay`, { method: 'POST' });
         const data = await res.json();
-        const bId = (data.data && data.data.booking_id) || data.booking_id || defaultBookingId;
+        const payload = data.data || data;
+        if (payload.category === 'dining' || payload.order_id) {
+            Toast.success('Dining bill simulated & paid! Bill settled.');
+            setTimeout(() => {
+                window.location.href = `/dining/order/${payload.order_no || payload.order_id || 'active'}`;
+            }, 600);
+            return;
+        }
+        const bId = payload.booking_id || defaultBookingId;
         Toast.success('Payment simulated on phone! Booking confirmed.');
         setTimeout(() => {
             window.location.href = `/confirmation/${bId}`;

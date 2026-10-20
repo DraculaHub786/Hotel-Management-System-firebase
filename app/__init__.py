@@ -54,6 +54,8 @@ def create_app(config_class=None):
             return
         if app.config.get('TESTING'):
             return
+        if request.path.startswith(('/api/auth/invite/accept', '/api/invite/', '/api/login', '/api/register', '/api/google-auth', '/api/auth/google')):
+            return
         if session.get('user_email') and '_csrf_token' in session:
             token = request.headers.get('X-CSRF-Token')
             if not token and request.form:
@@ -61,10 +63,10 @@ def create_app(config_class=None):
             if not token and request.is_json:
                 data = request.get_json(silent=True) or {}
                 token = data.get('csrf_token')
-            if token and token != session['_csrf_token']:
+            if not token or token != session['_csrf_token']:
                 if request.path.startswith('/api/'):
-                    return jsonify({"ok": False, "message": "Invalid CSRF token."}), 403
-                return render_template('permission_denied.html', message="Invalid CSRF token.", user_role=session.get('user_role', 'guest')), 403
+                    return jsonify({"ok": False, "message": "Invalid or missing CSRF token."}), 403
+                return render_template('permission_denied.html', message="Invalid or missing CSRF token.", user_role=session.get('user_role', 'guest')), 403
 
     # Initialize Firestore
     db = get_db()

@@ -9,7 +9,7 @@ from app.firebase_db import (
     resolve_room_doc
 )
 from app.auth.decorators import login_required, role_required
-from api_utils import api_success, api_error, permission_denied
+from api_utils import api_success, api_error, permission_denied, safe_sort_key
 from app.core.sync_hub import sync_hub
 
 logger = logging.getLogger(__name__)
@@ -187,7 +187,7 @@ def announcements():
                 item = d.to_dict()
                 item['id'] = d.id
                 posts.append(item)
-            posts.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+            posts.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
         except Exception as e:
             logger.warning(f"Error fetching announcements: {e}")
         return render_template('manager/broadcasts.html', announcements=posts)
@@ -262,7 +262,7 @@ def api_active_announcements():
             if matches:
                 active.append(item)
 
-        active.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        active.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
     except Exception as e:
         logger.warning(f"Error streaming active announcements: {e}")
 

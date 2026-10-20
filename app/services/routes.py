@@ -8,7 +8,7 @@ from app.firebase_db import (
     service_requests_col, lost_found_col, linen_col, rooms_col
 )
 from app.auth.decorators import login_required, role_required
-from api_utils import api_success, api_error, permission_denied
+from api_utils import api_success, api_error, permission_denied, safe_sort_key
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def housekeeping_board():
         
     # Sort by priority urgent -> high -> medium -> low, then age
     priority_order = {'urgent': 0, 'high': 1, 'medium': 2, 'low': 3}
-    tasks.sort(key=lambda x: (priority_order.get(x.get('priority', 'medium'), 2), x.get('created_at', '')))
+    tasks.sort(key=lambda x: (priority_order.get(x.get('priority', 'medium'), 2), safe_sort_key(x.get('created_at'))))
     return render_template('housekeeping/task_board.html', tasks=tasks)
 
 @services_bp.route('/staff/housekeeping/tasks/<task_id>', methods=['GET'])
@@ -52,14 +52,15 @@ def api_housekeeping_tasks():
     new_doc = housekeeping_tasks_col().add(data)
     return api_success({"task_id": new_doc[1].id, "message": "Housekeeping task created"})
 
-@services_bp.route('/api/housekeeping/tasks/<task_id>', methods=['PATCH', 'POST'])
+@services_bp.route('/api/housekeeping/tasks/<task_id>', methods=['PATCH', 'POST', 'PUT'])
 @services_bp.route('/api/housekeeping/tasks/<task_id>/update', methods=['POST'])
 def api_update_housekeeping_task(task_id):
     data = request.get_json() or {}
     doc = housekeeping_tasks_col().document(str(task_id)).get()
     
     status = data.get('status', 'in_progress')
-    updates = {"status": status, "updated_at": datetime.utcnow().isoformat() + "Z"}
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    updates = {"status": status, "updated_at": now_iso}
     
     if doc.exists:
         doc.reference.update(updates)
@@ -67,10 +68,30 @@ def api_update_housekeeping_task(task_id):
         rdata.update(updates)
         rdata['id'] = task_id
 
-        # Bi-directional state change: if task is marked done, mark the linked room available
+        # Bi-directional state change: if task is marked done, mark the linked room or table available
         if status == 'done':
+            tbl_id = rdata.get('table_id')
+            tbl_num = rdata.get('table_number')
+            from app.firebase_db import restaurant_tables_col
+            reset_fields = {
+                "status": "available",
+                "guest_name": "",
+                "assigned_guest_name": "",
+                "order_id": "",
+                "order_status": "",
+                "cleaned_at": now_iso
+            }
+            if tbl_id:
+                td = restaurant_tables_col().document(str(tbl_id)).get()
+                if td.exists:
+                    td.reference.update(reset_fields)
+            if tbl_num:
+                for tdoc in restaurant_tables_col().where('table_no', '==', str(tbl_num)).stream():
+                    tdoc.reference.update(reset_fields)
+                for tdoc in restaurant_tables_col().where('table_number', '==', str(tbl_num)).stream():
+                    tdoc.reference.update(reset_fields)
             rnum = str(rdata.get('room_number', ''))
-            if rnum:
+            if rnum and not rnum.startswith('Table '):
                 num_part = rnum.split('-')[-1]
                 for rdoc in rooms_col().where('number', '==', rnum).stream():
                     rdoc.reference.update({"status": "available"})
@@ -232,7 +253,7 @@ def guest_service_request():
 def my_service_requests():
     email = session.get('user_email')
     reqs = [d.to_dict() for d in service_requests_col().where('user_email', '==', email).stream()]
-    reqs.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    reqs.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
     return render_template('services/my_requests.html', requests=reqs)
 
 @services_bp.route('/api/service-requests', methods=['GET', 'POST'])

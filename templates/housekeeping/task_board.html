@@ -29,6 +29,9 @@
         <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif;">Priority:</span>
         <div class="filter-pills">
             <button type="button" class="filter-pill active" data-priority="all" onclick="filterPriority('all', this)">All Priorities</button>
+            <button type="button" class="filter-pill" data-priority="dining-tables" onclick="filterPriority('dining-tables', this)">
+                <i class="fas fa-chair text-warning me-1"></i> Dining Tables (<span id="countDiningTables">0</span>)
+            </button>
             <button type="button" class="filter-pill" data-priority="vip" onclick="filterPriority('vip', this)">
                 <i class="fas fa-star text-danger me-1"></i> VIP Urgent
             </button>
@@ -40,9 +43,12 @@
             </button>
         </div>
         <div class="ms-auto d-none d-md-block" style="font-size: 12px; color: var(--text-secondary);">
-            <i class="fas fa-info-circle me-1"></i> Drag & drop cards or tap status dropdown on touch devices
+            <i class="fas fa-info-circle me-1"></i> Dining table turnovers auto-triggered when guests leave
         </div>
     </div>
+
+    <!-- Dining Table Cleaning Urgent Banner -->
+    <div id="diningTableCleaningAlert" class="mb-3"></div>
 
     <!-- Kanban Board Container (3 Columns: Pending | In Progress | Done) -->
     <div class="row g-3 mt-1" id="kanbanContainer">
@@ -141,10 +147,12 @@
     justify-content: center;
 }
 </style>
+{% endblock %}
 
 {% block extra_js %}
 <script>
 let allTasks = [];
+let busingTables = [];
 let currentFilter = 'all';
 
 async function loadTasks() {
@@ -153,32 +161,69 @@ async function loadTasks() {
     const dCol = document.getElementById('doneCol');
 
     // Show loading skeleton
-    if (window.AppConventions && AppConventions.AppStates) {
+    if (window.AppConventions && AppConventions.AppStates && allTasks.length === 0) {
         AppConventions.AppStates.renderLoading(pCol, { count: 2, type: 'card' });
         AppConventions.AppStates.renderLoading(ipCol, { count: 2, type: 'card' });
         AppConventions.AppStates.renderLoading(dCol, { count: 2, type: 'card' });
     }
 
     try {
-        const res = await fetch('/api/housekeeping/tasks');
-        const json = await res.json();
-        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
-            allTasks = json.data;
+        const [tasksRes, tablesRes] = await Promise.all([
+            fetch('/api/housekeeping/tasks'),
+            fetch('/api/dining/tables')
+        ]);
+        const tasksJson = await tasksRes.json();
+        const tablesJson = await tablesRes.json();
+
+        if (tasksJson.ok && Array.isArray(tasksJson.data)) {
+            allTasks = tasksJson.data;
+        }
+
+        if (tablesJson.ok && Array.isArray(tablesJson.data)) {
+            busingTables = tablesJson.data.filter(t => t.status === 'busing');
         } else {
-            // Seed fallback mock items
-            allTasks = [
-                { task_id: 'task_101', room_id: '101', type: 'checkout_clean', priority: 'vip', status: 'pending', assigned_to: 'Maria Santos', created_from: 'booking_checkout' },
-                { task_id: 'task_204', room_id: '204', type: 'daily_tidy', priority: 'guest-waiting', status: 'in_progress', assigned_to: 'Alex Rivera', created_from: 'guest_request' },
-                { task_id: 'task_305', room_id: '305', type: 'deep_clean', priority: 'standard', status: 'done', assigned_to: 'Maria Santos', created_from: 'scheduled_rotation' }
-            ];
+            busingTables = [];
         }
-        renderBoard();
     } catch (e) {
-        console.error('Error fetching housekeeping tasks', e);
-        if (window.AppConventions && AppConventions.Toast) {
-            AppConventions.Toast.error('Failed to load housekeeping tasks.');
-        }
+        console.error('Error fetching housekeeping tasks / tables', e);
     }
+
+    renderBusingTablesAlert();
+    renderBoard();
+}
+
+function renderBusingTablesAlert() {
+    const alertDiv = document.getElementById('diningTableCleaningAlert');
+    const badgeCount = document.getElementById('countDiningTables');
+    if (badgeCount) badgeCount.textContent = busingTables.length;
+
+    if (!alertDiv) return;
+
+    if (busingTables.length === 0) {
+        alertDiv.innerHTML = '';
+        return;
+    }
+
+    alertDiv.innerHTML = `
+        <div class="p-3 rounded-3 mb-3" style="background: linear-gradient(135deg, rgba(199,0,57,0.3), rgba(22,34,54,0.95)); border: 2px solid #c70039; box-shadow: 0 4px 20px rgba(199,0,57,0.35);">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <div class="badge bg-danger text-white mb-1"><i class="fas fa-broom me-1"></i>RESTAURANT TABLE TURNOVER REQUIRED</div>
+                    <h5 class="text-light mb-1" style="font-size: 16px;">
+                        Tables Needing Turnover Cleaning: <strong>${busingTables.map(t => 'Table ' + t.table_no).join(', ')}</strong>
+                    </h5>
+                    <div class="small text-secondary">Guests departed. Clear dishes, sanitize table, replace table linen and reset place settings.</div>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    ${busingTables.map(t => `
+                        <button class="btn btn-sm btn-success fw-bold" onclick="markTableCleaned('${t.id}', '${t.table_no}')" style="padding: 6px 14px; font-size: 12px;">
+                            <i class="fas fa-check-circle me-1"></i> Clean Table ${t.table_no}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 function filterPriority(prio, btn) {
@@ -197,9 +242,12 @@ function renderBoard() {
     ipCol.innerHTML = '';
     dCol.innerHTML = '';
 
-    const filtered = currentFilter === 'all' 
-        ? allTasks 
-        : allTasks.filter(t => (t.priority || 'standard').toLowerCase() === currentFilter.toLowerCase());
+    let filtered = allTasks;
+    if (currentFilter === 'dining-tables') {
+        filtered = allTasks.filter(t => t.table_number || (t.room_number || '').startsWith('Table') || t.category === 'dining_table');
+    } else if (currentFilter !== 'all') {
+        filtered = allTasks.filter(t => (t.priority || 'standard').toLowerCase() === currentFilter.toLowerCase());
+    }
 
     let pCount = 0, ipCount = 0, dCount = 0;
 
@@ -246,28 +294,41 @@ function createCardEl(task) {
         badgePriority = `<span class="badge bg-danger text-white rounded-pill" style="font-size: 10px;"><i class="fas fa-star me-1"></i>VIP</span>`;
     } else if (priority === 'guest-waiting') {
         badgePriority = `<span class="badge bg-warning text-dark rounded-pill" style="font-size: 10px;"><i class="fas fa-clock me-1"></i>Guest Waiting</span>`;
+    } else if (priority === 'urgent') {
+        badgePriority = `<span class="badge bg-danger text-white rounded-pill" style="font-size: 10px;"><i class="fas fa-exclamation me-1"></i>Urgent</span>`;
     } else {
         badgePriority = `<span class="badge rounded-pill" style="background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 10px;">Standard</span>`;
     }
+
+    const isTableTask = Boolean(task.table_number || (task.room_number || '').startsWith('Table') || task.category === 'dining_table');
+    const tblNo = task.table_number || (task.room_number || '').replace('Table ', '');
+    const locationBadge = isTableTask
+        ? `<span class="badge bg-primary text-white fw-bold px-2 py-1 rounded" style="font-size: 12px;"><i class="fas fa-chair me-1"></i>Table ${tblNo}</span>`
+        : `<span class="badge bg-warning text-dark fw-bold px-2 py-1 rounded" style="font-size: 12px;"><i class="fas fa-door-open me-1"></i>Room ${task.room_id || task.room_number || 'N/A'}</span>`;
 
     const typeBadge = (task.type || 'turnover_clean').replace(/_/g, ' ').toUpperCase();
 
     div.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div class="d-flex align-items-center gap-1">
-                <span class="badge bg-warning text-dark fw-bold px-2 py-1 rounded" style="font-size: 12px;">Room ${task.room_id || 'N/A'}</span>
+                ${locationBadge}
                 <span class="badge rounded-pill" style="background: rgba(212,175,55,0.15); color: var(--primary-color); font-size: 10px;">${typeBadge}</span>
             </div>
             ${badgePriority}
         </div>
         <p class="small mb-2" style="color: var(--text-primary); font-size: 12px;">
             <i class="fas fa-info-circle me-1" style="color: var(--text-secondary);"></i>
-            ${task.created_from ? `Source: ${task.created_from.replace(/_/g, ' ')}` : 'Turnover required'}
+            ${task.notes || (task.created_from ? `Source: ${task.created_from.replace(/_/g, ' ')}` : 'Turnover sanitization required')}
         </p>
+        ${isTableTask && task.status !== 'done' ? `
+            <button class="btn btn-sm btn-success w-100 fw-bold mb-2" onclick="markTableCleaned('${task.table_id || tblNo}', '${tblNo}', '${task.task_id}')" style="font-size: 11px; padding: 4px 10px;">
+                <i class="fas fa-check-circle me-1"></i> Cleaned &amp; Reset Table ${tblNo}
+            </button>
+        ` : ''}
         <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
             <div class="d-flex align-items-center gap-2 small">
-                <div class="avatar-hk">${(task.assigned_to || 'HK')[0].toUpperCase()}</div>
-                <span style="color: var(--text-primary); font-size: 12px;">${task.assigned_to || 'Unassigned'}</span>
+                <div class="avatar-hk">${(task.assigned_to || (isTableTask ? 'Waitstaff' : 'HK'))[0].toUpperCase()}</div>
+                <span style="color: var(--text-primary); font-size: 12px;">${task.assigned_to || (isTableTask ? 'Dining Staff' : 'Housekeeping')}</span>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <select class="form-select form-select-sm py-0 px-2 rounded-pill" style="width: auto; font-size: 11px; height: 26px;" onchange="updateTaskStatus('${task.task_id}', this.value)">
@@ -282,6 +343,34 @@ function createCardEl(task) {
         </div>
     `;
     return div;
+}
+
+async function markTableCleaned(tableId, tableNo, taskId) {
+    try {
+        const res = await fetch(`/api/dining/tables/${tableId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'available' })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (taskId) {
+                await fetch(`/api/housekeeping/tasks/${taskId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'done' })
+                });
+            }
+            if (window.Toast) {
+                Toast.success(`Table ${tableNo} marked cleaned and reset to Available!`);
+            }
+            loadTasks();
+        } else {
+            if (window.Toast) Toast.error(json.message || 'Failed to update table');
+        }
+    } catch (e) {
+        console.error('Error cleaning table:', e);
+    }
 }
 
 function allowDrop(e) {
@@ -305,7 +394,9 @@ async function updateTaskStatus(taskId, newStatus) {
         });
         const json = await res.json();
         if (json.ok) {
-            if (window.AppConventions && AppConventions.Toast) {
+            if (window.Toast) {
+                Toast.success(`Task marked as ${newStatus.replace(/_/g, ' ')}`);
+            } else if (window.AppConventions && AppConventions.Toast) {
                 AppConventions.Toast.success(`Task ${taskId} marked as ${newStatus.replace(/_/g, ' ')}`);
             }
             const task = allTasks.find(x => x.task_id === taskId);
@@ -313,25 +404,25 @@ async function updateTaskStatus(taskId, newStatus) {
             renderBoard();
         } else {
             const errMsg = json.message || (json.errors ? Object.values(json.errors).join(', ') : 'Failed to update task status');
-            if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.error(errMsg);
-            }
+            if (window.Toast) Toast.error(errMsg);
         }
     } catch (e) {
         console.error(e);
-        if (window.AppConventions && AppConventions.Toast) {
-            AppConventions.Toast.error('Network error updating task status');
-        }
+        if (window.Toast) Toast.error('Network error updating task status');
     }
 }
 
 function openNewTaskModal() {
-    if (window.AppConventions && AppConventions.Toast) {
+    if (window.Toast) {
+        Toast.info('Turnover tasks are automatically scheduled from front desk checkouts and dining departures.');
+    } else if (window.AppConventions && AppConventions.Toast) {
         AppConventions.Toast.info('Turnover tasks are automatically scheduled from front desk checkouts and daily schedules.');
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadTasks);
+document.addEventListener('DOMContentLoaded', () => {
+    loadTasks();
+    setInterval(loadTasks, 10000); // 10s auto-refresh for live turnover tasks
+});
 </script>
-{% endblock %}
 {% endblock %}

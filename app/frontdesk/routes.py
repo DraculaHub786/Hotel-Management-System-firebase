@@ -9,7 +9,7 @@ from app.firebase_db import (
     spa_bookings_col, pool_bookings_col, gym_bookings_col, resolve_room_doc
 )
 from app.auth.decorators import login_required, role_required
-from api_utils import api_success, api_error, permission_denied
+from api_utils import api_success, api_error, permission_denied, safe_sort_key
 from guest_service import generate_qr_base64, calculate_order_pricing
 from app.core.sync_hub import sync_hub
 
@@ -396,22 +396,185 @@ def my_bookings_view():
         except Exception as e:
             logger.warning(f"Error querying facility collection: {e}")
 
-    user_bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-    user_orders.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-    user_facilities.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    user_bookings.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
+    user_orders.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
+    user_facilities.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
     return render_template('guest/my_bookings.html', bookings=user_bookings, orders=user_orders, facilities=user_facilities)
 
-@frontdesk_bp.route('/api/user/bookings', methods=['GET'])
+@frontdesk_bp.route('/my-bookings/<booking_id>', methods=['GET'])
+@frontdesk_bp.route('/bookings/<booking_id>', methods=['GET'])
 @login_required
-def api_user_bookings():
-    email = session.get('user_email')
-    user_bookings = []
-    for doc in bookings_col().where('user_email', '==', email).stream():
-        d = doc.to_dict()
-        d['id'] = doc.id
-        user_bookings.append(d)
-    user_bookings.sort(key=lambda x: x.get('created_at', ''), reverse=True)
-    return api_success(user_bookings)
+def booking_detail_view(booking_id):
+    user_email = session.get('user_email')
+    user_role = session.get('user_role', 'guest')
+    staff_roles = {'admin', 'super_admin', 'manager', 'front_desk'}
+
+    doc = bookings_col().document(str(booking_id)).get()
+    bdata = doc.to_dict() if doc.exists else None
+
+    if not bdata:
+        matches = list(bookings_col().where('booking_no', '==', str(booking_id)).limit(1).get())
+        if matches:
+            bdata = matches[0].to_dict()
+            booking_id = matches[0].id
+
+    if not bdata:
+        return render_template('permission_denied.html', message="Booking not found.", user_role=user_role), 404
+
+    booking_owner = (bdata.get('user_email') or '').lower()
+    if user_role not in staff_roles and booking_owner and booking_owner != (user_email or '').lower():
+        return permission_denied("You are not authorized to view this booking.")
+
+    if 'items' not in bdata or not bdata['items']:
+        room_name = bdata.get('room_name') or f"Room {bdata.get('room_number', '101')}"
+        bdata['items'] = [{
+            'name': room_name,
+            'qty': 1,
+            'unit_price': float(bdata.get('subtotal') or bdata.get('total_price') or 3500.0),
+            'line_total': float(bdata.get('subtotal') or bdata.get('total_price') or 3500.0)
+        }]
+
+    return render_template('guest/booking_detail.html', booking=bdata, items=bdata.get('items', []), booking_id=booking_id)
+
+@frontdesk_bp.route('/api/user/bookings', methods=['GET'])
+@frontdesk_bp.route('/api/bookings', methods=['GET', 'POST'])
+@login_required
+def api_bookings_handler():
+    user_email = session.get('user_email')
+    user_role = session.get('user_role', 'guest')
+    user_name = session.get('user_name', user_email.split('@')[0] if user_email else 'Guest')
+
+    if request.method == 'GET':
+        user_bookings = []
+        if user_role in ['admin', 'manager', 'front_desk'] and request.args.get('all') == 'true':
+            stream = bookings_col().stream()
+        else:
+            stream = bookings_col().where('user_email', '==', user_email).stream()
+        for doc in stream:
+            d = doc.to_dict()
+            d['id'] = doc.id
+            user_bookings.append(d)
+        user_bookings.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
+        return api_success(user_bookings)
+
+    # POST: Create Booking & Initiate Payment Flow
+    body = request.get_json() or {}
+    room_number = str(body.get('room_number') or body.get('room_id') or '101').strip()
+    room_id = body.get('room_id') or f"room_{room_number}"
+    room_type = body.get('room_type', 'Deluxe Heritage')
+    check_in = body.get('check_in')
+    check_out = body.get('check_out')
+    guests = int(body.get('guests', 1))
+    payment_method = body.get('payment_method', 'card')
+    special_requests = body.get('special_requests', '')
+    billing_name = body.get('billing_name') or body.get('guest_name') or user_name
+    phone = body.get('phone') or session.get('user_phone') or '9876543210'
+
+    now_iso = datetime.utcnow().isoformat() + "Z"
+    if not check_in:
+        check_in = datetime.utcnow().strftime('%Y-%m-%d')
+    if not check_out:
+        check_out = (datetime.utcnow() + timedelta(days=1)).strftime('%Y-%m-%d')
+
+    # Resolve room doc for pricing verification
+    rdoc = resolve_room_doc(room_number)
+    rdata = rdoc.to_dict() if (rdoc and rdoc.exists) else {}
+    room_price = float(rdata.get('price') or rdata.get('rate') or 3500.0)
+    room_type = rdata.get('type') or room_type
+
+    # Compute nights & pricing
+    try:
+        d1 = datetime.strptime(check_in[:10], '%Y-%m-%d')
+        d2 = datetime.strptime(check_out[:10], '%Y-%m-%d')
+        nights = max(1, (d2 - d1).days)
+    except Exception:
+        nights = 1
+
+    total_price = float(body.get('total_price') or (nights * room_price))
+    booking_no = generate_booking_no()
+    txn_id = f"txn_{int(time.time())}_{random.randint(100, 999)}"
+    dynamic_otp = f"{random.randint(100000, 999999)}"
+
+    # Create Booking in Firestore
+    booking_doc = {
+        "booking_no": booking_no,
+        "user_email": user_email,
+        "guest_name": billing_name,
+        "phone": phone,
+        "room_id": str(room_id),
+        "room_number": str(room_number),
+        "room_type": room_type,
+        "check_in": check_in,
+        "check_out": check_out,
+        "nights": nights,
+        "guests": guests,
+        "total_price": total_price,
+        "special_requests": special_requests,
+        "status": "confirmed",
+        "payment_status": "pending",
+        "txn_id": txn_id,
+        "payment_method": payment_method,
+        "created_at": now_iso
+    }
+    bref = bookings_col().add(booking_doc)
+    booking_id = bref[1].id
+
+    # Create Pending Transaction in Firestore
+    order_sum = {
+        "subtotal": round(total_price / 1.075, 2),
+        "tax": round(total_price * 0.05, 2),
+        "service_charge": round(total_price * 0.025, 2),
+        "total": total_price,
+        "currency": "INR"
+    }
+
+    transactions_col().document(txn_id).set({
+        "transaction_id": txn_id,
+        "user_email": user_email,
+        "phone": phone,
+        "amount": total_price,
+        "total": total_price,
+        "payment_method": payment_method,
+        "payment_status": "pending",
+        "status": "pending",
+        "category": "room",
+        "booking_id": booking_id,
+        "reference_no": booking_no,
+        "order_summary": order_sum,
+        "otp": dynamic_otp,
+        "created_at": now_iso
+    })
+
+    # Log/print interactive demo OTP prompt
+    banner = f"""
+======================================================================
+🔐 [ROOM BOOKING INITIATED — STEP 1: MOBILE OTP VERIFICATION]
+   Transaction ID : {txn_id}
+   Room Number    : {room_number} ({room_type})
+   Booking Ref    : {booking_no}
+   Guest Name     : {billing_name} (+91 {phone})
+   Amount Payable : ₹{total_price}
+   >>> DEMO OTP: {dynamic_otp} <<<
+   Timestamp      : {now_iso}
+   Instruction    : Verify mobile number on /pay/{txn_id}/otp before QR payment simulation
+======================================================================
+"""
+    logger.info(banner)
+    print(banner, flush=True)
+
+    resp_payload = {
+        "success": True,
+        "ok": True,
+        "booking_id": booking_id,
+        "booking_no": booking_no,
+        "txn_id": txn_id,
+        "amount": total_price,
+        "redirect_url": f"/pay/{txn_id}/otp",
+        "next_url": f"/pay/{txn_id}/qr",
+        "otp_code": dynamic_otp,
+        "message": f"Booking for Room {room_number} initiated! Proceeding to mobile verification..."
+    }
+    return api_success(resp_payload)
 
 @frontdesk_bp.route('/api/user/orders', methods=['GET'])
 @login_required
@@ -422,7 +585,7 @@ def api_user_orders():
         d = doc.to_dict()
         d['id'] = doc.id
         user_orders.append(d)
-    user_orders.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    user_orders.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
     return api_success(user_orders)
 
 @frontdesk_bp.route('/api/user/facilities', methods=['GET'])
@@ -438,7 +601,7 @@ def api_user_facilities():
                 user_facilities.append(d)
         except Exception as e:
             logger.warning(f"Error querying facility collection: {e}")
-    user_facilities.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    user_facilities.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
     return api_success(user_facilities)
 
 @frontdesk_bp.route('/api/bookings/<booking_id>/cancel', methods=['POST'])
@@ -801,7 +964,7 @@ def walkin_registration():
 def night_audit():
     if request.method == 'GET':
         audits = [d.to_dict() for d in night_audits_col().stream()]
-        audits.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+        audits.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
         return render_template('frontdesk/night_audit.html', audits=audits)
 
     # Perform Automated EOD Night Audit calculation

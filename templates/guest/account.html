@@ -1,65 +1,274 @@
 {% extends "base.html" %}
 
-{% block title %}Account Settings — Nur-e-Haya{% endblock %}
+{% block title %}Account Settings & Preferences — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 70px;">
-    <div class="screen-topbar">
+<div class="container" style="max-width: 1200px; padding-top: 85px; padding-bottom: 70px;">
+    <!-- Screen Header -->
+    <div class="screen-topbar mb-4">
         <div class="topbar-title">
-            <i class="fas fa-user-circle"></i> Profile & Account Preferences
+            <i class="fas fa-user-cog text-warning"></i>
+            <span>Profile & Account Settings</span>
         </div>
-        <div class="topbar-actions">
-            <a href="/my-bookings" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">My Bookings</a>
-            <a href="/dashboard" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">Dashboard</a>
+        <div class="topbar-actions d-flex gap-2">
+            <a href="/my-bookings" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
+                <i class="fas fa-suitcase me-1"></i> My Bookings
+            </a>
+            <a href="/dashboard" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
+                <i class="fas fa-home me-1"></i> Guest Dashboard
+            </a>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 30px; margin-top: 25px;">
-        <!-- Left: Profile Badge & Membership -->
-        <div class="card" style="text-align: center; padding: 35px 24px;">
-            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: var(--dark-bg); font-family: 'Cinzel', serif; font-size: 32px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 20px rgba(212,175,55,0.4);">
-                {{ (user.name[0] if user and user.name else (session.get('user_name', 'G')[0] if session.get('user_name') else 'G')) | upper }}
+    <!-- Active Stay & Dining Status Banner (If Guest has Active Room or Table) -->
+    {% if active_room or active_dining %}
+    <div class="row g-3 mb-4">
+        {% if active_room %}
+        <div class="{% if active_dining %}col-md-6{% else %}col-12{% endif %}">
+            <div class="p-3 rounded-3 d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, rgba(212,175,55,0.18), rgba(15,26,42,0.95)); border: 1.5px solid rgba(212,175,55,0.5); box-shadow: 0 4px 18px rgba(0,0,0,0.3);">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(212,175,55,0.2); border: 1px solid var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--primary-color);">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--primary-color); font-weight: 700;">Active Stay</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #ffffff;">Your Room: {{ active_room.room_number }}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary);">Booking #{{ active_room.booking_no or 'Confirmed' }} &bull; Status: <span class="badge bg-success" style="font-size: 10px;">{{ active_room.status | upper }}</span></div>
+                    </div>
+                </div>
+                <a href="/my-bookings" class="btn btn-sm btn-outline-warning" style="font-size: 11px;">View Stay</a>
             </div>
+        </div>
+        {% endif %}
 
-            <h3 style="color: var(--text-bright); font-size: 20px; margin-bottom: 4px;">{{ (user.name if user and user.name else session.get('user_name', 'Valued Guest')) }}</h3>
-            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">{{ (user.email if user and user.email else session.get('user_email', '')) }}</div>
-
-            <div style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.25); border-radius: 8px; padding: 12px; font-size: 13px; color: var(--primary-color); margin-bottom: 20px;">
-                <i class="fas fa-crown"></i> Membership: <strong>{{ ((user.role if user and user.role else session.get('user_role', 'Guest')) or 'Guest') | upper }}</strong>
-                <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">5% Privileged Discount on all Dining & Stays</div>
+        {% if active_dining %}
+        <div class="{% if active_room %}col-md-6{% else %}col-12{% endif %}">
+            <div class="p-3 rounded-3 d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, rgba(66,133,244,0.15), rgba(15,26,42,0.95)); border: 1.5px solid rgba(66,133,244,0.45); box-shadow: 0 4px 18px rgba(0,0,0,0.3);">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(66,133,244,0.2); border: 1px solid #4285f4; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #4285f4;">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <div>
+                        <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #4285f4; font-weight: 700;">Restaurant Order</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #ffffff;">Your Table: {{ active_dining.table_number }}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
+                            Order #{{ active_dining.order_no or 'Active' }} &bull; Status: <span class="badge bg-info text-dark" style="font-size: 10px;">{{ active_dining.status | upper }}</span>
+                            {% if active_dining.payment_status in ['paid', 'completed'] or active_dining.status == 'paid' %}
+                            <span class="badge bg-success ms-1" style="font-size: 10px;">PAID</span>
+                            {% else %}
+                            <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">PAYMENT PENDING</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <a href="/dining/order/{{ active_dining.order_no or active_dining.id or 'active' }}" class="btn btn-sm btn-outline-primary" style="font-size: 11px;">
+                    <i class="fas fa-utensils me-1"></i> View Order
+                </a>
             </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
 
-            <button type="button" class="btn btn-danger" id="btnLogoutAcc" style="width: 100%; font-size: 12px; padding: 10px;">
-                <i class="fas fa-sign-out-alt" style="margin-right: 6px;"></i> Sign Out
-            </button>
+    <div class="row g-4">
+        <!-- Left Column: Profile Card & Navigation -->
+        <div class="col-12 col-lg-4">
+            <div class="card p-4 text-center" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212,175,55,0.25); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+                <!-- Avatar -->
+                <div style="position: relative; width: 96px; height: 96px; margin: 0 auto 16px;">
+                    {% if user and user.avatar %}
+                    <img src="{{ user.avatar }}" alt="Avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); box-shadow: 0 0 20px rgba(212,175,55,0.4);">
+                    {% else %}
+                    <div style="width: 100%; height: 100%; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: var(--dark-bg); font-family: 'Cinzel', serif; font-size: 38px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(255,255,255,0.4); box-shadow: 0 0 20px rgba(212,175,55,0.4);">
+                        {{ (user.name[0] if user and user.name else (session.get('user_name', 'G')[0] if session.get('user_name') else 'G')) | upper }}
+                    </div>
+                    {% endif %}
+                    {% if user and user.google_auth %}
+                    <div style="position: absolute; bottom: 0; right: 0; width: 26px; height: 26px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4);" title="Connected with Google">
+                        <i class="fab fa-google" style="color: #4285f4; font-size: 13px;"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h3 id="displayProfileName" style="color: var(--text-bright); font-size: 20px; font-weight: 700; margin-bottom: 4px;">
+                    {{ (user.name if user and user.name else session.get('user_name', 'Valued Guest')) }}
+                </h3>
+                <div id="displayProfileEmail" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                    {{ (user.email if user and user.email else session.get('user_email', '')) }}
+                </div>
+
+                <!-- Membership Badge -->
+                <div style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.25); border-radius: 10px; padding: 12px; margin-bottom: 20px; text-align: left;">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span style="font-size: 13px; color: var(--primary-color); font-weight: 600;">
+                            <i class="fas fa-crown me-1"></i> Tier: <strong>{{ ((user.role if user and user.role else session.get('user_role', 'Guest')) or 'Guest') | upper }}</strong>
+                        </span>
+                        <span class="badge bg-warning text-dark" style="font-size: 10px;">{{ (user.loyalty_points if user else None) or 25 }} PTS</span>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-secondary);">
+                        {% if (user.role if user else session.get('user_role')) == 'member' %}
+                        VIP Member: 5% Privileged Discount on all Dining & Stays
+                        {% else %}
+                        Standard Guest: Enjoy complimentary high-speed Wi-Fi and 24/7 concierge assistance.
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Sign Out Button -->
+                <button type="button" class="btn btn-outline-danger w-100" id="btnLogoutAcc" style="font-size: 12px; padding: 10px; border-radius: 8px;">
+                    <i class="fas fa-sign-out-alt me-1"></i> Sign Out of Account
+                </button>
+            </div>
         </div>
 
-        <!-- Right: Editable Details -->
-        <div class="card">
-            <h3 style="font-size: 18px; color: var(--text-bright); margin-bottom: 20px; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 10px;">
-                Personal Information
-            </h3>
+        <!-- Right Column: Settings Form -->
+        <div class="col-12 col-lg-8">
+            <div class="card p-4" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212,175,55,0.25); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+                <form id="profileForm" novalidate>
+                    <!-- SECTION 1: Personal & Account Identity -->
+                    <div class="mb-4">
+                        <h4 style="font-size: 16px; color: var(--primary-color); font-family: 'Cinzel', serif; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-id-card"></i> 1. Personal & Contact Information
+                        </h4>
 
-            <form id="profileForm" novalidate>
-                <div class="form-group">
-                    <label class="form-label" for="accName">Full Name</label>
-                    <input type="text" id="accName" class="form-control" value="{{ (user.name if user and user.name else session.get('user_name', '')) }}" required>
-                </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label required" for="accName">Username / Full Name</label>
+                                <input type="text" id="accName" name="name" class="form-control" value="{{ (user.name if user and user.name else session.get('user_name', '')) }}" required placeholder="e.g. Afjal Ansari">
+                            </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="accEmail">Email Address</label>
-                    <input type="email" id="accEmail" class="form-control" value="{{ (user.email if user and user.email else session.get('user_email', '')) }}" disabled style="opacity: 0.6; cursor: not-allowed;">
-                </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="accPhone">Primary Phone Number</label>
+                                <input type="tel" id="accPhone" name="phone" class="form-control" value="{{ (user.phone if user and user.phone else '') }}" placeholder="+91 98765 43210">
+                            </div>
 
-                <div class="form-group">
-                    <label class="form-label" for="accPhone">Contact Phone</label>
-                    <input type="tel" id="accPhone" class="form-control" value="{{ (user.phone if user and user.phone else '') }}" placeholder="+91 98765 43210">
-                </div>
+                            <div class="col-md-6">
+                                <label class="form-label required" for="accEmail">Primary Account Email</label>
+                                <input type="email" id="accEmail" name="email" class="form-control" value="{{ (user.email if user and user.email else session.get('user_email', '')) }}" required placeholder="your.email@example.com">
+                                <div class="form-text" style="font-size: 11px; color: var(--text-secondary);">Used for your booking confirmations and invoices.</div>
+                            </div>
 
-                <button type="submit" class="btn btn-primary" style="margin-top: 10px;">
-                    <i class="fas fa-save" style="margin-right: 6px;"></i> Save Changes
-                </button>
-            </form>
+                            <div class="col-md-6">
+                                <label class="form-label" for="accSecEmail">Alternate / Secondary Email</label>
+                                <input type="email" id="accSecEmail" name="secondary_email" class="form-control" value="{{ (user.secondary_email if user and user.secondary_email else '') }}" placeholder="backup.email@example.com">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="accAge">Age</label>
+                                <input type="number" id="accAge" name="age" class="form-control" value="{{ (user.age if user and user.age else '') }}" min="18" max="120" placeholder="e.g. 28">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="accGender">Gender</label>
+                                <select id="accGender" name="gender" class="form-select">
+                                    <option value="" {% if not user or not user.gender %}selected{% endif %}>Select Gender</option>
+                                    <option value="Male" {% if user and user.gender == 'Male' %}selected{% endif %}>Male</option>
+                                    <option value="Female" {% if user and user.gender == 'Female' %}selected{% endif %}>Female</option>
+                                    <option value="Non-Binary" {% if user and user.gender == 'Non-Binary' %}selected{% endif %}>Non-Binary</option>
+                                    <option value="Prefer not to say" {% if user and user.gender == 'Prefer not to say' %}selected{% endif %}>Prefer not to say</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="accNationality">Nationality</label>
+                                <input type="text" id="accNationality" name="nationality" class="form-control" value="{{ (user.nationality if user and user.nationality else 'Indian') }}" placeholder="e.g. Indian">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: Official ID & Residence Address -->
+                    <div class="mb-4">
+                        <h4 style="font-size: 16px; color: var(--primary-color); font-family: 'Cinzel', serif; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-passport"></i> 2. Official Identification & Address
+                        </h4>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="accIdType">Government ID Type</label>
+                                <select id="accIdType" name="id_type" class="form-select">
+                                    <option value="Aadhaar" {% if user and user.id_type == 'Aadhaar' %}selected{% endif %}>Aadhaar Card (India)</option>
+                                    <option value="Passport" {% if user and user.id_type == 'Passport' %}selected{% endif %}>International Passport</option>
+                                    <option value="Driving License" {% if user and user.id_type == 'Driving License' %}selected{% endif %}>Driving License</option>
+                                    <option value="Voter ID" {% if user and user.id_type == 'Voter ID' %}selected{% endif %}>Voter ID Card</option>
+                                    <option value="National ID" {% if user and user.id_type == 'National ID' %}selected{% endif %}>National ID Card</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="accIdNumber">ID Document Number</label>
+                                <input type="text" id="accIdNumber" name="id_number" class="form-control" value="{{ (user.id_number if user and user.id_number else '') }}" placeholder="e.g. ABCD1234E or Aadhaar #">
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="accAddress">Residential Street Address</label>
+                                <input type="text" id="accAddress" name="address" class="form-control" value="{{ (user.address if user and user.address else '') }}" placeholder="Suite / Flat, Building, Street">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="accCity">City</label>
+                                <input type="text" id="accCity" name="city" class="form-control" value="{{ (user.city if user and user.city else '') }}" placeholder="e.g. Mumbai">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="accState">State / Region</label>
+                                <input type="text" id="accState" name="state" class="form-control" value="{{ (user.state if user and user.state else '') }}" placeholder="e.g. Maharashtra">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="accPincode">Postal / ZIP Code</label>
+                                <input type="text" id="accPincode" name="pincode" class="form-control" value="{{ (user.pincode if user and user.pincode else '') }}" placeholder="e.g. 400001">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Dining & Stay Preferences & Emergency Contact -->
+                    <div class="mb-4">
+                        <h4 style="font-size: 16px; color: var(--primary-color); font-family: 'Cinzel', serif; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-concierge-bell"></i> 3. Hospitality Preferences & Emergency Contact
+                        </h4>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="accDiet">Dietary Requirement</label>
+                                <select id="accDiet" name="dietary_preference" class="form-select">
+                                    <option value="None" {% if not user or not user.dietary_preference or user.dietary_preference == 'None' %}selected{% endif %}>No Special Restrictions</option>
+                                    <option value="Pure Vegetarian" {% if user and user.dietary_preference == 'Pure Vegetarian' %}selected{% endif %}>Pure Vegetarian (Veg)</option>
+                                    <option value="Non-Vegetarian" {% if user and user.dietary_preference == 'Non-Vegetarian' %}selected{% endif %}>Non-Vegetarian</option>
+                                    <option value="Jain Food" {% if user and user.dietary_preference == 'Jain Food' %}selected{% endif %}>Jain Food (No root veggies)</option>
+                                    <option value="Halal" {% if user and user.dietary_preference == 'Halal' %}selected{% endif %}>100% Halal</option>
+                                    <option value="Vegan" {% if user and user.dietary_preference == 'Vegan' %}selected{% endif %}>Vegan</option>
+                                    <option value="Gluten-Free" {% if user and user.dietary_preference == 'Gluten-Free' %}selected{% endif %}>Gluten-Free</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="accStayPref">Room & Stay Preferences</label>
+                                <input type="text" id="accStayPref" name="stay_preferences" class="form-control" value="{{ (user.stay_preferences if user and user.stay_preferences else '') }}" placeholder="e.g. High floor, quiet room, extra pillows">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="accEmergName">Emergency Contact Person</label>
+                                <input type="text" id="accEmergName" name="emergency_contact_name" class="form-control" value="{{ (user.emergency_contact_name if user and user.emergency_contact_name else '') }}" placeholder="Contact Name & Relation">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="accEmergPhone">Emergency Contact Phone</label>
+                                <input type="tel" id="accEmergPhone" name="emergency_contact_phone" class="form-control" value="{{ (user.emergency_contact_phone if user and user.emergency_contact_phone else '') }}" placeholder="+91 98765 00000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-3 border-top d-flex justify-content-between align-items-center" style="border-color: rgba(212,175,55,0.2) !important;">
+                        <span class="text-secondary small">
+                            <i class="fas fa-lock me-1"></i> All guest personal data is encrypted and strictly confidential.
+                        </span>
+                        <button type="submit" class="btn btn-primary" id="btnSaveProfile" style="padding: 10px 24px;">
+                            <i class="fas fa-save me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -71,18 +280,73 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('btnLogoutAcc');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
-            await fetch('/api/logout', { method: 'POST' });
+            try {
+                await fetch('/api/logout', { method: 'POST' });
+            } catch (e) {}
             Toast.success('Signed out successfully.');
-            setTimeout(() => { window.location.href = '/login'; }, 500);
+            setTimeout(() => { window.location.href = '/login'; }, 400);
         });
     }
 
     const form = document.getElementById('profileForm');
-    AppForm.bind(form, {
-        onSubmit: async () => {
-            Toast.success('Profile settings updated!');
+    const saveBtn = document.getElementById('btnSaveProfile');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const originalBtnHtml = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Saving...';
+
+        const payload = {
+            name: document.getElementById('accName').value.trim(),
+            phone: document.getElementById('accPhone').value.trim(),
+            email: document.getElementById('accEmail').value.trim(),
+            secondary_email: document.getElementById('accSecEmail').value.trim(),
+            age: document.getElementById('accAge').value.trim(),
+            gender: document.getElementById('accGender').value,
+            nationality: document.getElementById('accNationality').value.trim(),
+            id_type: document.getElementById('accIdType').value,
+            id_number: document.getElementById('accIdNumber').value.trim(),
+            address: document.getElementById('accAddress').value.trim(),
+            city: document.getElementById('accCity').value.trim(),
+            state: document.getElementById('accState').value.trim(),
+            pincode: document.getElementById('accPincode').value.trim(),
+            dietary_preference: document.getElementById('accDiet').value,
+            stay_preferences: document.getElementById('accStayPref').value.trim(),
+            emergency_contact_name: document.getElementById('accEmergName').value.trim(),
+            emergency_contact_phone: document.getElementById('accEmergPhone').value.trim()
+        };
+
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            
+            if (data.ok) {
+                Toast.success(data.message || 'Profile settings updated successfully!');
+                // Update display fields immediately
+                if (payload.name) {
+                    document.getElementById('displayProfileName').textContent = payload.name;
+                }
+                if (payload.email) {
+                    document.getElementById('displayProfileEmail').textContent = payload.email;
+                }
+            } else {
+                Toast.error(data.message || 'Failed to update profile.');
+            }
+        } catch (err) {
+            console.error('Profile update error:', err);
+            Toast.error('Network error. Could not update profile.');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = originalBtnHtml;
         }
     });
 });
 </script>
 {% endblock %}
+

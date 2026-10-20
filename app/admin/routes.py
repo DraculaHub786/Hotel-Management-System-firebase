@@ -10,7 +10,7 @@ from app.firebase_db import (
     facilities_col, security_incidents_col, refunds_col
 )
 from app.auth.decorators import login_required, role_required
-from api_utils import api_success, api_error, permission_denied, log_audit_denied
+from api_utils import api_success, api_error, permission_denied, log_audit_denied, safe_sort_key
 
 logger = logging.getLogger(__name__)
 
@@ -171,14 +171,14 @@ def promo_codes():
 @role_required('admin', 'super_admin')
 def audit_logs():
     logs = [d.to_dict() for d in audit_logs_col().limit(100).stream()]
-    logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+    logs.sort(key=lambda x: safe_sort_key(x.get('timestamp')), reverse=True)
     return render_template('super_admin/audit_log.html', logs=logs)
 
 @admin_bp.route('/api/super-admin/audit-log', methods=['GET'])
 @role_required('admin', 'super_admin')
 def api_audit_logs():
     logs = [d.to_dict() for d in audit_logs_col().limit(100).stream()]
-    logs.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+    logs.sort(key=lambda x: safe_sort_key(x.get('timestamp')), reverse=True)
     return api_success(logs)
 
 # SCR-81: System Settings

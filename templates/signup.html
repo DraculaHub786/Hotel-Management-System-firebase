@@ -251,6 +251,29 @@
                     CREATE GUEST ACCOUNT
                 </button>
             </form>
+
+            <!-- Divider "or" -->
+            <div style="display: flex; align-items: center; margin: 20px 0; color: #bda568; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                <div style="flex: 1; height: 1px; background: rgba(212, 175, 55, 0.2);"></div>
+                <span style="padding: 0 12px;">or</span>
+                <div style="flex: 1; height: 1px; background: rgba(212, 175, 55, 0.2);"></div>
+            </div>
+
+            <!-- Instant Google Sign-Up / Login Button -->
+            <div id="g_id_onload"
+                 data-client_id="851707665415-ahf7difr035p39bn9cmi948tvngpol2f.apps.googleusercontent.com"
+                 data-callback="handleGoogleSignUp"
+                 data-auto_prompt="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="filled_black"
+                 data-text="signup_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 data-width="380">
+            </div>
         </div>
 
         <!-- 2. STAFF INVITE REDEEM SECTION -->
@@ -370,8 +393,40 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 window.location.href = result.redirect || '/dashboard';
             }, 600);
-        }
     });
 });
+
+function handleGoogleSignUp(response) {
+    try {
+        const payload = decodeJwtResponse(response.credential);
+        AppAPI.post('/api/google-auth', {
+            credential: response.credential,
+            id_token: response.credential,
+            email: payload.email,
+            name: payload.name,
+            picture: payload.picture,
+            googleId: payload.sub
+        }).then(res => {
+            const data = (res && res.data) ? res.data : res;
+            Toast.success('Google account connected! Direct sign-in successful...');
+            const redirectUrl = (data && (data.redirect || data.redirect_url)) ? (data.redirect || data.redirect_url) : '/dashboard';
+            setTimeout(() => {
+                window.location.href = redirectUrl;
+            }, 400);
+        }).catch(err => {
+            Toast.error(err.message || 'Google sign-up failed.');
+        });
+    } catch (e) {
+        console.error('Google sign-up error:', e);
+        Toast.error('Could not process Google Sign-In.');
+    }
+}
+
+function decodeJwtResponse(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(jsonPayload);
+}
 </script>
 {% endblock %}

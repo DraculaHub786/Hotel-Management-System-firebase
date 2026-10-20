@@ -55,6 +55,9 @@
         <button type="button" class="btn btn-sm btn-outline-secondary zone-btn" data-zone="Zone D: Private Alcove">Zone D: Private Alcove</button>
     </div>
 
+    <!-- Live Kitchen Ready Orders Alert for Waiters -->
+    <div id="waiterReadyAlertSection" class="mb-3"></div>
+
     <!-- Table Cards Grid -->
     <div class="row g-3" id="tablesContainer">
         <!-- Rendered via JS -->
@@ -114,32 +117,76 @@
     border-color: var(--primary-color) !important;
 }
 </style>
+{% endblock %}
 
 {% block extra_js %}
 <script>
 let allTables = [];
+let readyOrders = [];
 let statusFilter = 'all';
 let zoneFilter = 'all';
 
 async function fetchTables() {
     const container = document.getElementById('tablesContainer');
-    if (window.AppStates) {
+    if (window.AppStates && allTables.length === 0) {
         AppStates.renderLoading(container, { type: 'card', count: 8 });
     }
 
     try {
-        const res = await fetch('/api/dining/tables');
-        const json = await res.json();
-        if (json.ok && Array.isArray(json.data) && json.data.length > 0) {
-            allTables = json.data;
+        const [tablesRes, ordersRes] = await Promise.all([
+            fetch('/api/dining/tables'),
+            fetch('/api/orders')
+        ]);
+        const tablesJson = await tablesRes.json();
+        const ordersJson = await ordersRes.json();
+
+        if (tablesJson.ok && Array.isArray(tablesJson.data)) {
+            allTables = tablesJson.data;
+        }
+
+        if (ordersJson.ok && Array.isArray(ordersJson.data)) {
+            readyOrders = ordersJson.data.filter(o => o.status === 'ready' && o.table_number);
         } else {
-            allTables = [];
+            readyOrders = [];
         }
     } catch (e) {
-        console.error('Table fetch error:', e);
+        console.error('Table/order fetch error:', e);
     }
+    renderReadyAlerts();
     updateTableCounts();
     renderTables();
+}
+
+function renderReadyAlerts() {
+    const alertSec = document.getElementById('waiterReadyAlertSection');
+    if (!alertSec) return;
+
+    if (readyOrders.length === 0) {
+        alertSec.innerHTML = '';
+        return;
+    }
+
+    alertSec.innerHTML = readyOrders.map(o => `
+        <div class="p-3 rounded-3 mb-2 d-flex flex-wrap align-items-center justify-content-between gap-3" style="background: linear-gradient(135deg, rgba(0,134,112,0.35), rgba(22,34,54,0.95)); border: 2px solid #008670; box-shadow: 0 0 25px rgba(0,134,112,0.35);">
+            <div class="d-flex align-items-center gap-3">
+                <div class="spinner-grow text-success" role="status" style="width: 24px; height: 24px;"></div>
+                <div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #2ee59d; font-weight: 700;">
+                        <i class="fas fa-concierge-bell me-1"></i> Order Cooked &amp; Ready for Waiter Pickup!
+                    </div>
+                    <h4 style="margin: 2px 0 0 0; color: #ffffff; font-size: 16px; font-weight: 700;">
+                        Order #${o.order_no} for <strong>Table ${o.table_number}</strong> (Guest: ${o.guest_name || 'Guest'}) is ready!
+                    </h4>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
+                        Items: ${(o.items || []).map(i => i.qty + 'x ' + i.name).join(', ')}
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-success fw-bold" onclick="deliverOrder('${o.id || o.order_no}', '${o.table_number}')" style="padding: 8px 18px; font-size: 13px;">
+                <i class="fas fa-check-circle me-1"></i> Give to Table ${o.table_number} (Served)
+            </button>
+        </div>
+    `).join('');
 }
 
 function updateTableCounts() {
@@ -180,6 +227,9 @@ function renderTables() {
 
     container.innerHTML = list.map(tbl => {
         const status = tbl.status || 'available';
+        const tblNo = String(tbl.table_no);
+        const hasReadyOrder = readyOrders.find(o => String(o.table_number) === tblNo);
+
         let statusBadge = '';
         let actionBtn = '';
 
@@ -191,31 +241,47 @@ function renderTables() {
                 </button>
             `;
         } else if (status === 'occupied') {
-            statusBadge = '<span class="badge bg-primary text-white">Dining In-Progress</span>';
+            statusBadge = hasReadyOrder 
+                ? '<span class="badge bg-success text-white"><i class="fas fa-bell me-1"></i>Food Cooked!</span>' 
+                : '<span class="badge bg-primary text-white">Dining In-Progress</span>';
+            
             actionBtn = `
-                <button class="btn btn-sm btn-outline-warning w-100" onclick="setTableStatus('${tbl.id}', 'bill_pending', 'Bill Requested')">
-                    <i class="fas fa-file-invoice-dollar me-1"></i> Request Bill
+                ${hasReadyOrder ? `
+                    <button class="btn btn-sm btn-success w-100 fw-bold mb-2" onclick="deliverOrder('${hasReadyOrder.id || hasReadyOrder.order_no}', '${tbl.table_no}')">
+                        <i class="fas fa-concierge-bell me-1"></i> Give to Table ${tbl.table_no} (Served)
+                    </button>
+                ` : `
+                    <button class="btn btn-sm btn-outline-warning w-100 mb-2" onclick="setTableStatus('${tbl.id}', 'bill_pending', 'Bill Requested')">
+                        <i class="fas fa-file-invoice-dollar me-1"></i> Request Bill
+                    </button>
+                `}
+                <button class="btn btn-sm btn-outline-danger w-100" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')">
+                    <i class="fas fa-sign-out-alt me-1"></i> Guest Leaving &rarr; Clean Table
                 </button>
             `;
         } else if (status === 'bill_pending') {
             statusBadge = '<span class="badge bg-warning text-dark fw-bold">Bill Pending</span>';
             actionBtn = `
-                <button class="btn btn-sm btn-warning w-100 fw-bold text-dark" onclick="setTableStatus('${tbl.id}', 'busing', 'Guest Departed')">
-                    <i class="fas fa-receipt me-1"></i> Settle & Mark Busing
+                <button class="btn btn-sm btn-warning w-100 fw-bold text-dark mb-2" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')">
+                    <i class="fas fa-receipt me-1"></i> Settle &amp; Clean Table
+                </button>
+                <button class="btn btn-sm btn-outline-danger w-100" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')">
+                    <i class="fas fa-sign-out-alt me-1"></i> Guest Leaving &rarr; Clean Table
                 </button>
             `;
         } else if (status === 'busing') {
-            statusBadge = '<span class="badge bg-danger text-white"><i class="fas fa-broom me-1"></i>Needs Turnover Clean</span>';
+            statusBadge = '<span class="badge bg-danger text-white"><i class="fas fa-broom me-1"></i>Cleaning Staff Notified</span>';
             actionBtn = `
+                <div class="small text-secondary mb-2 text-center"><i class="fas fa-clock me-1 text-warning"></i> Cleaning in progress...</div>
                 <button class="btn btn-sm btn-success w-100 fw-bold" onclick="setTableStatus('${tbl.id}', 'available', 'Cleaned & Reset')">
-                    <i class="fas fa-check-circle me-1"></i> Mark Clean & Sanitized
+                    <i class="fas fa-check-circle me-1"></i> Mark Clean &amp; Ready
                 </button>
             `;
         }
 
         return `
             <div class="col-12 col-sm-6 col-md-4 col-xl-3">
-                <div class="table-card ${status}">
+                <div class="table-card ${status} ${hasReadyOrder ? 'border-success' : ''}">
                     <div>
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
@@ -234,6 +300,7 @@ function renderTables() {
                                 <div class="text-secondary small">Seated Guest:</div>
                                 <div class="fw-bold text-light">${tbl.guest_name}</div>
                                 ${tbl.order_id ? `<div class="text-warning small mt-1">Order #${tbl.order_id}</div>` : ''}
+                                ${hasReadyOrder ? `<div class="text-success small fw-bold mt-1"><i class="fas fa-check-circle me-1"></i>Kitchen: Cooked &amp; Ready!</div>` : ''}
                             </div>
                         ` : ''}
                     </div>
@@ -244,6 +311,56 @@ function renderTables() {
             </div>
         `;
     }).join('');
+}
+
+async function deliverOrder(orderId, tableNo) {
+    if (!orderId) {
+        if (window.Toast) Toast.error('Order identifier not found');
+        return;
+    }
+    try {
+        const res = await fetch(`/api/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'delivered' })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.Toast) Toast.success(`Order delivered to Table ${tableNo}!`);
+            readyOrders = readyOrders.filter(o => o.id !== orderId && o.order_no !== orderId);
+            fetchTables();
+        } else {
+            if (window.Toast) Toast.error(json.message || 'Could not update delivery status');
+        }
+    } catch (e) {
+        console.error('Delivery update error:', e);
+        if (window.Toast) Toast.error('Network error during delivery update');
+    }
+}
+
+async function triggerTableTurnover(tableId, tableNo, guestName) {
+    if (!confirm(`Guest is leaving Table ${tableNo}? This will alert the cleaning staff to sanitize and reset the table.`)) {
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/dining/tables/${tableId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'busing', guest_name: guestName })
+        });
+        const json = await res.json();
+        if (json.ok) {
+            if (window.Toast) {
+                Toast.success(`Table ${tableNo} marked for turnover! Cleaning staff alerted to clean.`);
+            }
+            fetchTables();
+        } else {
+            if (window.Toast) Toast.error(json.message || 'Failed to update table');
+        }
+    } catch (e) {
+        console.error('Turnover error:', e);
+    }
 }
 
 async function setTableStatus(tableId, newStatus, actionName) {
@@ -267,11 +384,11 @@ async function setTableStatus(tableId, newStatus, actionName) {
             renderTables();
             if (window.Toast) Toast.success(`Table updated: ${actionName}`);
         } else {
-            alert(json.message || 'Failed to update table status');
+            if (window.Toast) Toast.error(json.message || 'Failed to update table status');
         }
     } catch (e) {
         console.error(e);
-        alert('Network error updating table status');
+        if (window.Toast) Toast.error('Network error updating table status');
     }
 }
 
@@ -299,6 +416,9 @@ function seatWalkin(tableId, tableNo) {
 document.addEventListener('DOMContentLoaded', () => {
     fetchTables();
 
+    // Auto-refresh every 10 seconds for live kitchen ready updates
+    setInterval(fetchTables, 10000);
+
     // Status filter pills
     document.querySelectorAll('#tableFilterPills .filter-pill').forEach(pill => {
         pill.addEventListener('click', () => {
@@ -320,5 +440,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-{% endblock %}
 {% endblock %}

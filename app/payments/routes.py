@@ -5,10 +5,10 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from app.firebase_db import (
     transactions_col, invoices_col, qr_payments_col, refunds_col,
-    settings_col, bookings_col, audit_logs_col
+    settings_col, bookings_col, audit_logs_col, orders_col, restaurant_tables_col
 )
 from app.auth.decorators import login_required, role_required
-from api_utils import api_success, api_error, permission_denied
+from api_utils import api_success, api_error, permission_denied, safe_sort_key
 from guest_service import generate_qr_base64
 
 logger = logging.getLogger(__name__)
@@ -184,17 +184,49 @@ def api_simulate_pay(txn_id):
         if current_role not in staff_roles and tdata.get('user_email').lower() != current_email.lower():
             return permission_denied("You are not authorized to settle this transaction.")
 
-    b_id = 'bk_5521'
     now_iso = datetime.utcnow().isoformat() + "Z"
     if target_ref:
         target_ref.update({"payment_status": "completed", "status": "paid", "paid_at": now_iso})
-        b_id = (tdata or {}).get('booking_id') or (tdata or {}).get('reference_no') or b_id
     else:
         for d in transactions_col().where('transaction_id', '==', txn_id).stream():
             d.reference.update({"payment_status": "completed", "status": "paid", "paid_at": now_iso})
             tdata = d.to_dict()
-            b_id = tdata.get('booking_id') or tdata.get('reference_no') or b_id
 
+    category = (tdata or {}).get('category') or 'room'
+    ord_id = (tdata or {}).get('order_id') or (tdata or {}).get('reference_no')
+
+    # Handle dining order bill settlement
+    if category == 'dining' or (ord_id and str(ord_id).startswith('ORD')):
+        odoc = None
+        if ord_id:
+            odoc = orders_col().document(str(ord_id)).get()
+            if not odoc.exists:
+                omatches = list(orders_col().where('order_no', '==', str(ord_id)).limit(1).get())
+                if not omatches:
+                    omatches = list(orders_col().where('txn_id', '==', txn_id).limit(1).get())
+                if omatches:
+                    odoc = omatches[0]
+        if odoc and odoc.exists:
+            odata = odoc.to_dict()
+            odoc.reference.update({
+                "status": "paid",
+                "payment_status": "paid",
+                "paid_at": now_iso
+            })
+            tbl_num = odata.get('table_number')
+            if tbl_num:
+                for tdoc in restaurant_tables_col().where('table_no', '==', str(tbl_num)).stream():
+                    tdoc.reference.update({"status": "busing", "order_status": "bill_settled"})
+            return api_success({
+                "status": "paid",
+                "category": "dining",
+                "order_id": odoc.id,
+                "order_no": odata.get('order_no'),
+                "table_number": tbl_num,
+                "message": "Dining bill simulation confirmed"
+            })
+
+    b_id = (tdata or {}).get('booking_id') or (tdata or {}).get('reference_no') or 'bk_5521'
     # Update associated booking to confirmed & paid
     bdoc = bookings_col().document(str(b_id)).get()
     if not bdoc.exists:
@@ -211,7 +243,7 @@ def api_simulate_pay(txn_id):
         })
         b_id = bdoc.id
 
-    return api_success({"status": "paid", "booking_id": b_id, "message": "Payment simulation confirmed"})
+    return api_success({"status": "paid", "booking_id": b_id, "category": "room", "message": "Payment simulation confirmed"})
 
 @payments_bp.route('/api/process-payment', methods=['POST'])
 @login_required
@@ -268,7 +300,7 @@ def ledger():
         d = doc.to_dict()
         d['id'] = doc.id
         txns.append(d)
-    txns.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    txns.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
     return render_template('payments/ledger.html', transactions=txns)
 
 @payments_bp.route('/accounts/invoices/<id>', methods=['GET'])
@@ -332,6 +364,17 @@ def invoice_detail(id):
             "total": 14708.75,
             "created_at": datetime.utcnow().strftime('%Y-%m-%d')
         }
+
+    # IDOR protection: guests can only view their own invoice
+    user_email = session.get('user_email')
+    user_role = session.get('user_role', 'guest')
+    staff_roles = {'admin', 'super_admin', 'manager', 'accountant', 'front_desk'}
+    if user_role not in staff_roles:
+        invoice_owner = (idata.get('user_email') or '').lower()
+        if invoice_owner and invoice_owner != (user_email or '').lower():
+            return render_template('permission_denied.html',
+                                   message="You do not have permission to view another guest's invoice.",
+                                   user_role=user_role), 403
 
     return render_template('payments/invoice_print.html', invoice=idata)
 

@@ -11,6 +11,9 @@
 
   <div class="topbar-actions">
     {% if session.get('user_role') in ['member', 'guest', 'user', None] %}
+    <!-- Active Room / Table Status Pill -->
+    <div id="topbarActiveStayPill" class="d-none d-sm-flex align-items-center gap-2"></div>
+
     <a href="/cart" class="btn-nh btn-nh-outline btn-nh-sm" title="View Cart">
       <i class="fas fa-shopping-bag"></i>
       <span class="d-none d-md-inline">Cart</span>
@@ -108,5 +111,34 @@
       if (window.Toast) Toast.error('Shift toggle failed.');
     }
   }
+
+  // Load Active Room and Active Table for Guest
+  async function loadTopbarActiveStay() {
+    const pill = document.getElementById('topbarActiveStayPill');
+    if (!pill) return;
+    try {
+      const res = await fetch('/api/user/active-stay-dining');
+      const json = await res.json();
+      if (json.ok && json.data) {
+        let html = '';
+        if (json.data.has_active_stay && json.data.active_room) {
+          html += `
+            <a href="/my-bookings" class="badge rounded-pill text-decoration-none d-inline-flex align-items-center gap-1" style="background: rgba(212,175,55,0.18); border: 1px solid var(--primary-color); color: var(--primary-color); font-size: 11px; padding: 4px 10px;" title="Your Paid Accommodation">
+              <i class="fas fa-bed"></i> <strong>Your room: ${json.data.active_room.room_number}</strong>
+            </a>
+          `;
+        }
+        if (json.data.has_active_dining && json.data.active_dining) {
+          html += `
+            <a href="/dining/order/active" class="badge rounded-pill text-decoration-none d-inline-flex align-items-center gap-1" style="background: rgba(66,133,244,0.18); border: 1px solid #4285f4; color: #8ab4f8; font-size: 11px; padding: 4px 10px;" title="Your Restaurant Table Order">
+              <i class="fas fa-chair"></i> <strong>Your table: ${json.data.active_dining.table_number}</strong>
+            </a>
+          `;
+        }
+        pill.innerHTML = html;
+      }
+    } catch(e) {}
+  }
+  document.addEventListener('DOMContentLoaded', loadTopbarActiveStay);
   </script>
 </header>

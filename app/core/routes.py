@@ -3,11 +3,12 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from app.firebase_db import (
     users_col, rooms_col, bookings_col, orders_col, notifications_col,
-    audit_logs_col, settings_col, chat_history_col, concierge_requests_col
+    audit_logs_col, settings_col, chat_history_col, concierge_requests_col,
+    restaurant_tables_col
 )
 from app.auth.decorators import login_required
 from app.auth.routes import get_role_redirect
-from api_utils import api_success, api_error
+from api_utils import api_success, api_error, safe_sort_key
 from chatbot import get_bot_response
 
 core_bp = Blueprint('core', __name__)
@@ -44,7 +45,84 @@ def dashboard():
         return redirect('/dining/tables')
         
     # Standard guest / member dashboard
-    return render_template('dashboard.html')
+    email = session.get('user_email')
+    active_room, active_dining = get_user_active_stay_and_dining(email)
+    return render_template('dashboard.html', active_room=active_room, active_dining=active_dining)
+
+def get_user_active_stay_and_dining(email):
+    """Helper to query current active paid/confirmed room booking and active dining table order."""
+    if not email:
+        return None, None
+    active_room = None
+    active_dining = None
+
+    # 1. Check for active paid/confirmed room booking
+    try:
+        b_stream = bookings_col().where('user_email', '==', email).stream()
+        user_bookings = [d.to_dict() for d in b_stream]
+        user_bookings.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
+        for b in user_bookings:
+            status = (b.get('status') or '').lower()
+            if status in ['confirmed', 'checked_in', 'paid', 'active']:
+                active_room = {
+                    "room_number": str(b.get('room_number') or b.get('room_id') or '101'),
+                    "booking_no": b.get('booking_no', ''),
+                    "status": status,
+                    "check_in": b.get('check_in', ''),
+                    "check_out": b.get('check_out', ''),
+                    "guest_name": b.get('guest_name', '')
+                }
+                break
+    except Exception as e:
+        logger.warning(f"Error resolving active room for {email}: {e}")
+
+    # 2. Check for active dining order at a table
+    try:
+        o_stream = orders_col().where('user_email', '==', email).stream()
+        user_orders = []
+        for doc in o_stream:
+            d = doc.to_dict()
+            d['id'] = doc.id
+            user_orders.append(d)
+        user_orders.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
+        for o in user_orders:
+            tbl = o.get('table_number')
+            status = (o.get('status') or '').lower()
+            if tbl and status in ['received', 'preparing', 'ready', 'delivering', 'delivered', 'bill_pending', 'active', 'paid']:
+                pay_status = (o.get('payment_status') or '').lower()
+                if not pay_status:
+                    pay_status = 'paid' if status == 'paid' else 'pending'
+                active_dining = {
+                    "id": o.get('id', ''),
+                    "table_number": str(tbl),
+                    "order_no": o.get('order_no', ''),
+                    "status": status,
+                    "payment_status": pay_status,
+                    "payment_method": o.get('payment_method', 'card'),
+                    "items": o.get('items', []),
+                    "subtotal": o.get('subtotal', 0),
+                    "tax": o.get('tax', 0),
+                    "total": o.get('total', 0),
+                    "created_at": o.get('created_at', ''),
+                    "txn_id": o.get('txn_id', '')
+                }
+                break
+    except Exception as e:
+        logger.warning(f"Error resolving active dining for {email}: {e}")
+
+    return active_room, active_dining
+
+@core_bp.route('/api/user/active-stay-dining', methods=['GET'])
+@login_required
+def active_stay_dining_api():
+    email = session.get('user_email')
+    active_room, active_dining = get_user_active_stay_and_dining(email)
+    return api_success({
+        "has_active_stay": bool(active_room),
+        "active_room": active_room,
+        "has_active_dining": bool(active_dining),
+        "active_dining": active_dining
+    })
 
 @core_bp.route('/profile')
 @core_bp.route('/account')
@@ -54,7 +132,8 @@ def profile_view():
     col = users_col()
     docs = list(col.where('email', '==', email).limit(1).get())
     user_data = docs[0].to_dict() if docs else {}
-    return render_template('guest/account.html', user=user_data)
+    active_room, active_dining = get_user_active_stay_and_dining(email)
+    return render_template('guest/account.html', user=user_data, active_room=active_room, active_dining=active_dining)
 
 @core_bp.route('/api/user/profile', methods=['GET', 'PUT', 'POST'])
 @login_required
@@ -73,21 +152,94 @@ def profile_api():
 
     body = request.get_json() or {}
     updates = {}
-    if 'name' in body: updates['name'] = body['name'].strip()
-    if 'phone' in body: updates['phone'] = body['phone'].strip()
-    if 'preferences' in body: updates['preferences'] = body['preferences']
     
+    # Username / Full name
+    if 'name' in body:
+        val = str(body['name']).strip()
+        if val:
+            updates['name'] = val
+            updates['username'] = val
+            session['user_name'] = val
+    elif 'username' in body:
+        val = str(body['username']).strip()
+        if val:
+            updates['name'] = val
+            updates['username'] = val
+            session['user_name'] = val
+
+    # Contact phone
+    if 'phone' in body:
+        updates['phone'] = str(body['phone']).strip()
+
+    # Email updates (primary or secondary)
+    if 'email' in body and body['email'].strip() and body['email'].strip().lower() != email.lower():
+        new_email = str(body['email']).strip().lower()
+        # Verify not duplicate
+        existing = list(col.where('email', '==', new_email).limit(1).get())
+        if not existing:
+            updates['email'] = new_email
+            session['user_email'] = new_email
+        else:
+            return api_error(message="That email address is already in use by another account.", status=409)
+
+    if 'secondary_email' in body:
+        updates['secondary_email'] = str(body['secondary_email']).strip().lower()
+
+    # Age & demographic fields
+    if 'age' in body:
+        updates['age'] = str(body['age']).strip()
+    if 'gender' in body:
+        updates['gender'] = str(body['gender']).strip()
+    if 'nationality' in body:
+        updates['nationality'] = str(body['nationality']).strip()
+
+    # ID details
+    if 'id_type' in body:
+        updates['id_type'] = str(body['id_type']).strip()
+    if 'id_number' in body:
+        updates['id_number'] = str(body['id_number']).strip()
+
+    # Address details
+    if 'address' in body:
+        updates['address'] = str(body['address']).strip()
+    if 'city' in body:
+        updates['city'] = str(body['city']).strip()
+    if 'state' in body:
+        updates['state'] = str(body['state']).strip()
+    if 'country' in body:
+        updates['country'] = str(body['country']).strip()
+    if 'pincode' in body:
+        updates['pincode'] = str(body['pincode']).strip()
+
+    # Preferences & emergency
+    if 'dietary_preference' in body:
+        updates['dietary_preference'] = str(body['dietary_preference']).strip()
+    if 'stay_preferences' in body:
+        updates['stay_preferences'] = str(body['stay_preferences']).strip()
+    if 'preferences' in body:
+        updates['preferences'] = body['preferences']
+    if 'emergency_contact_name' in body:
+        updates['emergency_contact_name'] = str(body['emergency_contact_name']).strip()
+    if 'emergency_contact_phone' in body:
+        updates['emergency_contact_phone'] = str(body['emergency_contact_phone']).strip()
+
     if updates:
+        updates['updated_at'] = datetime.utcnow().isoformat() + "Z"
         user_doc.reference.update(updates)
-        if 'name' in updates:
-            session['user_name'] = updates['name']
-            
-    return api_success({"message": "Profile updated successfully"})
+
+    fresh_doc = user_doc.reference.get().to_dict()
+    fresh_doc.pop('password', None)
+    return api_success({"message": "Profile and account settings updated successfully", "user": fresh_doc})
 
 @core_bp.route('/notifications')
 @login_required
 def notifications_view():
-    return render_template('guest/account.html', active_tab='notifications')
+    email = session.get('user_email')
+    col = users_col()
+    docs = list(col.where('email', '==', email).limit(1).get()) if email else []
+    user_data = docs[0].to_dict() if docs else {}
+    active_room, active_dining = get_user_active_stay_and_dining(email)
+    return render_template('guest/account.html', user=user_data, active_room=active_room, active_dining=active_dining, active_tab='notifications')
 
 @core_bp.route('/api/notifications', methods=['GET', 'POST'])
 @login_required
@@ -103,7 +255,7 @@ def notifications_api():
             role_notifs = [d.to_dict() for d in col.where('target_role', '==', role).stream()]
             combined = user_notifs + role_notifs
             # Sort newest first
-            combined.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+            combined.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
             return api_success(combined[:50])
         except Exception as e:
             return api_success([])
@@ -171,24 +323,32 @@ def chatbot_api():
         "suggestions": res.get("suggestions", ["Spa & Massages", "Pool Timings", "Room Booking", "Dining Menu"])
     })
 
+def get_chat_user_identifier():
+    if session.get('user_email'):
+        return session['user_email']
+    if '_chat_session_id' not in session:
+        import secrets
+        session['_chat_session_id'] = f"anon_{secrets.token_hex(12)}"
+    return session['_chat_session_id']
+
 @core_bp.route('/api/chatbot/message', methods=['POST'])
 def chatbot_message():
     """Dashboard chatbot messaging endpoint"""
     data = request.get_json() or {}
     user_message = data.get('message', '').strip()
-    user_email = session.get('user_email', 'guest@nur-e-haya.com')
+    user_identifier = get_chat_user_identifier()
     
     if not user_message:
         return api_error(message="Message cannot be empty", status=400)
         
-    res = get_bot_response(user_message, user_email)
+    res = get_bot_response(user_message, user_identifier)
     bot_reply = res.get("response", "I am here to assist you with your stay at Nur-e-Haya.")
     now_iso = datetime.utcnow().isoformat() + "Z"
     
     # Store to chat history collection for persistent conversations
     try:
         chat_history_col().add({
-            "user_email": user_email,
+            "user_email": user_identifier,
             "user_message": user_message,
             "bot_response": bot_reply,
             "intent": res.get("intent", "general"),
@@ -226,10 +386,10 @@ def chatbot_suggestions():
 @core_bp.route('/api/chatbot/history', methods=['GET'])
 def chatbot_history():
     """Returns recent chat history for the active user"""
-    user_email = session.get('user_email', 'guest@nur-e-haya.com')
+    user_identifier = get_chat_user_identifier()
     history = []
     try:
-        docs = chat_history_col().where('user_email', '==', user_email).stream()
+        docs = chat_history_col().where('user_email', '==', user_identifier).stream()
         for doc in docs:
             d = doc.to_dict()
             history.append({
@@ -238,7 +398,7 @@ def chatbot_history():
                 "timestamp": d.get("timestamp", "")
             })
         # Sort descending by timestamp, take last 15
-        history.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        history.sort(key=lambda x: safe_sort_key(x.get('timestamp')), reverse=True)
         history = history[:15]
     except Exception as e:
         logger.warning(f"Could not load chat history: {e}")

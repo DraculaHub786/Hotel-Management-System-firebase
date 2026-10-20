@@ -76,6 +76,7 @@
     border-bottom: 1px dashed rgba(255,255,255,0.08);
 }
 </style>
+{% endblock %}
 
 {% block extra_js %}
 <script>
@@ -214,12 +215,12 @@ function renderKds() {
                     ` : ''}
                     ${ticket.status === 'preparing' ? `
                         <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="advanceTicket('${tid}', 'ready')">
-                            <i class="fas fa-bell me-1"></i> Plated & Ready (Notify Waiter)
+                            <i class="fas fa-check-double me-1"></i> Cooked & Ready for Waiter
                         </button>
                     ` : ''}
                     ${ticket.status === 'ready' ? `
-                        <div class="w-100 text-center py-1 rounded" style="background: rgba(0,134,112,0.2); border: 1px solid #008670; color: #2ee59d; font-size: 12px; font-weight: bold;">
-                            <i class="fas fa-check-circle me-1"></i> On Pass — Waiter Alerted
+                        <div class="w-100 text-center py-2 rounded" style="background: rgba(0,134,112,0.25); border: 1px solid #008670; color: #2ee59d; font-size: 13px; font-weight: bold;">
+                            <i class="fas fa-bell me-1 text-warning"></i> Cooked! Waiter Alerted for Table Pickup
                         </div>
                     ` : ''}
                 </div>
@@ -230,7 +231,6 @@ function renderKds() {
 }
 
 async function advanceTicket(orderId, nextStatus) {
-
     try {
         const res = await fetch(`/api/orders/${orderId}/status`, {
             method: 'PATCH',
@@ -239,15 +239,18 @@ async function advanceTicket(orderId, nextStatus) {
         });
         const json = await res.json();
         if (json.ok) {
-            if (window.AppConventions && AppConventions.Toast) {
-                AppConventions.Toast.success(`Ticket ${orderId} progressed to ${nextStatus}`);
+            if (window.Toast) {
+                Toast.success(nextStatus === 'ready' ? `Order marked cooked! Waiter notified for table delivery.` : `Order progressed to ${nextStatus}`);
+            } else if (window.AppConventions && AppConventions.Toast) {
+                AppConventions.Toast.success(`Ticket progressed to ${nextStatus}`);
             }
-            const t = tickets.find(x => x.order_id === orderId);
+            const t = tickets.find(x => (x.id === orderId || x.order_no === orderId || x.order_id === orderId));
             if (t) t.status = nextStatus;
             renderKds();
         } else {
             const errMsg = json.message || 'Failed to advance ticket status';
-            if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
+            if (window.Toast) Toast.error(errMsg);
+            else if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error(errMsg);
         }
     } catch (e) {
         if (window.AppConventions && AppConventions.Toast) AppConventions.Toast.error('Network error');
@@ -256,5 +259,4 @@ async function advanceTicket(orderId, nextStatus) {
 
 document.addEventListener('DOMContentLoaded', fetchKitchenTickets);
 </script>
-{% endblock %}
 {% endblock %}

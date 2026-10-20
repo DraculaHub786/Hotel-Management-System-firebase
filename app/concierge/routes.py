@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from app.firebase_db import concierge_requests_col
 from app.auth.decorators import login_required, role_required
-from api_utils import api_success, api_error, permission_denied
+from api_utils import api_success, api_error, permission_denied, safe_sort_key
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def requests_board():
         d = doc.to_dict()
         d['id'] = doc.id
         requests.append(d)
-    requests.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    requests.sort(key=lambda x: safe_sort_key(x.get('created_at')), reverse=True)
     return render_template('housekeeping/task_board.html', concierge_requests=requests, is_concierge=True)
 
 @concierge_bp.route('/concierge/request', methods=['GET', 'POST'])

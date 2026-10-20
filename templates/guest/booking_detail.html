@@ -2,23 +2,49 @@
 
 {% block title %}Booking #{{ booking_id }} — Nur-e-Haya{% endblock %}
 
+{% block extra_css %}
+<style>
+.booking-layout-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 30px;
+}
+.booking-dates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+@media (max-width: 991px) {
+    .booking-layout-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 576px) {
+    .booking-dates-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container" style="padding-top: 90px; padding-bottom: 70px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
         <a href="/my-bookings" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
             <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> All Bookings
         </a>
         <span style="font-size: 13px; color: var(--text-secondary);">Booking Ref: <strong style="color: var(--primary-color);">{{ booking_id }}</strong></span>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 360px; gap: 30px;">
+    <div class="booking-layout-grid">
         <!-- Left: Details -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 14px; margin-bottom: 20px;">
                 <div>
                     <span style="font-size: 11px; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 1px;">Reservation Overview</span>
                     <h2 style="font-size: 22px; color: var(--text-bright); margin-top: 4px;">
-                        {{ (booking.items[0].name if booking and booking.items and booking.items[0]) or 'Deluxe Room 204' }}
+                        {{ ((items and items[0].name) or (booking and booking.get('items') and booking['items'][0].name)) or 'Deluxe Room 204' }}
                     </h2>
                 </div>
                 <div>
@@ -32,7 +58,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+            <div class="booking-dates-grid">
                 <div style="background: rgba(0,0,0,0.25); padding: 16px; border-radius: 8px;">
                     <div style="font-size: 11px; color: var(--text-secondary); text-transform: uppercase;">Check-in Date</div>
                     <div style="font-size: 16px; color: var(--text-bright); font-weight: bold; margin-top: 4px;">
@@ -53,8 +79,8 @@
             <!-- Items booked -->
             <h3 style="font-size: 16px; color: var(--primary-color); margin-bottom: 12px;">Included Services</h3>
             <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px;">
-                {% if booking and booking.items %}
-                    {% for item in booking.items %}
+                {% if items or (booking and booking.get('items')) %}
+                    {% for item in (items or booking.get('items')) %}
                     <div style="display: flex; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 6px; font-size: 13px;">
                         <span style="color: var(--text-bright);">{{ item.name }} ({{ item.qty or 1 }}x)</span>
                         <strong style="color: var(--primary-color);">₹{{ item.line_total or item.unit_price }}</strong>

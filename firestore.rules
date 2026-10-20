@@ -1,0 +1,71 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // User accounts
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+    
+    // Public hotel catalog data (Rooms, Menu, Facilities)
+    match /rooms/{roomId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    match /menu_items/{itemId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    match /facilities/{facilityId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    match /restaurant_tables/{tableId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
+    // Bookings & Transactions
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && (resource.data.user_email == request.auth.token.email);
+      allow write: if isAuthenticated();
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (resource.data.user_email == request.auth.token.email);
+      allow write: if isAuthenticated();
+    }
+
+    match /transactions/{txnId} {
+      allow read: if isAuthenticated() && (resource.data.user_email == request.auth.token.email);
+      allow write: if isAuthenticated();
+    }
+    
+    // Internal Staff & Operational Collections (gated to server/staff)
+    match /audit_logs/{logId} {
+      allow read, write: if false; // Server SDK only
+    }
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if false; // Admin Server SDK only
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

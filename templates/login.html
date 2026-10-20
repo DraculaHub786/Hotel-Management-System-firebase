@@ -574,19 +574,24 @@ function handleGoogleSignIn(response) {
     try {
         const payload = decodeJwtResponse(response.credential);
         AppAPI.post('/api/google-auth', {
+            credential: response.credential,
+            id_token: response.credential,
             email: payload.email,
             name: payload.name,
+            picture: payload.picture,
             googleId: payload.sub
-        }).then(data => {
+        }).then(res => {
+            const data = (res && res.data) ? res.data : res;
             Toast.success('Google sign-in successful! Redirecting...');
-            const redirectUrl = (data && data.redirect) ? data.redirect : '/dashboard';
+            const redirectUrl = (data && (data.redirect || data.redirect_url)) ? (data.redirect || data.redirect_url) : '/dashboard';
             setTimeout(() => {
                 window.location.href = redirectUrl;
-            }, 500);
+            }, 400);
         }).catch(err => {
             Toast.error(err.message || 'Google sign-in failed.');
         });
     } catch (e) {
+        console.error('Google sign-in error:', e);
         Toast.error('Could not process Google Sign-In.');
     }
 }
