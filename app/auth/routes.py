@@ -349,6 +349,8 @@ def verify_otp_endpoint():
 def resend_otp_endpoint():
     data = request.get_json() or {}
     txn_id = data.get('txn_id')
+    email = data.get('email', '').strip().lower()
+    purpose = data.get('purpose', 'register')
 
     if txn_id:
         import random
@@ -378,6 +380,9 @@ def resend_otp_endpoint():
             "message": "A new verification OTP has been generated and printed to console logs.",
             "txn_id": txn_id
         })
+
+    if not email:
+        return api_error(message="Email is required.", status=400)
 
     ok_limit, min_left = check_otp_rate_limit(email)
     if not ok_limit:
