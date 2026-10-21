@@ -12,13 +12,13 @@
             <span class="badge bg-warning text-dark rounded-pill ms-2" id="totalTicketsCount" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Tickets</span>
         </div>
         <div class="topbar-actions">
-            <button type="button" class="btn btn-secondary" onclick="loadTickets()" style="font-size: 13px; padding: 8px 16px;">
+            <button type="button" class="btn btn-secondary-glass" onclick="loadTickets()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/staff/front-desk/rooms" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/front-desk/rooms" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-th me-1"></i> Room Board
             </a>
-            <a href="/staff/housekeeping" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/housekeeping" class="btn btn-gold" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-broom me-1"></i> Housekeeping
             </a>
         </div>
@@ -209,7 +209,7 @@ function renderTickets() {
                     <span class="badge rounded-pill" style="background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 10px;">
                         PRIORITY: ${prio.toUpperCase()}
                     </span>
-                    <a href="/staff/maintenance/tickets/${ticket.ticket_id}" class="btn btn-sm btn-primary" style="font-size: 12px; padding: 5px 14px;">
+                    <a href="/staff/maintenance/tickets/${ticket.ticket_id}" class="btn btn-gold btn-sm" style="font-size: 12px; padding: 6px 14px;">
                         Manage Ticket <i class="fas fa-chevron-right ms-1" style="font-size: 9px;"></i>
                     </a>
                 </div>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nur-e-Haya — Luxury Palatial Hotel & Royal Suites</title>
+    <meta name="description" content="Experience unparalleled opulence, palatial suites, royal dining, and wellness sanctuary at Nur-e-Haya Luxury Hotel.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Project Stylesheet -->
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/conventions.css">
+    <style>
+        :root {
+            --landing-navy: #0b1320;
+            --landing-surface: #101c2e;
+            --landing-surface-card: #16243a;
+            --landing-gold: #d4af37;
+            --landing-gold-light: #f3d87f;
+            --landing-text-bright: #fff9e6;
+            --landing-text-muted: #bda568;
+        }
+
+        body {
+            background-color: var(--landing-navy);
+            color: #e6dfd3;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Top strip */
+        .top-strip {
+            background: #080e18;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+            font-size: 12px;
+            padding: 8px 0;
+            color: var(--landing-text-muted);
+        }
+        .top-strip a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .top-strip a:hover {
+            color: var(--landing-gold);
+        }
+
+        /* Navigation */
+        .landing-nav {
+            background: rgba(11, 19, 32, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 16px 0;
+            transition: all 0.3s ease;
+        }
+        .landing-brand {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--landing-text-bright);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .landing-brand i {
+            color: var(--landing-gold);
+            font-size: 22px;
+        }
+        .landing-menu-links {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .landing-menu-links a {
+            color: #d0c8b6;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: color 0.2s;
+        }
+        .landing-menu-links a:hover, .landing-menu-links a.active {
+            color: var(--landing-gold);
+        }
+
+        /* Hero */
+        .landing-hero {
+            position: relative;
+            min-height: 580px;
+            background: linear-gradient(180deg, rgba(11, 19, 32, 0.72) 0%, rgba(11, 19, 32, 0.92) 100%),
+                        url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            padding: 90px 0 60px;
+        }
+        .hero-title {
+            font-family: 'Cinzel', serif;
+            font-size: 52px;
+            font-weight: 700;
+            color: var(--landing-text-bright);
+            line-height: 1.15;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .hero-title { font-size: 36px; }
+            .landing-menu-links { display: none; }
+        }
+
+        /* Category pills */
+        .category-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 32px 0 24px;
+        }
+        .cat-pill {
+            background: rgba(22, 36, 58, 0.7);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            color: #dcd4c3;
+            padding: 10px 22px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .cat-pill:hover, .cat-pill.active {
+            background: var(--landing-gold);
+            color: #0b1320;
+            border-color: var(--landing-gold);
+            box-shadow: 0 4px 18px rgba(212, 175, 55, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Split Showcase Card */
+        .showcase-split-card {
+            background: var(--landing-surface-card);
+            border: 1px solid rgba(212, 175, 55, 0.25);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.45);
+        }
+        .showcase-img {
+            width: 100%;
+            height: 380px;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+
+        /* Room Cards Grid (Royelle/Motclin hybrid) */
+        .room-card-modern {
+            background: var(--landing-surface-card);
+            border: 1px solid rgba(212, 175, 55, 0.22);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .room-card-modern:hover {
+            transform: translateY(-6px);
+            border-color: var(--landing-gold);
+            box-shadow: 0 18px 40px rgba(212, 175, 55, 0.25);
+        }
+        .room-card-photo-box {
+            position: relative;
+            height: 220px;
+            overflow: hidden;
+        }
+        .room-card-photo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        .room-card-modern:hover .room-card-photo-box img {
+            transform: scale(1.06);
+        }
+        .room-badge-overlap {
+            position: absolute;
+            bottom: 14px;
+            left: 14px;
+            background: rgba(11, 19, 32, 0.88);
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: var(--landing-gold);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 5px 12px;
+            border-radius: 999px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Arched Showcase */
+        .arched-img-col {
+            position: relative;
+            overflow: hidden;
+            border-radius: 140px 140px 24px 24px;
+            border: 2px solid rgba(212, 175, 55, 0.35);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+            height: 380px;
+        }
+        .arched-img-col img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+        .arched-img-col:hover img {
+            transform: scale(1.08);
+        }
+
+        /* Stats strip */
+        .stats-dark-strip {
+            background: #070c14;
+            border-top: 1px solid rgba(212, 175, 55, 0.2);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 50px 0;
+        }
+        .stat-figure {
+            font-family: 'Cinzel', serif;
+            font-size: 44px;
+            font-weight: 700;
+            color: var(--landing-gold);
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        /* Capsule Newsletter */
+        .newsletter-capsule {
+            background: linear-gradient(135deg, rgba(16, 28, 46, 0.95), rgba(11, 19, 32, 0.98)),
+                        url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1200&q=80') center/cover;
+            border: 1px solid rgba(212, 175, 55, 0.35);
+            border-radius: 100px;
+            padding: 55px 45px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .newsletter-capsule { border-radius: 28px; padding: 35px 20px; }
+        }
+
+        /* Video tour pill button */
+        .video-tour-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(22, 36, 58, 0.85);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            color: var(--landing-text-bright);
+            padding: 10px 24px;
+            border-radius: 999px;
+            font-size: 13.5px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .video-tour-btn:hover {
+            background: var(--landing-gold);
+            color: #0b1320;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+        .video-icon-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--landing-gold);
+            color: #0b1320;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        .video-tour-btn:hover .video-icon-circle {
+            background: #0b1320;
+            color: var(--landing-gold);
+        }
+
+        /* Luxury Footer */
+        .landing-footer {
+            background: #060a11;
+            border-top: 1px solid rgba(212, 175, 55, 0.18);
+            padding: 70px 0 30px;
+            color: #a79c88;
+            font-size: 13.5px;
+        }
+        .footer-col-title {
+            font-family: 'Cinzel', serif;
+            color: var(--landing-text-bright);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .footer-links a {
+            color: #a79c88;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer-links a:hover {
+            color: var(--landing-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top contact & location strip -->
+    <div class="top-strip">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-4">
+                <span><i class="fas fa-phone-alt me-1 text-warning"></i> +91 (011) 4590-8800</span>
+                <span><i class="fas fa-envelope me-1 text-warning"></i> concierge@nurehaya.luxury</span>
+                <span class="d-none d-md-inline"><i class="fas fa-map-marker-alt me-1 text-warning"></i> 2484 Royal Palace Way, Heritage District</span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="landing-nav" id="mainNav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/" class="landing-brand">
+                <i class="fas fa-crown"></i>
+                <span>Nur-e-Haya</span>
+            </a>
+
+            <ul class="landing-menu-links">
+                <li><a href="/" class="active">Home</a></li>
+                <li><a href="/rooms">Rooms &amp; Suites</a></li>
+                <li><a href="/menu">Restaurant &amp; Bar</a></li>
+                <li><a href="/facilities">Spa &amp; Wellness</a></li>
+                <li><a href="#amenitiesSection">Amenities</a></li>
+                <li><a href="#experienceSection">Experience</a></li>
+            </ul>
+
+            <div class="d-flex align-items-center gap-3">
+                <a href="/login" class="btn btn-secondary-glass" style="font-size: 13px; padding: 9px 20px; border-radius: 999px;">
+                    <i class="fas fa-sign-in-alt me-1"></i> Sign In
+                </a>
+                <a href="/signup" class="btn btn-gold" style="font-size: 13px; padding: 9px 22px; border-radius: 999px; font-weight: 700;">
+                    <i class="fas fa-user-plus me-1"></i> Register / Book
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="landing-hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span style="font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: var(--landing-gold); font-weight: 700; display: inline-block; margin-bottom: 12px;">
+                        <i class="fas fa-gem me-1"></i> The Height of Regal Hospitality
+                    </span>
+                    <h1 class="hero-title">Giving the best<br>just for you</h1>
+                    <p style="font-size: 16px; color: #cfc7b4; max-width: 580px; line-height: 1.65; margin-bottom: 28px;">
+                        Immerse yourself in palatial grandeur, bespoke butler service, Michelin-inspired dining, and tranquil wellness rituals designed for the discerning traveler.
+                    </p>
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <a href="/rooms" class="btn btn-gold px-4 py-3" style="font-size: 14px; font-weight: 700; border-radius: 999px;">
+                            <i class="fas fa-calendar-check me-2"></i> Book Your Stay
+                        </a>
+                        <a href="#amenitiesSection" class="video-tour-btn">
+                            <span class="video-icon-circle"><i class="fas fa-play"></i></span>
+                            <span>Explore Virtual Tour</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Amenities Interactive Switcher Section (Per Motclin Ref 2) -->
+    <section id="amenitiesSection" class="py-5" style="background: #09101c; border-top: 1px solid rgba(212, 175, 55, 0.15); border-bottom: 1px solid rgba(212, 175, 55, 0.15);">
+        <div class="container py-4">
+            <div class="text-center mb-4">
+                <span style="font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--landing-gold); font-weight: 700;">Curated Sanctuary</span>
+                <h2 style="font-family: 'Cinzel', serif; font-size: 36px; color: var(--landing-text-bright); margin-top: 6px;">Amenities &amp; Leisure</h2>
+            </div>
+
+            <!-- Category Pills Row -->
+            <div class="category-pills justify-content-center" id="facilityPillRow">
+                <button type="button" class="cat-pill active" onclick="switchAmenity('dining', this)">Restaurant &amp; Bar</button>
+                <button type="button" class="cat-pill" onclick="switchAmenity('spa', this)">Spa &amp; Wellness</button>
+                <button type="button" class="cat-pill" onclick="switchAmenity('yoga', this)">Yoga &amp; Fitness</button>
+                <button type="button" class="cat-pill" onclick="switchAmenity('terrace', this)">Summer Terrace</button>
+                <button type="button" class="cat-pill" onclick="switchAmenity('pool', this)">Swimming Pool</button>
+                <button type="button" class="cat-pill" onclick="switchAmenity('events', this)">Events &amp; Meetings</button>
+            </div>
+
+            <!-- Split Card Showcase -->
+            <div class="showcase-split-card mt-4 p-4 p-lg-5">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-6">
+                        <img id="amenityImage" class="showcase-img" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80" alt="Restaurant & Bar Showcase">
+                    </div>
+                    <div class="col-lg-6 ps-lg-4">
+                        <span id="amenitySubtitle" style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--landing-gold); font-weight: 700;">Gourmet &amp; Mixology</span>
+                        <h3 id="amenityTitle" style="font-family: 'Cinzel', serif; font-size: 28px; color: var(--landing-text-bright); margin: 8px 0 16px;">
+                            Stylish decor and extensive beverage selection
+                        </h3>
+                        <p id="amenityDesc" style="color: #bfaea2; font-size: 15px; line-height: 1.7; margin-bottom: 20px;">
+                            Savor exquisite royal recipes crafted with organic artisanal ingredients, paired with vintage cellar selections curated by master sommeliers.
+                        </p>
+                        
+                        <div class="d-flex flex-column gap-3 mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(212,175,55,0.15); border: 1px solid var(--landing-gold); display: flex; align-items: center; justify-content: center; color: var(--landing-gold);">
+                                    <i class="fas fa-glass-martini-alt"></i>
+                                </div>
+                                <span id="amenityPoint1" style="font-size: 14px; font-weight: 600; color: var(--landing-text-bright);">Outdoor seating and live evening entertainment</span>
+                            </div>
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(212,175,55,0.15); border: 1px solid var(--landing-gold); display: flex; align-items: center; justify-content: center; color: var(--landing-gold);">
+                                    <i class="fas fa-concierge-bell"></i>
+                                </div>
+                                <span id="amenityPoint2" style="font-size: 14px; font-weight: 600; color: var(--landing-text-bright);">24/7 in-suite silver service &amp; private sommelier</span>
+                            </div>
+                        </div>
+
+                        <a href="/menu" id="amenityActionBtn" class="btn btn-gold px-4 py-2" style="font-size: 13.5px; border-radius: 999px; font-weight: 700;">
+                            View Dining Menu &amp; Reserve <i class="fas fa-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Rooms Section -->
+    <section class="py-5" style="background: var(--landing-navy);">
+        <div class="container py-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-end mb-4 gap-3">
+                <div>
+                    <span style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--landing-gold); font-weight: 700;">Palatial Living</span>
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 36px; color: var(--landing-text-bright); margin-top: 6px;">Your dream luxurious hotel room</h2>
+                    <p style="color: #bfaea2; font-size: 14.5px; margin: 0; max-width: 520px;">
+                        Opulent furnishings, breathtaking courtyard and skyline panoramas, lavish marble baths, and dedicated private butler service.
+                    </p>
+                </div>
+                <a href="/rooms" class="btn btn-secondary-glass" style="font-size: 13.5px; padding: 10px 22px; border-radius: 999px;">
+                    View All Accommodations <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+
+            <!-- 4 Featured Rooms Grid -->
+            <div class="row g-4">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="room-card-modern">
+                        <div class="room-card-photo-box">
+                            <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80" alt="Royal Suite">
+                            <span class="room-badge-overlap">Royal Suite</span>
+                        </div>
+                        <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span style="font-size: 11px; color: var(--landing-gold); font-weight: 600;"><i class="fas fa-star text-warning"></i> 5.0</span>
+                                    <span style="font-size: 11px; color: #a9a08e;">Skyline Wing</span>
+                                </div>
+                                <h4 style="font-family: 'Cinzel', serif; font-size: 16px; color: var(--landing-text-bright); margin-bottom: 8px;">The Royal Presidential</h4>
+                                <div class="d-flex align-items-center gap-2 mb-3 text-secondary" style="font-size: 11.5px; color: #bcaea2;">
+                                    <span><i class="fas fa-bed text-warning me-1"></i> 2 King</span> &bull;
+                                    <span><i class="fas fa-bath text-warning me-1"></i> 2 Bath</span> &bull;
+                                    <span><i class="fas fa-expand me-1"></i> 750 sqft</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(212,175,55,0.18) !important;">
+                                <div>
+                                    <span style="font-size: 17px; font-weight: 700; color: var(--landing-gold); font-family: 'Cinzel', serif;">₹18,500</span>
+                                    <span style="font-size: 10px; color: #9c9281;">/ night</span>
+                                </div>
+                                <a href="/rooms" class="btn btn-gold btn-sm" style="font-size: 11px; padding: 5px 12px; border-radius: 999px;">Book Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="room-card-modern">
+                        <div class="room-card-photo-box">
+                            <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80" alt="Executive Deluxe">
+                            <span class="room-badge-overlap">Luxury Room</span>
+                        </div>
+                        <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span style="font-size: 11px; color: var(--landing-gold); font-weight: 600;"><i class="fas fa-star text-warning"></i> 4.9</span>
+                                    <span style="font-size: 11px; color: #a9a08e;">Heritage Wing</span>
+                                </div>
+                                <h4 style="font-family: 'Cinzel', serif; font-size: 16px; color: var(--landing-text-bright); margin-bottom: 8px;">The Executive Deluxe</h4>
+                                <div class="d-flex align-items-center gap-2 mb-3 text-secondary" style="font-size: 11.5px; color: #bcaea2;">
+                                    <span><i class="fas fa-bed text-warning me-1"></i> 1 King</span> &bull;
+                                    <span><i class="fas fa-bath text-warning me-1"></i> 1 Bath</span> &bull;
+                                    <span><i class="fas fa-expand me-1"></i> 450 sqft</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(212,175,55,0.18) !important;">
+                                <div>
+                                    <span style="font-size: 17px; font-weight: 700; color: var(--landing-gold); font-family: 'Cinzel', serif;">₹10,500</span>
+                                    <span style="font-size: 10px; color: #9c9281;">/ night</span>
+                                </div>
+                                <a href="/rooms" class="btn btn-gold btn-sm" style="font-size: 11px; padding: 5px 12px; border-radius: 999px;">Book Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="room-card-modern">
+                        <div class="room-card-photo-box">
+                            <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=600&q=80" alt="The Pearl Suite">
+                            <span class="room-badge-overlap">Luxury Suite</span>
+                        </div>
+                        <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span style="font-size: 11px; color: var(--landing-gold); font-weight: 600;"><i class="fas fa-star text-warning"></i> 4.9</span>
+                                    <span style="font-size: 11px; color: #a9a08e;">Royal Wing</span>
+                                </div>
+                                <h4 style="font-family: 'Cinzel', serif; font-size: 16px; color: var(--landing-text-bright); margin-bottom: 8px;">The Pearl Sanctuary</h4>
+                                <div class="d-flex align-items-center gap-2 mb-3 text-secondary" style="font-size: 11.5px; color: #bcaea2;">
+                                    <span><i class="fas fa-bed text-warning me-1"></i> 2 Bed</span> &bull;
+                                    <span><i class="fas fa-bath text-warning me-1"></i> 2 Bath</span> &bull;
+                                    <span><i class="fas fa-expand me-1"></i> 700 sqft</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(212,175,55,0.18) !important;">
+                                <div>
+                                    <span style="font-size: 17px; font-weight: 700; color: var(--landing-gold); font-family: 'Cinzel', serif;">₹14,200</span>
+                                    <span style="font-size: 10px; color: #9c9281;">/ night</span>
+                                </div>
+                                <a href="/rooms" class="btn btn-gold btn-sm" style="font-size: 11px; padding: 5px 12px; border-radius: 999px;">Book Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="room-card-modern">
+                        <div class="room-card-photo-box">
+                            <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80" alt="Garden Standard">
+                            <span class="room-badge-overlap">Luxury Room</span>
+                        </div>
+                        <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span style="font-size: 11px; color: var(--landing-gold); font-weight: 600;"><i class="fas fa-star text-warning"></i> 4.8</span>
+                                    <span style="font-size: 11px; color: #a9a08e;">Courtyard Wing</span>
+                                </div>
+                                <h4 style="font-family: 'Cinzel', serif; font-size: 16px; color: var(--landing-text-bright); margin-bottom: 8px;">Standard Deluxe</h4>
+                                <div class="d-flex align-items-center gap-2 mb-3 text-secondary" style="font-size: 11.5px; color: #bcaea2;">
+                                    <span><i class="fas fa-bed text-warning me-1"></i> 1 Bed</span> &bull;
+                                    <span><i class="fas fa-bath text-warning me-1"></i> 1 Bath</span> &bull;
+                                    <span><i class="fas fa-expand me-1"></i> 380 sqft</span>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(212,175,55,0.18) !important;">
+                                <div>
+                                    <span style="font-size: 17px; font-weight: 700; color: var(--landing-gold); font-family: 'Cinzel', serif;">₹6,500</span>
+                                    <span style="font-size: 10px; color: #9c9281;">/ night</span>
+                                </div>
+                                <a href="/rooms" class="btn btn-gold btn-sm" style="font-size: 11px; padding: 5px 12px; border-radius: 999px;">Book Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Arched Showcase & Experience Section (Ref 2) -->
+    <section id="experienceSection" class="py-5" style="background: #09101c; border-top: 1px solid rgba(212, 175, 55, 0.15);">
+        <div class="container py-4">
+            <!-- 3 Arched Architectural Photos -->
+            <div class="row g-4 mb-5">
+                <div class="col-12 col-md-4">
+                    <div class="arched-img-col">
+                        <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80" alt="Resort Architecture">
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="arched-img-col">
+                        <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80" alt="Royal Infinity Pool">
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="arched-img-col">
+                        <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80" alt="Palatial Master Suites">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Experience Narrative & Statistics -->
+            <div class="stats-dark-strip rounded-4 p-4 p-lg-5 text-center">
+                <span style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--landing-gold); font-weight: 700;">Legacy of Distinction</span>
+                <h2 style="font-family: 'Cinzel', serif; font-size: 34px; color: var(--landing-text-bright); margin: 8px 0 35px;">
+                    With our experience we will serve you
+                </h2>
+                <div class="row g-4">
+                    <div class="col-12 col-md-4">
+                        <div class="stat-figure">800+</div>
+                        <div style="font-size: 14px; color: #a9a08e; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Global Partner Destinations</div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="stat-figure">3,500+</div>
+                        <div style="font-size: 14px; color: #a9a08e; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Exclusive Suites &amp; Villas</div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="stat-figure">2M+</div>
+                        <div style="font-size: 14px; color: #a9a08e; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Exceptional Guest Stays</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Capsule Newsletter Banner -->
+            <div class="mt-5">
+                <div class="newsletter-capsule">
+                    <span style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--landing-gold); font-weight: 700;">Private Invitations</span>
+                    <h3 style="font-family: 'Cinzel', serif; font-size: 30px; color: var(--landing-text-bright); margin: 8px 0 12px;">
+                        Sign up for exclusive offers from us
+                    </h3>
+                    <p style="color: #bfaea2; font-size: 14.5px; max-width: 500px; margin: 0 auto 24px;">
+                        Receive seasonal privileges, private chef invites, and complimentary suite upgrades directly in your inbox.
+                    </p>
+                    <form onsubmit="handleNewsletter(event)" class="d-flex justify-content-center gap-2 flex-wrap" style="max-width: 500px; margin: 0 auto;">
+                        <input type="email" required placeholder="Enter your email address..." class="form-control" style="background: rgba(11, 19, 32, 0.85); border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 999px; color: #fff9e6; padding: 12px 24px; font-size: 13.5px; min-width: 280px;">
+                        <button type="submit" class="btn btn-gold px-4 py-2" style="border-radius: 999px; font-weight: 700; font-size: 13.5px;">
+                            Subscribe
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Multi-Column Classical Luxury Footer -->
+    <footer class="landing-footer">
+        <div class="container">
+            <div class="row g-4 mb-5">
+                <div class="col-12 col-lg-4">
+                    <div class="landing-brand mb-3">
+                        <i class="fas fa-crown"></i>
+                        <span>Nur-e-Haya</span>
+                    </div>
+                    <p style="font-size: 13.5px; color: #9c9281; line-height: 1.65; max-width: 320px;">
+                        Nur-e-Haya represents the pinnacle of aristocratic comfort, heritage hospitality, and tranquil modern indulgence.
+                    </p>
+                    <div class="d-flex gap-3 mt-3">
+                        <a href="#" class="text-warning"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="text-warning"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="text-warning"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-warning"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-2">
+                    <h5 class="footer-col-title">About</h5>
+                    <ul class="footer-links">
+                        <li><a href="/">About Us</a></li>
+                        <li><a href="/rooms">Our Rooms</a></li>
+                        <li><a href="/facilities">Sanctuary Spa</a></li>
+                        <li><a href="/menu">Fine Dining</a></li>
+                        <li><a href="/login">Guest Portal</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-6 col-md-3 col-lg-3">
+                    <h5 class="footer-col-title">Reservations</h5>
+                    <ul class="footer-links">
+                        <li><a href="/rooms">Request Suite Booking</a></li>
+                        <li><a href="/cart">Cart &amp; Order Checkout</a></li>
+                        <li><a href="/login">Manage Reservations</a></li>
+                        <li><a href="/support">Concierge Support</a></li>
+                        <li><a href="#">Cancellation Policies</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <h5 class="footer-col-title">Opening Hours &amp; Location</h5>
+                    <p style="margin-bottom: 6px; color: #c4baa7;"><strong>Front Desk:</strong> 24 Hours / 7 Days</p>
+                    <p style="margin-bottom: 6px; color: #c4baa7;"><strong>Royal Dining:</strong> 07:00 AM – 11:30 PM</p>
+                    <p style="margin-bottom: 12px; color: #c4baa7;"><strong>Thermal Spa:</strong> 06:00 AM – 10:00 PM</p>
+                    <p style="font-size: 12.5px; color: #9c9281;">
+                        <i class="fas fa-map-pin text-warning me-1"></i> 2484 Royal Palace Way, Heritage District, New Delhi 110001
+                    </p>
+                </div>
+            </div>
+
+            <div class="border-top pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3" style="border-color: rgba(212,175,55,0.15) !important;">
+                <p class="m-0" style="font-size: 12.5px; color: #7f7667;">
+                    &copy; 2026 Nur-e-Haya Luxury Hotel &amp; Palatial Residences. All rights reserved.
+                </p>
+                <div class="d-flex gap-4" style="font-size: 12px; color: #7f7667;">
+                    <a href="#" style="color: inherit; text-decoration: none;">Privacy Policy</a>
+                    <a href="#" style="color: inherit; text-decoration: none;">Terms of Service</a>
+                    <a href="#" style="color: inherit; text-decoration: none;">Security Compliance</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive script for category switcher and newsletter -->
+    <script>
+        const amenityData = {
+            dining: {
+                title: "Stylish decor and extensive beverage selection",
+                subtitle: "Gourmet & Mixology",
+                desc: "Savor exquisite royal recipes crafted with organic artisanal ingredients, paired with vintage cellar selections curated by master sommeliers.",
+                point1: "Outdoor seating and live evening entertainment",
+                point2: "24/7 in-suite silver service & private sommelier",
+                img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+                btnText: "View Dining Menu & Reserve",
+                btnLink: "/menu"
+            },
+            spa: {
+                title: "Tranquil thermal baths & therapeutic Ayurvedic rituals",
+                subtitle: "Spa & Wellness",
+                desc: "Rejuvenate mind and body in our Moroccan steam rooms, Himalayan salt caves, and essential oil vitality pools guided by master therapists.",
+                point1: "Organic herbal massages & deep rejuvenation therapies",
+                point2: "Heated marble loungers & private vitality hydrotherapy",
+                img: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80",
+                btnText: "Explore Spa Sanctuary",
+                btnLink: "/facilities"
+            },
+            yoga: {
+                title: "Sunrise meditation & state-of-the-art fitness arena",
+                subtitle: "Yoga & Fitness",
+                desc: "Invigorate your senses with morning terrace vinyasa flow sessions and Technogym Olympic-grade performance training equipment.",
+                point1: "Certified private fitness and breathwork instructors",
+                point2: "Panoramic sunrise vistas over the palatial courtyard",
+                img: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80",
+                btnText: "View Wellness Programs",
+                btnLink: "/facilities"
+            },
+            terrace: {
+                title: "Starlight dining & handcrafted cocktail lounges",
+                subtitle: "Summer Terrace",
+                desc: "Bask under twilight skies surrounded by illuminated fountains, gentle acoustic melodies, and private fire pits.",
+                point1: "Signature craft cocktails & artisanal wood-fired mezze",
+                point2: "Exclusive sunset cabanas with dedicated attendants",
+                img: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80",
+                btnText: "Reserve Terrace Cabana",
+                btnLink: "/menu"
+            },
+            pool: {
+                title: "Temperature-regulated royal marble infinity pool",
+                subtitle: "Swimming Pool",
+                desc: "Immerse yourself in azure waters overlooking pristine gardens, complete with plush poolside daybeds and refreshing mocktail service.",
+                point1: "Underwater acoustic soundscape & heated whirlpools",
+                point2: "Complimentary sun protection and chilled towel service",
+                img: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80",
+                btnText: "Discover Poolside Club",
+                btnLink: "/facilities"
+            },
+            events: {
+                title: "Grand ballrooms for royal weddings & executive summits",
+                subtitle: "Events & Meetings",
+                desc: "Host historic galas, diplomatic forums, and timeless celebrations in our crystal chandelier-lit halls equipped with discrete modern AV.",
+                point1: "Accommodates up to 800 distinguished guests with staging",
+                point2: "Bespoke banquet catering & dedicated protocol team",
+                img: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80",
+                btnText: "Inquire for Private Events",
+                btnLink: "/support"
+            }
+        };
+
+        function switchAmenity(key, btn) {
+            document.querySelectorAll('#facilityPillRow .cat-pill').forEach(p => p.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            const item = amenityData[key];
+            if (!item) return;
+
+            const imgEl = document.getElementById('amenityImage');
+            imgEl.style.opacity = '0.4';
+            setTimeout(() => {
+                imgEl.src = item.img;
+                imgEl.style.opacity = '1';
+            }, 180);
+
+            document.getElementById('amenityTitle').textContent = item.title;
+            document.getElementById('amenitySubtitle').textContent = item.subtitle;
+            document.getElementById('amenityDesc').textContent = item.desc;
+            document.getElementById('amenityPoint1').textContent = item.point1;
+            document.getElementById('amenityPoint2').textContent = item.point2;
+
+            const actionBtn = document.getElementById('amenityActionBtn');
+            actionBtn.innerHTML = `${item.btnText} <i class="fas fa-arrow-right ms-2"></i>`;
+            actionBtn.href = item.btnLink;
+        }
+
+        function handleNewsletter(e) {
+            e.preventDefault();
+            alert("Thank you for subscribing to Nur-e-Haya Private Invitations!");
+            e.target.reset();
+        }
+    </script>
+</body>
+</html>

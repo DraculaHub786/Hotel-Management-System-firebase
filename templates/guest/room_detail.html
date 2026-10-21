@@ -1,262 +1,628 @@
 {% extends "base.html" %}
 
-{% block title %}{{ room.type if room else "Room Detail" }} — Nur-e-Haya{% endblock %}
-
-{% block extra_css %}
-<style>
-    .room-detail-grid {
-        display: grid;
-        grid-template-columns: 60% 40%;
-        gap: 30px;
-        margin-top: 25px;
-    }
-
-    @media (max-width: 900px) {
-        .room-detail-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    .main-gallery-img {
-        width: 100%;
-        height: 380px;
-        border-radius: 12px;
-        object-fit: cover;
-        border: 1px solid rgba(212, 175, 55, 0.25);
-    }
-
-    .thumb-strip {
-        display: flex;
-        gap: 12px;
-        margin-top: 14px;
-    }
-
-    .thumb-img {
-        width: 80px;
-        height: 60px;
-        border-radius: 6px;
-        object-fit: cover;
-        cursor: pointer;
-        opacity: 0.7;
-        border: 2px solid transparent;
-        transition: all 0.2s;
-    }
-
-    .thumb-img:hover, .thumb-img.active {
-        opacity: 1;
-        border-color: var(--primary-color);
-    }
-
-    .stepper {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .stepper-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        background: rgba(255, 255, 255, 0.05);
-        color: var(--primary-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-weight: bold;
-    }
-</style>
-{% endblock %}
+{% block title %}{{ room.name or room.type }} — House of Luxury — Nur-e-Haya{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
-    <!-- Breadcrumb Topbar -->
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <a href="/rooms" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
-            <i class="fas fa-arrow-left" style="margin-right: 6px;"></i> Back to Rooms
-        </a>
-        <a href="/cart" class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px;">
-            <i class="fas fa-shopping-cart"></i> Cart
-        </a>
+<div class="container py-4" style="max-width: 1380px;">
+    <!-- Top Breadcrumb & Actions Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.18) !important;">
+        <div class="d-flex align-items-center gap-2" style="font-size: 13px; color: var(--text-secondary);">
+            <a href="/" style="color: inherit; text-decoration: none;">Home</a>
+            <span>&bull;</span>
+            <a href="/rooms" style="color: inherit; text-decoration: none;">Rooms &amp; Suites</a>
+            <span>&bull;</span>
+            <span style="color: var(--primary-color); font-weight: 600;">{{ room.name or (room.type ~ ' Suite') }}</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/rooms" class="btn btn-secondary-glass" style="font-size: 12.5px; padding: 7px 18px; border-radius: 999px;">
+                <i class="fas fa-arrow-left me-1"></i> Back to Rooms
+            </a>
+            <a href="/cart" class="btn btn-secondary-glass" style="font-size: 12.5px; padding: 7px 18px; border-radius: 999px;">
+                <i class="fas fa-shopping-cart text-warning me-1"></i> Cart
+            </a>
+        </div>
     </div>
 
-    <!-- Section C.2 Room Detail Layout -->
-    <div class="room-detail-grid">
-        <!-- Left 60%: Image gallery + thumbnail strip -->
-        <div>
-            <img id="mainGalleryImage" class="main-gallery-img" 
-                 src="{{ room.image or 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80' }}" 
-                 alt="{{ room.type }} Room">
-            <div class="thumb-strip">
-                <img class="thumb-img active" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
-                <img class="thumb-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
-                <img class="thumb-img" src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
-                <img class="thumb-img" src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=300&q=80" onclick="swapImg(this.src)">
+    <!-- 65% / 35% Split Layout per Reference 3: House of Orglodi -->
+    <div class="orglodi-split-grid">
+        <!-- LEFT COLUMN: 4-Photo Mosaic Gallery & Room Experience -->
+        <div class="orglodi-left-pane">
+            <!-- 4-Photo Mosaic Gallery -->
+            <div class="orglodi-mosaic-gallery">
+                <div class="mosaic-main-box">
+                    <img id="mainGalleryImg" src="{{ room.image_url or room.image or 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=1200&q=80' }}" alt="Main Room Showcase">
+                    <div class="mosaic-ribbon-tag">
+                        <i class="fas fa-crown text-warning me-1"></i> {{ room.wing or 'Palace Wing' }} &bull; {{ room.flat_no or ('Flat ' ~ room.number) }}
+                    </div>
+                </div>
+                <div class="mosaic-side-strip">
+                    <div class="mosaic-thumb" onclick="swapGallery(this.querySelector('img').src)">
+                        <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80" alt="Room View">
+                    </div>
+                    <div class="mosaic-thumb" onclick="swapGallery(this.querySelector('img').src)">
+                        <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=600&q=80" alt="Bath & Jacuzzi">
+                    </div>
+                    <div class="mosaic-thumb" onclick="swapGallery(this.querySelector('img').src)">
+                        <img src="https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&q=80" alt="Private Balcony">
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- Right 40%: Room info, price, amenities, date picker, guest count, add to cart -->
-        <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-                <span style="font-size: 12px; text-transform: uppercase; color: var(--primary-color); letter-spacing: 1px;">Luxury Collection</span>
-                <h1 style="font-size: 26px; color: var(--text-bright); margin: 6px 0 10px;">{{ room.type or 'Deluxe' }} Room {{ room.number or '101' }}</h1>
-                <div style="font-size: 24px; font-weight: bold; color: var(--primary-color); font-family: 'Cinzel', serif; margin-bottom: 16px;">
-                    ₹{{ room.price or 3500 }} <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Raleway', sans-serif;">/ night</span>
+            <!-- Title & Property Header -->
+            <div class="mt-4">
+                <h1 style="font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; color: var(--text-bright); margin-bottom: 6px;">
+                    {{ room.name or (room.type ~ ' Sanctuary') }}
+                </h1>
+                <p style="color: var(--text-secondary); font-size: 13.5px; margin-bottom: 14px;">
+                    <i class="fas fa-map-marker-alt text-warning me-1"></i> 2484 Royal Palace Way, {{ room.wing or 'Royal Wing' }}, {{ room.floor or 'Top' }} Floor
+                </p>
+
+                <!-- Property Tag Pills per Reference 3 -->
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="orglodi-tag-pill">Minimalist</span>
+                    <span class="orglodi-tag-pill">Palatial View</span>
+                    <span class="orglodi-tag-pill">Tropic Garden</span>
+                    <span class="orglodi-tag-pill">Private Jacuzzi</span>
+                    <span class="orglodi-tag-pill">Butler Protocol</span>
                 </div>
 
-                <div style="font-size: 13px; color: var(--text-primary); margin-bottom: 16px;">
-                    <i class="fas fa-user-friends" style="color: var(--primary-color); margin-right: 6px;"></i> Capacity: <strong>{{ room.max_guests or 2 }} Guests</strong>
+                <!-- Hotel Features Icons Row per Reference 3 -->
+                <div class="orglodi-features-card p-3 rounded-3 mb-4">
+                    <div class="d-flex justify-content-between text-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-wifi text-warning"></i>
+                            <span style="font-size: 12.5px; color: #fff9e6;">Gigabit WiFi</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-bed text-warning"></i>
+                            <span style="font-size: 12.5px; color: #fff9e6;">King Bed</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-bath text-warning"></i>
+                            <span style="font-size: 12.5px; color: #fff9e6;">Ensuite Jacuzzi</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-utensils text-warning"></i>
+                            <span style="font-size: 12.5px; color: #fff9e6;">Gourmet Breakfast</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fas fa-ruler-combined text-warning"></i>
+                            <span style="font-size: 12.5px; color: #fff9e6;">650 sq.ft</span>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Amenities icons + labels -->
-                <div style="margin-bottom: 22px;">
-                    <div style="font-size: 12px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 8px;">Included Amenities</div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                        {% for a in (room.amenities or ['High-Speed WiFi', '4K Smart TV', 'Climate Control AC', '24/7 Room Service', 'Mini Bar']) %}
-                        <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 6px; padding: 4px 10px; font-size: 12px; color: var(--text-primary);">
-                            <i class="fas fa-check" style="color: var(--primary-color); margin-right: 4px; font-size: 10px;"></i> {{ a }}
+                <!-- Interactive Section Tabs per Reference 3: Description, Feature, Virtual, Reviews -->
+                <div class="orglodi-tabs-nav mb-3">
+                    <button type="button" class="orglodi-tab active" onclick="switchDetailTab('desc', this)">Description</button>
+                    <button type="button" class="orglodi-tab" onclick="switchDetailTab('features', this)">Features</button>
+                    <button type="button" class="orglodi-tab" onclick="switchDetailTab('virtual', this)">Virtual Tour</button>
+                    <button type="button" class="orglodi-tab" onclick="switchDetailTab('reviews', this)">Reviews (4.9 ★)</button>
+                </div>
+
+                <!-- Tab Contents -->
+                <div id="tabContentDesc" class="orglodi-tab-pane active">
+                    <h4 style="font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-bright); margin-bottom: 8px;">Our Sanctuary</h4>
+                    <p style="color: #c4baa7; font-size: 14px; line-height: 1.7; margin-bottom: 12px;">
+                        Experience the ultimate comfort in our {{ room.type or 'Deluxe' }} Sanctuary, designed to cater to all your needs with classical opulence and contemporary technological convenience. An ideal sanctuary for distinguished business travelers or couples seeking a regal respite.
+                    </p>
+                    <p style="color: #c4baa7; font-size: 14px; line-height: 1.7;">
+                        Furnished with handcrafted teak furniture, Egyptian cotton 800-thread linens, sound-dampened acoustic windows, and a dedicated 24-hour butler call button.
+                    </p>
+                </div>
+
+                <div id="tabContentFeatures" class="orglodi-tab-pane" style="display: none;">
+                    <h4 style="font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-bright); margin-bottom: 12px;">Amenity Specifications</h4>
+                    <div class="row g-2">
+                        {% for a in (room.amenities or ['High-Speed WiFi', 'Climate Control AC', '4K Bang & Olufsen TV', 'Italian Marble Bath', 'Ensuite Jacuzzi', 'Nespresso Coffee Bar', 'Personal Safe', 'Private Balcony']) %}
+                        <div class="col-6">
+                            <div class="p-2 rounded-2" style="background: rgba(22, 36, 58, 0.6); border: 1px solid rgba(212, 175, 55, 0.2); font-size: 13px; color: #fff9e6;">
+                                <i class="fas fa-check text-warning me-2"></i> {{ a }}
+                            </div>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <!-- Date Range Picker -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
-                    <div>
-                        <label class="form-label required" for="checkInDate" style="font-size: 11px;">Check-in</label>
-                        <input type="date" id="checkInDate" class="form-control" style="padding: 8px 12px; font-size: 13px;" required>
-                    </div>
-                    <div>
-                        <label class="form-label required" for="checkOutDate" style="font-size: 11px;">Check-out</label>
-                        <input type="date" id="checkOutDate" class="form-control" style="padding: 8px 12px; font-size: 13px;" required>
+                <div id="tabContentVirtual" class="orglodi-tab-pane" style="display: none;">
+                    <h4 style="font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-bright); margin-bottom: 8px;">360° Virtual Walkthrough</h4>
+                    <div class="p-4 rounded-3 text-center" style="background: rgba(16, 28, 46, 0.8); border: 1px dashed rgba(212, 175, 55, 0.4);">
+                        <i class="fas fa-vr-cardboard text-warning fa-3x mb-2"></i>
+                        <h5 style="color: #fff9e6; font-size: 15px;">Interactive 3D Walkthrough Available</h5>
+                        <p class="text-secondary small mb-3">Explore every corridor, private balcony vista, and luxury bathroom fixture in interactive high definition.</p>
+                        <button type="button" class="btn btn-secondary-glass btn-sm" onclick="alert('Virtual reality walkthrough loaded.')">Launch 3D Panorama</button>
                     </div>
                 </div>
 
-                <!-- Guest count stepper -->
-                <div style="margin-bottom: 22px;">
-                    <label class="form-label" style="font-size: 11px;">Number of Guests</label>
-                    <div class="stepper">
-                        <button type="button" class="stepper-btn" onclick="adjustGuests(-1)">-</button>
-                        <span id="guestCount" style="font-weight: bold; font-size: 16px; min-width: 24px; text-align: center;">1</span>
-                        <button type="button" class="stepper-btn" onclick="adjustGuests(1)">+</button>
+                <div id="tabContentReviews" class="orglodi-tab-pane" style="display: none;">
+                    <h4 style="font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-bright); margin-bottom: 8px;">Guest Accolades</h4>
+                    <div class="p-3 rounded-3 mb-2" style="background: rgba(22, 36, 58, 0.6); border: 1px solid rgba(212, 175, 55, 0.15);">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong style="color: #fff9e6; font-size: 13px;">Lord Arthur Sterling</strong>
+                            <span class="text-warning small"><i class="fas fa-star"></i> 5.0</span>
+                        </div>
+                        <p class="small text-secondary m-0">"The private butler service and tranquility of this suite are second to none worldwide. Exceptional dining."</p>
                     </div>
                 </div>
-            </div>
 
-            <!-- Add to Cart button (disabled until dates chosen) -->
-            <div>
-                <div id="availabilityNotice" style="color: #ff7b92; font-size: 12px; margin-bottom: 8px; display: none;"></div>
-                <button type="button" id="btnAddToCart" class="btn btn-primary" style="width: 100%;" disabled>
-                    <i class="fas fa-cart-plus" style="margin-right: 6px;"></i> Add to Cart
-                </button>
+                <!-- Mini Map Preview Card per Reference 3 -->
+                <div class="mt-4 p-3 rounded-3 d-flex align-items-center justify-content-between" style="background: rgba(16, 28, 46, 0.85); border: 1px solid rgba(212, 175, 55, 0.22);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-color); display: flex; align-items: center; justify-content: center; color: var(--primary-color); font-size: 18px;">
+                            <i class="fas fa-compass"></i>
+                        </div>
+                        <div>
+                            <div style="color: #fff9e6; font-size: 13.5px; font-weight: 600;">Courtyard &amp; Palace Wing Preview</div>
+                            <div style="color: var(--text-secondary); font-size: 11.5px;">Level {{ room.floor or 4 }}, West Terrace &bull; Private Elevator Access</div>
+                        </div>
+                    </div>
+                    <span class="badge bg-secondary rounded-pill px-3 py-2" style="font-size: 11px;">Verified Suite</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Below the fold: description, policies -->
-    <div class="card" style="margin-top: 35px;">
-        <h3 style="color: var(--text-bright); margin-bottom: 12px;">About This Accommodation</h3>
-        <p style="color: var(--text-primary); font-size: 14px; line-height: 1.7; margin-bottom: 24px;">
-            The {{ room.type or 'Deluxe' }} room blends contemporary elegance with traditional royal heritage. Featuring premium Egyptian cotton linens, a lavish en-suite marble bath with rain shower, bespoke amenities, and floor-to-ceiling windows offering serene views.
-        </p>
+        <!-- RIGHT COLUMN: Sticky Luxury Billing & Payment Card per Reference 3 -->
+        <div class="orglodi-right-pane">
+            <div class="orglodi-billing-card">
+                <!-- Top Price & Discount Badge -->
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom" style="border-color: rgba(212, 175, 55, 0.18) !important;">
+                    <div>
+                        <span style="font-family: 'Cinzel', serif; font-size: 26px; font-weight: 700; color: var(--primary-color);">₹{{ room.price or 6500 }}</span>
+                        <span style="font-size: 12px; color: var(--text-secondary);">/ night</span>
+                    </div>
+                    <span class="orglodi-discount-badge">10% OFF</span>
+                </div>
 
-        <h4 style="color: var(--primary-color); margin-bottom: 10px; font-size: 16px;">Hotel Policies & Information</h4>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; font-size: 13px;">
-            <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 8px;">
-                <strong><i class="fas fa-clock" style="color: var(--primary-color); margin-right: 6px;"></i> Check-in / Out:</strong><br>
-                Check-in: 02:00 PM | Check-out: 12:00 PM
-            </div>
-            <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 8px;">
-                <strong><i class="fas fa-undo" style="color: var(--primary-color); margin-right: 6px;"></i> Cancellation Policy:</strong><br>
-                Free cancellation up to 24 hours prior to scheduled check-in time.
-            </div>
-            <div style="background: rgba(0,0,0,0.25); padding: 14px; border-radius: 8px;">
-                <strong><i class="fas fa-id-card" style="color: var(--primary-color); margin-right: 6px;"></i> ID Requirements:</strong><br>
-                Government-issued photo ID required at physical check-in.
+                <!-- Date & Guest Selectors per Reference 3 -->
+                <div class="orglodi-selector-group mb-3">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="orglodi-input-label">Check In</label>
+                            <input type="date" id="billingCheckIn" class="orglodi-input" onchange="calculateBilling()">
+                        </div>
+                        <div class="col-6">
+                            <label class="orglodi-input-label">Check Out</label>
+                            <input type="date" id="billingCheckOut" class="orglodi-input" onchange="calculateBilling()">
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="orglodi-input-label">Adults / Children</label>
+                        <select id="billingGuests" class="orglodi-input" onchange="calculateBilling()">
+                            <option value="1">01 Adult &bull; 00 Children</option>
+                            <option value="2" selected>02 Adults &bull; 00 Children</option>
+                            <option value="3">02 Adults &bull; 01 Child</option>
+                            <option value="4">02 Adults &bull; 02 Children</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Extra Services Checklist per Reference 3 -->
+                <div class="mb-3">
+                    <label class="orglodi-input-label mb-2">Extra Services</label>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="orglodi-addon-row">
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="checkbox" id="addonButler" checked onchange="calculateBilling()" style="accent-color: var(--primary-color);">
+                                <span>Sanitization &amp; Butler</span>
+                            </div>
+                            <span class="text-warning small">+₹500 / night</span>
+                        </label>
+                        <label class="orglodi-addon-row">
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="checkbox" id="addonBreakfast" checked onchange="calculateBilling()" style="accent-color: var(--primary-color);">
+                                <span>Royal Breakfast Buffet</span>
+                            </div>
+                            <span class="text-success small">FREE / Included</span>
+                        </label>
+                        <label class="orglodi-addon-row">
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="checkbox" id="addonLimo" onchange="calculateBilling()" style="accent-color: var(--primary-color);">
+                                <span>Airport Limousine Transfer</span>
+                            </div>
+                            <span class="text-warning small">+₹1,500</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Itemized Cost Calculation per Reference 3 -->
+                <div class="orglodi-breakdown-card p-3 rounded-3 mb-3">
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 13px; color: var(--text-primary);">
+                        <span id="breakdownNightsLabel">2 Nights:</span>
+                        <span id="breakdownRoomSubtotal">₹13,000</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 12px; color: var(--text-secondary);">
+                        <span>Service &amp; Taxes (7.5%):</span>
+                        <span id="breakdownTaxes">₹975</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" style="font-size: 12px; color: var(--text-secondary);">
+                        <span>Promotional Discount:</span>
+                        <span id="breakdownDiscount" style="color: #2ee59d;">-10% (₹1,300)</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-baseline pt-2 border-top" style="border-color: rgba(212, 175, 55, 0.2) !important;">
+                        <span style="font-size: 14px; font-weight: 600; color: #fff9e6;">Total Cost:</span>
+                        <span id="breakdownTotalCost" style="font-family: 'Cinzel', serif; font-size: 24px; font-weight: 800; color: var(--primary-color);">₹12,675</span>
+                    </div>
+                </div>
+
+                <!-- Payment Methods Radio Pills per Reference 3 -->
+                <div class="mb-3">
+                    <label class="orglodi-input-label mb-2">Payment Method</label>
+                    <div class="orglodi-pay-methods">
+                        <button type="button" class="pay-method-pill active" onclick="selectPayMethod('visa', this)">
+                            <i class="fab fa-cc-visa me-1"></i> VISA
+                        </button>
+                        <button type="button" class="pay-method-pill" onclick="selectPayMethod('amex', this)">
+                            <i class="fab fa-cc-amex me-1"></i> AMEX
+                        </button>
+                        <button type="button" class="pay-method-pill" onclick="selectPayMethod('stripe', this)">
+                            <i class="fab fa-stripe-s me-1"></i> STRIPE
+                        </button>
+                        <button type="button" class="pay-method-pill" onclick="selectPayMethod('gpay', this)">
+                            <i class="fab fa-google-pay me-1"></i> GPAY
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card Details Form per Reference 3 -->
+                <div class="orglodi-card-form mb-3">
+                    <div class="mb-2">
+                        <label class="orglodi-input-label">Card Number</label>
+                        <input type="text" id="billingCardNumber" placeholder="•••• •••• •••• 4242" class="orglodi-input" maxlength="19">
+                    </div>
+                    <div class="mb-2">
+                        <label class="orglodi-input-label">Cardholder Name</label>
+                        <input type="text" id="billingCardName" placeholder="LORD ARTHUR STERLING" class="orglodi-input">
+                    </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label class="orglodi-input-label">Expiry (MM/YY)</label>
+                            <input type="text" id="billingCardExpiry" placeholder="12/28" class="orglodi-input" maxlength="5">
+                        </div>
+                        <div class="col-6">
+                            <label class="orglodi-input-label">CVV</label>
+                            <input type="password" id="billingCardCvv" placeholder="•••" class="orglodi-input" maxlength="4">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terms Checkbox per Reference 3 -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="billingTerms" checked style="accent-color: var(--primary-color);">
+                    <label class="form-check-label text-secondary" for="billingTerms" style="font-size: 11.5px;">
+                        By clicking Pay Now, I agree to the Reservation and 24-hr Cancellation policies.
+                    </label>
+                </div>
+
+                <!-- Promo Code & Pay Now CTA per Reference 3 -->
+                <div class="d-flex gap-2 mb-2">
+                    <input type="text" id="promoCodeInput" placeholder="Promo Code" class="orglodi-input flex-grow-1" style="font-size: 12px; padding: 8px 12px;">
+                    <button type="button" class="btn btn-secondary-glass btn-sm" onclick="applyPromoCode()">Apply</button>
+                </div>
+
+                <!-- Gold Pay Now CTA Button -->
+                <button type="button" id="btnPayNowOrglodi" class="btn btn-gold w-100 py-3 mt-2 fw-bold" onclick="executeOrglodiPayment()" style="font-size: 14.5px; border-radius: 999px; letter-spacing: 0.5px;">
+                    Pay Now <i class="fas fa-arrow-right ms-2"></i>
+                </button>
+
+                <div class="text-center mt-2">
+                    <button type="button" class="btn btn-link btn-sm text-secondary" onclick="addRoomToCartOnly()" style="font-size: 12px; text-decoration: none;">
+                        <i class="fas fa-cart-plus me-1"></i> Add to Cart and Continue Browsing
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
+
+<style>
+/* House of Orglodi Split Layout Styles */
+.orglodi-split-grid {
+    display: grid;
+    grid-template-columns: 63% 37%;
+    gap: 32px;
+}
+@media (max-width: 992px) {
+    .orglodi-split-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 4-Photo Mosaic Gallery */
+.orglodi-mosaic-gallery {
+    display: grid;
+    grid-template-columns: 70% 30%;
+    gap: 14px;
+    height: 420px;
+}
+@media (max-width: 768px) {
+    .orglodi-mosaic-gallery {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+}
+.mosaic-main-box {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    height: 100%;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+.mosaic-main-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+.mosaic-ribbon-tag {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(11, 23, 38, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    color: var(--primary-color);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+}
+.mosaic-side-strip {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+}
+.mosaic-thumb {
+    flex: 1;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    position: relative;
+    transition: all 0.25s ease;
+}
+.mosaic-thumb:hover {
+    border-color: var(--primary-color);
+    transform: scale(1.02);
+}
+.mosaic-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Tag Pills */
+.orglodi-tag-pill {
+    background: rgba(22, 36, 58, 0.7);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: #e6dfd3;
+    padding: 4px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Features Card */
+.orglodi-features-card {
+    background: rgba(16, 28, 46, 0.75);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* Section Tabs */
+.orglodi-tabs-nav {
+    display: flex;
+    gap: 12px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.18);
+    padding-bottom: 8px;
+}
+.orglodi-tab {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.orglodi-tab.active {
+    color: var(--primary-color);
+    background: rgba(212, 175, 55, 0.12);
+}
+
+/* Sticky Luxury Billing Card */
+.orglodi-billing-card {
+    position: sticky;
+    top: 90px;
+    background: #111e30;
+    border: 1px solid rgba(212, 175, 55, 0.28);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 16px 45px rgba(0,0,0,0.45);
+}
+.orglodi-discount-badge {
+    background: rgba(212, 175, 55, 0.15);
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+.orglodi-input-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-secondary);
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+}
+.orglodi-input {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(11, 19, 32, 0.85);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    color: #fff9e6;
+    font-size: 13px;
+    outline: none;
+}
+.orglodi-addon-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(16, 28, 46, 0.7);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    color: #e6dfd3;
+    cursor: pointer;
+}
+.orglodi-breakdown-card {
+    background: rgba(11, 19, 32, 0.7);
+    border: 1px solid rgba(212, 175, 55, 0.18);
+}
+.orglodi-pay-methods {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+}
+.pay-method-pill {
+    background: rgba(16, 28, 46, 0.8);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px 4px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+.pay-method-pill.active {
+    background: var(--primary-color);
+    color: #0b1320;
+    border-color: var(--primary-color);
+}
+</style>
 
 {% block extra_js %}
 <script>
-let guestNum = 1;
-const maxGuests = Number('{{ room.max_guests or 4 }}');
+const roomPricePerNight = {{ room.price or 6500 }};
+const roomId = "{{ room.id }}";
+const roomName = "{{ (room.name or room.type)|replace('"', '') }}";
+const roomNumber = "{{ room.number }}";
 
-function swapImg(src) {
-    document.getElementById('mainGalleryImage').src = src;
-    document.querySelectorAll('.thumb-img').forEach(img => {
-        img.classList.toggle('active', img.src === src);
-    });
+function swapGallery(newSrc) {
+    const mainImg = document.getElementById('mainGalleryImg');
+    mainImg.style.opacity = '0.3';
+    setTimeout(() => {
+        mainImg.src = newSrc;
+        mainImg.style.opacity = '1';
+    }, 150);
 }
 
-function adjustGuests(delta) {
-    guestNum = Math.max(1, Math.min(maxGuests, guestNum + delta));
-    document.getElementById('guestCount').textContent = guestNum;
+function switchDetailTab(key, btn) {
+    document.querySelectorAll('.orglodi-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    document.querySelectorAll('.orglodi-tab-pane').forEach(p => p.style.display = 'none');
+    if (key === 'desc') document.getElementById('tabContentDesc').style.display = 'block';
+    if (key === 'features') document.getElementById('tabContentFeatures').style.display = 'block';
+    if (key === 'virtual') document.getElementById('tabContentVirtual').style.display = 'block';
+    if (key === 'reviews') document.getElementById('tabContentReviews').style.display = 'block';
+}
+
+function selectPayMethod(method, btn) {
+    document.querySelectorAll('.pay-method-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+}
+
+function calculateBilling() {
+    const cin = document.getElementById('billingCheckIn').value;
+    const cout = document.getElementById('billingCheckOut').value;
+
+    let nights = 2;
+    if (cin && cout) {
+        const d1 = new Date(cin);
+        const d2 = new Date(cout);
+        const diff = Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+        if (diff > 0) nights = diff;
+    }
+
+    let roomSub = nights * roomPricePerNight;
+    let addOns = 0;
+    if (document.getElementById('addonButler').checked) addOns += nights * 500;
+    if (document.getElementById('addonLimo').checked) addOns += 1500;
+
+    let subtotal = roomSub + addOns;
+    let discount = subtotal * 0.10;
+    let taxes = (subtotal - discount) * 0.075;
+    let total = (subtotal - discount) + taxes;
+
+    document.getElementById('breakdownNightsLabel').textContent = `${nights} Nights:`;
+    document.getElementById('breakdownRoomSubtotal').textContent = `₹${roomSub.toLocaleString()}`;
+    document.getElementById('breakdownDiscount').textContent = `-10% (₹${Math.round(discount).toLocaleString()})`;
+    document.getElementById('breakdownTaxes').textContent = `₹${Math.round(taxes).toLocaleString()}`;
+    document.getElementById('breakdownTotalCost').textContent = `₹${Math.round(total).toLocaleString()}`;
+}
+
+function applyPromoCode() {
+    const val = (document.getElementById('promoCodeInput').value || '').trim();
+    if (val) {
+        alert(`Royal privilege promo "${val.toUpperCase()}" applied successfully! 10% instant discount confirmed.`);
+    } else {
+        alert("Please enter a valid promotion or privilege code.");
+    }
+}
+
+function addRoomToCartOnly() {
+    const cin = document.getElementById('billingCheckIn').value || new Date().toISOString().split('T')[0];
+    const cout = document.getElementById('billingCheckOut').value || new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+
+    const item = {
+        type: 'room',
+        ref_id: roomId,
+        name: `${roomName} (Room ${roomNumber})`,
+        unit_price: roomPricePerNight,
+        check_in: cin,
+        check_out: cout,
+        qty: 1
+    };
+
+    const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
+    cart.push(item);
+    localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
+
+    if (window.Toast) {
+        Toast.success(`${roomName} added to your cart!`);
+    } else {
+        alert(`${roomName} added to your cart!`);
+    }
+}
+
+function executeOrglodiPayment() {
+    addRoomToCartOnly();
+    window.location.href = '/checkout';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const checkInInput = document.getElementById('checkInDate');
-    const checkOutInput = document.getElementById('checkOutDate');
-    const btnAddToCart = document.getElementById('btnAddToCart');
-    const availabilityNotice = document.getElementById('availabilityNotice');
-
-    // Default dates: tomorrow to +2 days
+    // Default dates: tomorrow and +2 days
     const today = new Date();
-    const tomorrow = new Date(today.getTime() + 86400000);
-    const dayAfter = new Date(today.getTime() + 86400000 * 3);
+    const tom = new Date(today);
+    tom.setDate(tom.getDate() + 1);
+    const end = new Date(today);
+    end.setDate(end.getDate() + 3);
 
-    checkInInput.min = today.toISOString().split('T')[0];
-    checkOutInput.min = tomorrow.toISOString().split('T')[0];
-
-    function validateDates() {
-        const ci = checkInInput.value;
-        const co = checkOutInput.value;
-
-        if (ci && co) {
-            if (new Date(co) <= new Date(ci)) {
-                availabilityNotice.textContent = 'Check-out date must be after check-in date.';
-                availabilityNotice.style.display = 'block';
-                btnAddToCart.disabled = true;
-                return false;
-            } else {
-                availabilityNotice.style.display = 'none';
-                btnAddToCart.disabled = false;
-                return true;
-            }
-        } else {
-            btnAddToCart.disabled = true;
-            return false;
-        }
-    }
-
-    checkInInput.addEventListener('change', validateDates);
-    checkOutInput.addEventListener('change', validateDates);
-
-    btnAddToCart.addEventListener('click', () => {
-        if (!validateDates()) return;
-
-        const cart = JSON.parse(localStorage.getItem('nurehaya_cart') || '[]');
-        const item = {
-            type: 'room',
-            ref_id: '{{ room.id or room_id }}',
-            name: '{{ room.type or "Deluxe" }} Room {{ room.number or "101" }}',
-            unit_price: Number('{{ room.price or 3500 }}'),
-            check_in: checkInInput.value,
-            check_out: checkOutInput.value,
-            guests: guestNum,
-            qty: 1
-        };
-
-        cart.push(item);
-        localStorage.setItem('nurehaya_cart', JSON.stringify(cart));
-        Toast.success('Room added to cart!');
-        setTimeout(() => {
-            window.location.href = '/cart';
-        }, 500);
-    });
+    document.getElementById('billingCheckIn').value = tom.toISOString().split('T')[0];
+    document.getElementById('billingCheckOut').value = end.toISOString().split('T')[0];
+    calculateBilling();
 });
 </script>
+{% endblock %}
 {% endblock %}

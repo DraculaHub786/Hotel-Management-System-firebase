@@ -15,12 +15,14 @@
 
     .qr-card {
         width: 100%;
-        max-width: 440px;
-        background: var(--glass-bg, rgba(22, 34, 54, 0.9));
-        border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(212, 175, 55, 0.12);
-        border-radius: 16px;
-        padding: 36px 30px;
+        max-width: 460px;
+        background: var(--card-gradient) !important;
+        border: 1px solid var(--border) !important;
+        border-top: 2px solid var(--border-strong) !important;
+        box-shadow: var(--card-shadow) !important;
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 38px 32px;
         text-align: center;
         position: relative;
     }
@@ -124,8 +126,8 @@
         </div>
 
         <!-- Dev Simulator Quick Action -->
-        <button type="button" class="btn btn-secondary" id="btnSimulatePhonePay" style="width: 100%; font-size: 12px; padding: 10px;">
-            <i class="fas fa-mobile-alt" style="margin-right: 6px;"></i> Simulate Phone Scan & Pay
+        <button type="button" class="btn btn-secondary-glass w-100 py-2" id="btnSimulatePhonePay" style="font-size: 13px;">
+            <i class="fas fa-mobile-alt me-1"></i> Simulate Phone Scan &amp; Pay
         </button>
 
         <div class="mt-3">

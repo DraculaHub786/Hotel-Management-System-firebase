@@ -231,8 +231,7 @@ body {
    MAIN CONTENT - PROPER TOP SPACING
    ============================================ */
 .dashboard-container {
-    padding-top: 80px;
-    min-height: 100vh;
+    padding-top: 10px;
     position: relative;
 }
 
@@ -1884,45 +1883,47 @@ textarea.form-control {
 
 .accessibility-menu {
     position: fixed;
-    left: 10px;
-    top: 215px;  /* Changed from top: 50% */
+    right: 25px;
+    bottom: 110px;
+    left: auto;
     z-index: 9994;
 }
 
 .accessibility-toggle {
-    width: 55px;  /* Changed from 50px */
-    height: 55px;  /* Changed from 50px */
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     background: var(--primary-color);
-    border: 2px solid var(--primary-color);  /* Added border */
+    border: 2px solid var(--primary-color);
     color: var(--dark-bg);
-    font-size: 24px;  /* Changed from 20px */
+    font-size: 20px;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);  /* Enhanced shadow */
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
     transition: all 0.3s ease;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    justify-content: center;  /* Added */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .accessibility-toggle:hover {
-    transform: scale(1.1);
+    transform: scale(1.08);
     box-shadow: 0 6px 20px var(--primary-glow);
-    background: #b8941f;  /* Darker gold on hover */
+    background: #b8941f;
 }
 
 .accessibility-panel {
     position: absolute;
-    left: 70px;  /* Changed from 70px to be more visible */
-    bottom: 0;  /* Changed from top: 50%; transform: translateY(-50%) */
+    right: 65px;
+    left: auto;
+    bottom: 0;
     background: var(--dark-surface);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(212, 175, 55, 0.2);
-    display: none;  /* Changed from display: none */
-    min-width: 220px;  /* Changed from 200px */
-    opacity: 0;  /* Added for animation */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    display: none;
+    min-width: 220px;
+    opacity: 0;
     transform: translateX(-10px);  /* Added for animation */
     transition: opacity 0.3s ease, transform 0.3s ease;  /* Added */
 }
@@ -3563,12 +3564,13 @@ button.chat-bubble {
     /* Position */
     position: fixed !important;
     bottom: 25px !important;
-    left: 25px !important;
+    right: 25px !important;
+    left: auto !important;
     z-index: 9998 !important;
-    
+
     /* Size */
-    width: 70px !important;
-    height: 70px !important;
+    width: 58px !important;
+    height: 58px !important;
     
     /* Shape */
     border-radius: 50% !important;
@@ -3763,7 +3765,8 @@ button.chat-bubble .chat-badge {
         width: 65px !important;
         height: 65px !important;
         bottom: 20px !important;
-        left: 20px !important;
+        right: 20px !important;
+        left: auto !important;
     }
     
     button.chat-bubble i.fa-robot {
@@ -3801,76 +3804,6 @@ button.chat-bubble .chat-badge {
 {% endblock %}
 
 {% block content %}
-<head>
-    <!-- Essential Meta Tags -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Nur-e-Haya Luxury Hotel - Experience world-class hospitality with premium accommodations, exceptional service, and unforgettable stays.">
-    <meta name="keywords" content="luxury hotel, accommodation, booking, rooms, hospitality, Nur-e-Haya">
-    <meta name="author" content="Nur-e-Haya Hotel">
-    <meta name="robots" content="index, follow">
-    <meta name="theme-color" content="#D4AF37">
-    
-    <!-- Open Graph Meta Tags (Facebook, LinkedIn) -->
-    <meta property="og:title" content="Nur-e-Haya Luxury Hotel - Premium Accommodation">
-    <meta property="og:description" content="Experience world-class hospitality with exceptional service and unforgettable stays.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://nur-e-haya.com">
-    <meta property="og:image" content="https://nur-e-haya.com/static/images/og-image.jpg">
-    <meta property="og:site_name" content="Nur-e-Haya Hotel">
-    
-    <!-- YouTube Card Meta Tags -->
-    <meta name="youtube:card" content="summary_large_image">
-    <meta name="youtube:title" content="Nur-e-Haya Luxury Hotel">
-    <meta name="youtube:description" content="Experience world-class hospitality with exceptional service.">
-    <meta name="youtube:image" content="https://nur-e-haya.com/static/images/twitter-image.jpg">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
-    <link rel="manifest" href="/static/site.webmanifest">
-    
-    <!-- Page Title -->
-    <title>Dashboard - Nur-e-Haya Luxury Hotel | Premium Accommodation</title>
-    
-    <!-- Preconnect for Performance -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
-    
-    <!-- Structured Data for SEO -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Hotel",
-        "name": "Nur-e-Haya Luxury Hotel",
-        "description": "Premium luxury hotel offering world-class accommodation and hospitality services",
-        "url": "https://nur-e-haya.com",
-        "logo": "https://nur-e-haya.com/static/images/logo.png",
-        "image": "https://nur-e-haya.com/static/images/hotel.jpg",
-        "priceRange": "₹₹₹₹",
-        "starRating": {
-            "@type": "Rating",
-            "ratingValue": "5"
-        },
-        "address": {
-            "@type": "PostalAddress",
-            "addressCountry": "IN"
-        },
-        "telephone": "+91 8010572845",
-        "email": "info@nur-e-haya.com"
-    }
-    </script>
-</head>
-<body>
-    
     <!-- Loading Overlay -->
     <div id="globalLoader" class="global-loader">
         <div class="loader-content">
@@ -3881,7 +3814,7 @@ button.chat-bubble .chat-badge {
         </div>
     </div>
 
-    <!-- Accessibility Menu -->
+    <!-- Accessibility Menu (Floating Right) -->
     <div id="accessibilityMenu" class="accessibility-menu">
         <button class="accessibility-toggle" onclick="toggleAccessibilityMenu()" aria-label="Accessibility Options">
             <i class="fas fa-universal-access"></i>
@@ -3908,66 +3841,162 @@ button.chat-bubble .chat-badge {
         </div>
     </div>
 
-
-    <!-- Main Content -->
-    <main id="main-content" class="dashboard-container">
+    <!-- Main Content Area -->
+    <div id="main-content" class="dashboard-container">
         <!-- Decorative Pattern -->
         <div class="arabesque-pattern" aria-hidden="true"></div>
         
-        <!-- Dashboard Header -->
-        <header class="dashboard-header">
-            <div class="container">
-                <h1 class="dashboard-title">DASHBOARD</h1>
-                <p class="dashboard-subtitle">Welcome to your luxury accommodation portal</p>
-                
-                <!-- Quick Actions -->
-                <div class="quick-actions">
-                    <button class="quick-action-btn" onclick="showNewBooking()" aria-label="Create new booking">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>New Booking</span>
+        <!-- Luxury Welcome Header Card -->
+        <!-- Hotel Serenity 5-Star Identity Header per Reference 5 -->
+        <header class="dashboard-header nh-card mb-4" style="padding: 24px 28px; position: relative; overflow: hidden; background: #111e30; border: 1px solid rgba(212, 175, 55, 0.28); border-radius: 18px; box-shadow: 0 12px 35px rgba(0,0,0,0.4);">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                <div>
+                    <!-- 5 Golden Stars per Reference 5 -->
+                    <div class="d-flex align-items-center gap-1 mb-1" style="color: var(--primary-color); font-size: 13px;">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h1 class="m-0" style="font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; color: var(--text-bright);">
+                        Nur-e-Haya Grand Luxury Palace
+                    </h1>
+                    <p class="m-0 mt-1" style="color: var(--text-secondary); font-size: 12.5px;">
+                        <i class="fas fa-map-marker-alt text-warning me-1"></i> 2875 Mountain Ridge Road, Aspen District &bull; Palace Wing
+                    </p>
+                </div>
+
+                <!-- Right Actions & User Pill per Reference 5 -->
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2 px-3 py-1 rounded-pill me-2" style="background: rgba(16, 28, 46, 0.9); border: 1px solid rgba(212, 175, 55, 0.25);">
+                        <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--primary-color); color: #0b1320; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">
+                            {{ (user_name or 'E')[0] | upper }}
+                        </div>
+                        <div style="font-size: 12px; line-height: 1.2;">
+                            <div style="color: #fff9e6; font-weight: 600;">{{ user_name or 'Esther Howard' }}</div>
+                            <div style="color: var(--text-secondary); font-size: 10px;">{{ user_email or 'esther@nurehaya.luxury' }}</div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-gold btn-sm px-3 py-2" onclick="showNewBooking()" aria-label="Create new booking" style="border-radius: 999px; font-weight: 700;">
+                        <i class="fas fa-plus-circle me-1"></i> New Booking
                     </button>
-                    <!-- ADMIN ONLY: Newsletter Button -->
+                    <a href="/menu" class="btn btn-secondary-glass btn-sm px-3 py-2" style="border-radius: 999px;">
+                        <i class="fas fa-utensils me-1"></i> Order Food
+                    </a>
                     {% if user_email == 'test1@gmail.com' %}
-                    <button class="quick-action-btn" onclick="window.location.href='/admin/newsletter'" aria-label="View newsletter subscribers">
-                    <i class="fas fa-envelope-open-text"></i>
-                    <span>Newsletter</span>
+                    <button class="btn btn-secondary-glass btn-sm px-3 py-2" onclick="window.location.href='/admin/newsletter'" style="border-radius: 999px;">
+                        <i class="fas fa-envelope-open-text me-1"></i> Newsletter
                     </button>
                     {% endif %}
-                    <button class="quick-action-btn" onclick="showSupport()" aria-label="Contact support">
-                        <i class="fas fa-headset"></i>
-                        <span>Support</span>
+                    <button class="btn btn-secondary-glass btn-sm px-3 py-2" onclick="showSupport()" style="border-radius: 999px;">
+                        <i class="fas fa-headset me-1"></i> Support
                     </button>
                     {% if user_email == 'test1@gmail.com' %}
-                    <!-- ADMIN ONLY: Download Report Button -->
-                    <button class="quick-action-btn" onclick="downloadReport()" aria-label="Download all bookings report">
-                    <i class="fas fa-download"></i>
-                    <span>Download Report</span>
+                    <button class="btn btn-secondary-glass btn-sm px-3 py-2" onclick="downloadReport()" style="border-radius: 999px;">
+                        <i class="fas fa-download me-1"></i> Report
                     </button>
                     {% endif %}
                 </div>
             </div>
+
+            <!-- Check-in Guests Horizontal Pill Stream per Reference 5 -->
+            <div class="mt-4 pt-3 border-top" style="border-color: rgba(212, 175, 55, 0.15) !important;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span style="font-size: 12px; font-weight: 700; color: var(--text-bright); text-transform: uppercase; letter-spacing: 0.5px;">Check-in Guests</span>
+                    <span class="badge rounded-pill" style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.4); font-size: 10px;">12 min</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 overflow-auto pb-1" style="white-space: nowrap;">
+                    <div class="serenity-guest-chip">
+                        <div class="guest-avatar-mini" style="background: #3b82f6;">SP</div>
+                        <span>Serhii Poraiko</span>
+                        <span class="room-tag">#26-028</span>
+                    </div>
+                    <div class="serenity-guest-chip">
+                        <div class="guest-avatar-mini" style="background: #10b981;">AR</div>
+                        <span>Alena Rostova</span>
+                        <span class="room-tag">#14-102</span>
+                    </div>
+                    <div class="serenity-guest-chip">
+                        <div class="guest-avatar-mini" style="background: #8b5cf6;">AS</div>
+                        <span>Arthur Sterling</span>
+                        <span class="room-tag">#02-005</span>
+                    </div>
+                    <div class="serenity-guest-chip">
+                        <div class="guest-avatar-mini" style="background: #f59e0b;">SC</div>
+                        <span>Sophia Chen</span>
+                        <span class="room-tag">#08-019</span>
+                    </div>
+                    <div class="serenity-guest-chip">
+                        <div class="guest-avatar-mini" style="background: #ec4899;">EP</div>
+                        <span>Elena Petrova</span>
+                        <span class="room-tag">#21-044</span>
+                    </div>
+                </div>
+            </div>
         </header>
 
-        <div class="container">
+        <!-- Center Resort Visual & Floating Guest Card per Reference 5 -->
+        <div class="nh-card mb-4 p-4 position-relative overflow-hidden" style="background: linear-gradient(135deg, rgba(16, 28, 46, 0.95), rgba(11, 19, 32, 0.98)), url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1400&q=80') center/cover; border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 18px; min-height: 220px;">
+            <div class="row align-items-center">
+                <div class="col-12 col-md-7">
+                    <span style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--primary-color); font-weight: 700;">Active Residence Protocol</span>
+                    <h2 style="font-family: 'Cinzel', serif; font-size: 26px; color: var(--text-bright); margin: 6px 0 10px;">Executive Sanctuary Management</h2>
+                    <p style="color: #c4baa7; font-size: 13.5px; max-width: 480px; margin-bottom: 16px;">
+                        Real-time telemetry of checked-in residents, butler requests, and scheduled departures.
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="serenity-filter-tag active"><i class="fas fa-search me-1"></i> Reservation &times;</span>
+                        <span class="serenity-filter-tag active"><i class="fas fa-bed me-1"></i> Occupancy &times;</span>
+                        <span class="serenity-filter-tag active"><i class="fas fa-user-friends me-1"></i> Guest &times;</span>
+                    </div>
+                </div>
+                <!-- Floating Glass Card per Reference 5 -->
+                <div class="col-12 col-md-5 mt-3 mt-md-0 d-flex justify-content-md-end">
+                    <div class="serenity-floating-card p-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="guest-avatar-mini" style="background: #d4af37; color: #0b1320; font-weight: bold;">AM</div>
+                            <div>
+                                <div style="font-size: 13px; font-weight: 700; color: #fff9e6;">Arlene McCoy</div>
+                                <div style="font-size: 10.5px; color: var(--primary-color);">N&deg;23 &bull; 2nd floor</div>
+                            </div>
+                        </div>
+                        <div class="d-flex flex-column gap-1 mb-2" style="font-size: 11px; color: #c4baa7;">
+                            <div><i class="fas fa-circle text-warning me-1" style="font-size: 7px;"></i> Restaurant reservation</div>
+                            <div><i class="fas fa-circle text-warning me-1" style="font-size: 7px;"></i> Spa &amp; thermal reservation</div>
+                            <div><i class="fas fa-circle text-warning me-1" style="font-size: 7px;"></i> Royal golf club pass</div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(212,175,55,0.2) !important; font-size: 11.5px;">
+                            <span class="text-secondary">12:30 Checkout Protocol</span>
+                            <span class="badge bg-secondary rounded-pill px-2">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div>
             <!-- Active Room & Table Indicators -->
             <div id="dashboardActiveStaySection" style="margin-bottom: 25px;">
                 <div class="row g-3" id="dashboardActiveStayRow">
                     {% if active_room %}
                     <div class="{% if active_dining %}col-md-6{% else %}col-12{% endif %}" id="dashActiveRoomCol">
-                        <div style="background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(22,34,54,0.95)); border: 1.5px solid rgba(212,175,55,0.55); border-radius: 14px; padding: 18px 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between;">
-                            <div style="display: flex; align-items: center; gap: 16px;">
-                                <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(212,175,55,0.25); border: 1px solid var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary-color);">
+                        <div class="nh-card p-3 p-md-4" style="background: linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(16, 28, 46, 0.95) 100%); border: 1px solid rgba(212, 175, 55, 0.4); border-top: 2px solid #d4af37; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(212, 175, 55, 0.2); border: 1px solid rgba(212, 175, 55, 0.5); display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--primary-color); flex-shrink: 0; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);">
                                     <i class="fas fa-bed"></i>
                                 </div>
                                 <div>
-                                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary-color); font-weight: 700;">Reserved &amp; Paid Accommodation</div>
-                                    <h3 style="margin: 2px 0 0 0; font-size: 22px; font-weight: 800; color: #ffffff;">Your room: {{ active_room.room_number }}</h3>
-                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                                        Booking #{{ active_room.booking_no or 'Confirmed' }} &bull; Status: <span class="badge bg-success" style="font-size: 10px;">{{ (active_room.status or 'Paid') | upper }}</span>
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary-color); font-weight: 700;">Reserved &amp; Paid Accommodation</div>
+                                    <h3 style="margin: 2px 0 0 0; font-size: 1.35rem; font-weight: 800; color: #ffffff; font-family: 'Cinzel', serif;">Room {{ active_room.room_number }}</h3>
+                                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px;">
+                                        Booking #{{ active_room.booking_no or 'Confirmed' }} &bull; Status: <span class="badge" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 0.68rem; padding: 3px 8px; border-radius: 20px;">{{ (active_room.status or 'Paid') | upper }}</span>
                                     </div>
                                 </div>
                             </div>
-                            <a href="/my-bookings" class="btn btn-sm btn-outline-warning" style="font-size: 11px; padding: 6px 14px; border-radius: 20px; text-decoration: none;">
+                            <a href="/my-bookings" class="btn btn-gold btn-sm px-3 py-2" style="font-size: 0.78rem; text-decoration: none; border-radius: 20px;">
                                 <i class="fas fa-key me-1"></i> Key &amp; Stay
                             </a>
                         </div>
@@ -3976,30 +4005,30 @@ button.chat-bubble .chat-badge {
 
                     {% if active_dining %}
                     <div class="{% if active_room %}col-md-6{% else %}col-12{% endif %}" id="dashActiveTableCol">
-                        <div style="background: linear-gradient(135deg, rgba(66,133,244,0.2), rgba(22,34,54,0.95)); border: 1.5px solid rgba(66,133,244,0.55); border-radius: 14px; padding: 18px 24px; box-shadow: 0 8px 25px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-                            <div style="display: flex; align-items: center; gap: 16px;">
-                                <div style="width: 52px; height: 52px; border-radius: 12px; background: rgba(66,133,244,0.25); border: 1px solid #4285f4; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #4285f4;">
+                        <div class="nh-card p-3 p-md-4" style="background: linear-gradient(135deg, rgba(66, 133, 244, 0.15) 0%, rgba(16, 28, 46, 0.95) 100%); border: 1px solid rgba(66, 133, 244, 0.4); border-top: 2px solid #4285f4; border-radius: 16px; box-shadow: var(--card-shadow); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+                            <div class="d-flex align-items-center gap-3">
+                                <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(66, 133, 244, 0.2); border: 1px solid rgba(66, 133, 244, 0.5); display: flex; align-items: center; justify-content: center; font-size: 22px; color: #4285f4; flex-shrink: 0; box-shadow: 0 4px 15px rgba(66, 133, 244, 0.25);">
                                     <i class="fas fa-chair"></i>
                                 </div>
                                 <div>
-                                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #4285f4; font-weight: 700;">Dining Reservation &amp; Order</div>
-                                    <h3 style="margin: 2px 0 0 0; font-size: 22px; font-weight: 800; color: #ffffff;">Your table: {{ active_dining.table_number }}</h3>
-                                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 3px;">
-                                        Order #{{ active_dining.order_no or 'Active' }} &bull; Status: <span class="badge bg-info text-dark" style="font-size: 10px;">{{ (active_dining.status or 'In-Kitchen') | upper }}</span>
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; color: #4285f4; font-weight: 700;">Dining Reservation &amp; Order</div>
+                                    <h3 style="margin: 2px 0 0 0; font-size: 1.35rem; font-weight: 800; color: #ffffff; font-family: 'Cinzel', serif;">Table {{ active_dining.table_number }}</h3>
+                                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px;">
+                                        Order #{{ active_dining.order_no or 'Active' }} &bull; Status: <span class="badge" style="background: rgba(66, 133, 244, 0.2); color: #8ab4f8; border: 1px solid rgba(66, 133, 244, 0.4); font-size: 0.68rem; padding: 3px 8px; border-radius: 20px;">{{ (active_dining.status or 'In-Kitchen') | upper }}</span>
                                         {% if active_dining.payment_status in ['paid', 'completed'] or active_dining.status == 'paid' %}
-                                        <span class="badge bg-success ms-1" style="font-size: 10px;">PAID</span>
+                                        <span class="badge ms-1" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 0.68rem; padding: 3px 8px; border-radius: 20px;">PAID</span>
                                         {% else %}
-                                        <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">PAYMENT PENDING</span>
+                                        <span class="badge ms-1" style="background: rgba(251, 188, 5, 0.2); color: #fbbc05; border: 1px solid rgba(251, 188, 5, 0.4); font-size: 0.68rem; padding: 3px 8px; border-radius: 20px;">PAYMENT PENDING</span>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 8px; align-items: center;">
-                                <button type="button" onclick="openGuestOrderModal('{{ active_dining.order_no or active_dining.id or 'active' }}')" class="btn btn-sm btn-outline-primary" style="font-size: 11px; padding: 6px 14px; border-radius: 20px;">
+                            <div class="d-flex gap-2 align-items-center">
+                                <button type="button" onclick="openGuestOrderModal('{{ active_dining.order_no or active_dining.id or 'active' }}')" class="btn btn-secondary-glass btn-sm px-3 py-2" style="font-size: 0.78rem; border-radius: 20px;">
                                     <i class="fas fa-utensils me-1"></i> View Order
                                 </button>
                                 {% if active_dining.payment_status not in ['paid', 'completed'] and active_dining.status != 'paid' %}
-                                <button type="button" onclick="payDiningOrder('{{ active_dining.order_no or active_dining.id or 'active' }}')" class="btn btn-sm btn-primary" style="font-size: 11px; padding: 6px 14px; border-radius: 20px;">
+                                <button type="button" onclick="payDiningOrder('{{ active_dining.order_no or active_dining.id or 'active' }}')" class="btn btn-gold btn-sm px-3 py-2" style="font-size: 0.78rem; border-radius: 20px;">
                                     <i class="fas fa-credit-card me-1"></i> Pay Now
                                 </button>
                                 {% endif %}
@@ -4010,49 +4039,113 @@ button.chat-bubble .chat-badge {
                 </div>
             </div>
 
-            <!-- Statistics Grid -->
-            <section class="stats-grid" id="statsGrid" aria-label="Booking statistics">
-                <article class="stat-card">
-                    <div class="stat-icon primary">
-                        <i class="fas fa-calendar-alt"></i>
+            <!-- 4 Hotel Serenity Visual Gauges & Equalizer Metric Cards per Reference 5 -->
+            <section class="stats-grid mb-4" id="statsGrid" aria-label="Booking statistics">
+                <!-- Gauge 1: Guest (Speedometer Arc Gauge) -->
+                <article class="stat-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="stat-label">Guest</span>
+                        <i class="fas fa-external-link-alt text-secondary" style="font-size: 11px;"></i>
                     </div>
-                    <div class="stat-value" id="totalBookings">0</div>
-                    <div class="stat-label">TOTAL BOOKINGS</div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> 12% from last month
+                    <div class="d-flex align-items-baseline gap-2 mb-2">
+                        <div class="stat-value m-0" id="totalBookings">527</div>
+                        <span style="font-size: 11px; color: #2ee59d; font-weight: 600;">+18% / Than last month</span>
                     </div>
-                </article>
-                
-                <article class="stat-card">
-                    <div class="stat-icon success">
-                        <i class="fas fa-check-circle"></i>
+
+                    <!-- Semi-circular Speedometer SVG Arc -->
+                    <div style="height: 70px; position: relative;" class="my-1">
+                        <svg viewBox="0 0 160 85" class="w-100 h-100">
+                            <!-- Background Arc -->
+                            <path d="M 15 80 A 65 65 0 0 1 145 80" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12" stroke-linecap="round" />
+                            <!-- Active Arc (Red/Gold glow) -->
+                            <path d="M 15 80 A 65 65 0 0 1 115 28" fill="none" stroke="#ff6b6b" stroke-width="12" stroke-linecap="round" />
+                        </svg>
+                        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); text-align: center;">
+                            <div style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Standard</div>
+                            <strong style="font-size: 14px; color: #fff9e6;">110</strong>
+                        </div>
                     </div>
-                    <div class="stat-value" id="activeBookings">0</div>
-                    <div class="stat-label">ACTIVE BOOKINGS</div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> 8% increase
-                    </div>
-                </article>
-                
-                <article class="stat-card">
-                    <div class="stat-icon warning">
-                        <i class="fas fa-dollar-sign"></i>
-                    </div>
-                    <div class="stat-value" id="totalSpent">₹0</div>
-                    <div class="stat-label">TOTAL SPENT</div>
-                    <div class="stat-trend neutral">
-                        <i class="fas fa-minus"></i> Same as last month
+                    <div class="d-flex justify-content-around text-secondary pt-2 border-top" style="border-color: rgba(212,175,55,0.1) !important; font-size: 10px;">
+                        <span>&bull; Standard</span><span>&bull; Enhanced</span><span>&bull; Luxury</span>
                     </div>
                 </article>
-                
-                <article class="stat-card">
-                    <div class="stat-icon info">
-                        <i class="fas fa-star"></i>
+
+                <!-- Gauge 2: Reservation Type (Vertical Equalizer Sliders) -->
+                <article class="stat-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="stat-label">Reservation Type</span>
+                        <i class="fas fa-external-link-alt text-secondary" style="font-size: 11px;"></i>
                     </div>
-                    <div class="stat-value" id="loyaltyPoints">0</div>
-                    <div class="stat-label">LOYALTY POINTS</div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-gift"></i> Redeem rewards
+                    <div class="d-flex align-items-baseline gap-2 mb-2">
+                        <div class="stat-value m-0" id="activeBookings">64</div>
+                        <span style="font-size: 11px; color: #2ee59d; font-weight: 600;">+24% / Than last month</span>
+                    </div>
+
+                    <!-- 8 Equalizer Vertical Slider Bars per Reference 5 -->
+                    <div class="d-flex justify-content-between align-items-end my-2 px-1" style="height: 65px;">
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 40%;"></div></div>
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 65%;"></div></div>
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 90%;"></div></div>
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 50%;"></div></div>
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 80%;"></div></div>
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 45%;"></div></div>
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 70%;"></div></div>
+                        <div class="serenity-eq-bar"><div class="eq-pill" style="height: 60%;"></div></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary pt-1 border-top" style="border-color: rgba(212,175,55,0.1) !important; font-size: 9px;">
+                        <span>6AM</span><span>9AM</span><span>12PM</span><span>3PM</span><span>6PM</span>
+                    </div>
+                </article>
+
+                <!-- Gauge 3: Occupancy & Profit Pill -->
+                <article class="stat-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="stat-label">Occupancy &amp; Revenue</span>
+                        <i class="fas fa-external-link-alt text-secondary" style="font-size: 11px;"></i>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2 mb-2">
+                        <div class="stat-value m-0">73%</div>
+                        <span style="font-size: 11px; color: #2ee59d; font-weight: 600;">+9% / Than last month</span>
+                    </div>
+
+                    <!-- Rounded Profit Capsule per Reference 5 -->
+                    <div class="p-2 rounded-pill text-center my-2" style="background: rgba(255, 107, 107, 0.12); border: 2px solid rgba(255, 107, 107, 0.6);">
+                        <div style="font-size: 9.5px; color: var(--text-secondary); text-transform: uppercase;">Daily Profit / Spent</div>
+                        <div style="font-size: 15px; font-weight: 800; color: #fff9e6;" id="totalSpent">₹1,51,526</div>
+                    </div>
+                    <div class="d-flex justify-content-around text-secondary pt-1 border-top" style="border-color: rgba(212,175,55,0.1) !important; font-size: 10px;">
+                        <span><i class="fas fa-square text-danger me-1"></i> Hotel</span>
+                        <span><i class="fas fa-square text-warning me-1"></i> Restaurant</span>
+                        <span><i class="fas fa-square text-info me-1"></i> Spa</span>
+                    </div>
+                </article>
+
+                <!-- Gauge 4: Housekeeping & Turnaround Timer Arc -->
+                <article class="stat-card p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="stat-label">Housekeeping / Turnaround</span>
+                        <i class="fas fa-external-link-alt text-secondary" style="font-size: 11px;"></i>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2 mb-2">
+                        <div class="stat-value m-0" id="loyaltyPoints">30</div>
+                        <span style="font-size: 11px; color: #2ee59d; font-weight: 600;">12:12 / The last cleaning</span>
+                    </div>
+
+                    <!-- Semi-circular arc gauge timer with 5m, 10m, 15m notches per Reference 5 -->
+                    <div style="height: 70px; position: relative;" class="my-1">
+                        <svg viewBox="0 0 160 85" class="w-100 h-100">
+                            <!-- Arc notches -->
+                            <path d="M 15 80 A 65 65 0 0 1 145 80" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="4" stroke-dasharray="3, 3" />
+                            <!-- Active Arc -->
+                            <path d="M 15 80 A 65 65 0 0 1 130 50" fill="none" stroke="#ff7675" stroke-width="6" stroke-linecap="round" />
+                        </svg>
+                        <div style="position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); text-align: center;">
+                            <div style="font-size: 9px; color: var(--text-secondary); text-transform: uppercase;">Timer</div>
+                            <strong style="font-size: 13px; color: #fff9e6;">12:12 min</strong>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary pt-2 border-top" style="border-color: rgba(212,175,55,0.1) !important; font-size: 9px;">
+                        <span>5 min</span><span>10 min</span><span>15 min</span>
                     </div>
                 </article>
             </section>
@@ -4191,84 +4284,7 @@ button.chat-bubble .chat-badge {
                 </section>
             </div>
         </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-column">
-                    <h3>About Nur-e-Haya</h3>
-                    <p>Experience luxury redefined with world-class hospitality and exceptional service.</p>
-                    <div class="social-links">
-                        <a href="https://www.facebook.com/profile.php?id=100090700341082" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
-                        <a href="https://www.youtube.com/@_Dracula_786" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-                        <a href="https://www.instagram.com/_afjal___ansari_?igsh=ZGlkZDU4eHF6NGM4" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="https://www.linkedin.com/in/afjal-ansari-999067299?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="/about">About Us</a></li>
-                        <li><a href="/rooms">Our Rooms</a></li>
-                        <li><a href="/amenities">Amenities</a></li>
-                        <li><a href="/gallery">Gallery</a></li>
-                        <li><a href="/contact">Contact</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Policies</h3>
-                    <ul>
-                        <li><a href="#" onclick="showPrivacyPolicy()">Privacy Policy</a></li>
-                        <li><a href="#" onclick="showTerms()">Terms & Conditions</a></li>
-                        <li><a href="#" onclick="showCancellationPolicy()">Cancellation Policy</a></li>
-                        <li><a href="#" onclick="showRefundPolicy()">Refund Policy</a></li>
-                        <li><a href="/sitemap">Sitemap</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-column">
-                    <h3>Newsletter</h3>
-                    <p>Subscribe for exclusive offers and updates</p>
-    
-                    <!-- Check if user is subscribed -->
-                    <div id="newsletterSection">
-                        <form id="newsletterForm" onsubmit="subscribeNewsletter(event)">
-                        <div class="newsletter-input">
-                            <input type="email" placeholder="Your email" required>
-                            <button type="submit" aria-label="Subscribe">
-                            <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </div>
-                        </form>
-        
-                        <!-- Unsubscribe button (hidden by default) -->
-                        <div id="unsubscribeSection" style="display: none; margin-top: 15px;">
-                            <p style="color: var(--success-color); font-size: 13px; margin-bottom: 10px;">
-                                <i class="fas fa-check-circle"></i> You're subscribed
-                            </p>
-                            <button onclick="unsubscribeNewsletter()" class="btn btn-secondary" style="width: 100%;">
-                            <i class="fas fa-times-circle"></i> UNSUBSCRIBE
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="certifications">
-                        <img src="/static/images/ssl-secure.png" alt="SSL Secure" height="40">
-                        <img src="/static/images/pci-compliant.png" alt="PCI Compliant" height="40">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-bottom">
-                <p>&copy; 2024 Nur-e-Haya Luxury Hotel. All rights reserved.</p>
-                <p>Made with <i class="fas fa-heart"></i> for exceptional hospitality</p>
-            </div>
-        </div>
-    </footer>
+    </div>
 
     <!-- Cookie Consent Banner -->
     <div id="cookieConsent" class="cookie-consent">

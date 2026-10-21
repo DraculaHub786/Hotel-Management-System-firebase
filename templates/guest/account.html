@@ -3,18 +3,18 @@
 {% block title %}Account Settings & Preferences — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container" style="max-width: 1200px; padding-top: 85px; padding-bottom: 70px;">
+<div class="container py-4" style="max-width: 1200px;">
     <!-- Screen Header -->
-    <div class="screen-topbar mb-4">
-        <div class="topbar-title">
+    <div class="screen-topbar d-flex justify-content-between align-items-center mb-4">
+        <div class="topbar-title d-flex align-items-center gap-2" style="font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; color: #fff9e6;">
             <i class="fas fa-user-cog text-warning"></i>
-            <span>Profile & Account Settings</span>
+            <span>Profile &amp; Account Settings</span>
         </div>
         <div class="topbar-actions d-flex gap-2">
-            <a href="/my-bookings" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
+            <a href="/my-bookings" class="btn btn-secondary-glass" style="font-size: 0.82rem; padding: 8px 16px;">
                 <i class="fas fa-suitcase me-1"></i> My Bookings
             </a>
-            <a href="/dashboard" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
+            <a href="/dashboard" class="btn btn-secondary-glass" style="font-size: 0.82rem; padding: 8px 16px;">
                 <i class="fas fa-home me-1"></i> Guest Dashboard
             </a>
         </div>
@@ -73,7 +73,7 @@
     <div class="row g-4">
         <!-- Left Column: Profile Card & Navigation -->
         <div class="col-12 col-lg-4">
-            <div class="card p-4 text-center" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212,175,55,0.25); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+            <div class="nh-card p-4 text-center" style="background: var(--card-gradient); border: 1px solid var(--border); border-top: 1px solid var(--border-strong); border-radius: 18px; box-shadow: var(--card-shadow);">
                 <!-- Avatar -->
                 <div style="position: relative; width: 96px; height: 96px; margin: 0 auto 16px;">
                     {% if user and user.avatar %}
@@ -123,7 +123,7 @@
 
         <!-- Right Column: Settings Form -->
         <div class="col-12 col-lg-8">
-            <div class="card p-4" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212,175,55,0.25); border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);">
+            <div class="nh-card p-4" style="background: var(--card-gradient); border: 1px solid var(--border); border-top: 1px solid var(--border-strong); border-radius: 18px; box-shadow: var(--card-shadow);">
                 <form id="profileForm" novalidate>
                     <!-- SECTION 1: Personal & Account Identity -->
                     <div class="mb-4">
@@ -263,7 +263,7 @@
                         <span class="text-secondary small">
                             <i class="fas fa-lock me-1"></i> All guest personal data is encrypted and strictly confidential.
                         </span>
-                        <button type="submit" class="btn btn-primary" id="btnSaveProfile" style="padding: 10px 24px;">
+                        <button type="submit" class="btn btn-gold px-4 py-2" id="btnSaveProfile">
                             <i class="fas fa-save me-1"></i> Save Changes
                         </button>
                     </div>

@@ -307,39 +307,41 @@ function renderFilteredMenu() {
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="food-card">
                     <div class="food-img-wrapper" style="background-image: url('${imgUrl}');">
-                        <div style="position: absolute; top: 12px; right: 12px; background: rgba(15,26,42,0.85); border: 1px solid var(--primary-color); border-radius: 20px; padding: 4px 12px; font-size: 13px; font-weight: bold; color: var(--primary-color);">
-                            ₹${item.price}
+                        <div class="room-image-scrim"></div>
+                        <div class="room-price-badge">
+                            ₹${item.price.toLocaleString()}
                         </div>
-                        <div style="position: absolute; bottom: 10px; left: 12px; background: rgba(0,0,0,0.65); padding: 3px 10px; border-radius: 4px; font-size: 11px; color: #fff;">
+                        <div style="position: absolute; bottom: 12px; left: 14px; background: rgba(11, 19, 32, 0.88); border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(8px); padding: 4px 12px; border-radius: 20px; font-size: 11.5px; color: #fff9e6; z-index: 2;">
                             <i class="fas fa-clock text-warning me-1"></i> ${prep}
                         </div>
-                        <div style="position: absolute; top: 12px; left: 12px; background: rgba(15,26,42,0.85); border-radius: 4px; padding: 3px 6px;">
+                        <div style="position: absolute; top: 14px; left: 14px; background: rgba(11, 19, 32, 0.9); border-radius: 20px; padding: 4px 10px; border: 1px solid ${isVeg ? 'rgba(46, 229, 157, 0.4)' : 'rgba(255, 94, 126, 0.4)'}; backdrop-filter: blur(8px); display: inline-flex; align-items: center; gap: 6px; z-index: 2;">
                             <span class="diet-indicator ${isVeg ? 'diet-veg' : 'diet-nonveg'}">
                                 <i class="fas fa-circle"></i>
                             </span>
+                            <span style="font-size: 11px; font-weight: 600; color: ${isVeg ? '#2ee59d' : '#ff7a95'};">${isVeg ? 'Pure Veg' : 'Non-Veg'}</span>
                         </div>
                     </div>
-                    <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+                    <div class="p-4 d-flex flex-column justify-content-between flex-grow-1">
                         <div>
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <h5 class="fw-bold mb-1" style="color: var(--text-bright); font-size: 16px;">${item.name}</h5>
-                            </div>
-                            <span class="badge bg-secondary text-uppercase mb-2" style="font-size: 10px; letter-spacing: 0.5px;">${item.category || 'Specialty'}</span>
-                            <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.4; margin-bottom: 15px;">
-                                ${item.description || 'Prepared fresh by master chefs using indigenous spices.'}
+                            <span class="badge bg-secondary rounded-pill px-2 py-1 mb-2 text-uppercase" style="font-size: 9.5px; letter-spacing: 0.8px;">${item.category || 'Specialty'}</span>
+                            <h4 class="fw-bold mb-2" style="color: var(--text-bright); font-size: 17.5px; font-family: 'Cinzel', serif; letter-spacing: 0.3px;">
+                                ${item.name}
+                            </h4>
+                            <p style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 18px;">
+                                ${item.description || 'Prepared fresh by master chefs using indigenous royal spices.'}
                             </p>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(212, 175, 55, 0.16) !important;">
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="filter-pill" onclick="changeQty('${item.id}', -1)" style="padding: 2px 8px; font-size: 11px;">-</button>
-                                <span id="qty_${item.id}" class="fw-bold px-1" style="font-size: 13px; min-width: 18px; text-align: center;">1</span>
-                                <button type="button" class="filter-pill" onclick="changeQty('${item.id}', 1)" style="padding: 2px 8px; font-size: 11px;">+</button>
+                                <button type="button" class="btn btn-secondary btn-sm rounded-circle p-0" onclick="changeQty('${item.id}', -1)" style="width: 28px; height: 28px; font-size: 14px; line-height: 1;">-</button>
+                                <span id="qty_${item.id}" class="fw-bold px-1" style="font-size: 14px; min-width: 20px; text-align: center; color: var(--text-bright);">1</span>
+                                <button type="button" class="btn btn-secondary btn-sm rounded-circle p-0" onclick="changeQty('${item.id}', 1)" style="width: 28px; height: 28px; font-size: 14px; line-height: 1;">+</button>
                             </div>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-sm btn-secondary" onclick="addToCart('${item.id}')" title="Add to Cart" style="padding: 6px 10px; font-size: 12px;">
-                                    <i class="fas fa-shopping-cart"></i>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="addToCart('${item.id}')" title="Add to Cart" style="padding: 7px 12px; border-radius: 8px;">
+                                    <i class="fas fa-shopping-cart text-warning"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-primary" onclick="openDirectOrderModal('${item.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="openDirectOrderModal('${item.id}')" style="padding: 7px 14px; border-radius: 8px; font-size: 12px;">
                                     Order Now
                                 </button>
                             </div>

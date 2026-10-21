@@ -10,14 +10,14 @@
             <i class="fas fa-concierge-bell text-warning"></i> Front Desk: Arrivals & Departures
         </div>
         <div class="topbar-actions">
-            <a href="/frontdesk/checkin" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
-                <i class="fas fa-key"></i> Guest Check-In
+            <a href="/frontdesk/checkin" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-key me-1"></i> Guest Check-In
             </a>
-            <a href="/staff/front-desk/rooms" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
-                <i class="fas fa-th"></i> Room Board
+            <a href="/staff/front-desk/rooms" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-th me-1"></i> Room Board
             </a>
-            <button type="button" class="btn btn-primary" onclick="openDirectCheckinModal()" style="font-size: 13px; padding: 8px 16px;">
-                <i class="fas fa-plus"></i> Quick Check-in
+            <button type="button" class="btn btn-gold" onclick="openDirectCheckinModal()" style="font-size: 13px; padding: 8px 16px;">
+                <i class="fas fa-plus me-1"></i> Quick Check-in
             </button>
         </div>
     </div>
@@ -143,11 +143,11 @@ function renderQueue(type) {
                 <td style="font-size: 12px; color: var(--text-primary); font-style: italic;">${notes}</td>
                 <td style="text-align: right;">
                     ${type === 'arrivals' ? (status !== 'checked_in' ? `
-                        <button type="button" class="btn btn-primary" onclick="openDirectCheckinModal('${id}', '${rnum}')" style="font-size: 11px; padding: 5px 12px;">
+                        <button type="button" class="btn btn-gold" onclick="openDirectCheckinModal('${id}', '${rnum}')" style="font-size: 11px; padding: 6px 14px;">
                             <i class="fas fa-key me-1"></i> Check-in
                         </button>
-                    ` : `<span class="badge bg-success py-1 px-2"><i class="fas fa-check me-1"></i>In House</span>`) : `
-                        <button type="button" class="btn btn-danger" onclick="triggerCheckout('${id}')" style="font-size: 11px; padding: 5px 12px;">
+                    ` : `<span class="badge bg-success py-1 px-2 rounded-pill"><i class="fas fa-check me-1"></i>In House</span>`) : `
+                        <button type="button" class="btn btn-danger" onclick="triggerCheckout('${id}')" style="font-size: 11px; padding: 6px 14px;">
                             <i class="fas fa-sign-out-alt me-1"></i> Check-out
                         </button>
                     `}

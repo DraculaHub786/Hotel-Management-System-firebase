@@ -43,34 +43,34 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 60px;">
+<div class="container py-4" style="max-width: 1280px;">
     <!-- Topbar -->
-    <div class="screen-topbar">
-        <div class="topbar-title">
-            <i class="fas fa-history"></i> My Bookings & Activity
+    <div class="screen-topbar d-flex justify-content-between align-items-center mb-4">
+        <div class="topbar-title d-flex align-items-center gap-2" style="font-family: 'Cinzel', serif; font-size: 1.5rem; font-weight: 700; color: #fff9e6;">
+            <i class="fas fa-history text-warning"></i> My Bookings &amp; Activity
         </div>
-        <div class="topbar-actions">
-            <a href="/rooms" class="btn btn-secondary" style="font-size: 12px; padding: 8px 14px;">
-                <i class="fas fa-bed"></i> Book a Room
+        <div class="topbar-actions d-flex gap-2">
+            <a href="/rooms" class="btn btn-secondary-glass" style="font-size: 0.82rem; padding: 8px 16px;">
+                <i class="fas fa-bed me-1"></i> Book a Room
             </a>
-            <a href="/menu" class="btn btn-primary" style="font-size: 12px; padding: 8px 14px;">
-                <i class="fas fa-utensils"></i> Order Food
+            <a href="/menu" class="btn btn-gold" style="font-size: 0.82rem; padding: 8px 16px;">
+                <i class="fas fa-utensils me-1"></i> Order Food
             </a>
         </div>
     </div>
 
     <!-- Activity Tabs: Bookings vs Dining Orders vs Spa & Facilities -->
-    <div class="activity-tabs" style="margin-top: 20px;">
-        <button type="button" class="activity-tab-btn active" id="tabBtnBookings" onclick="switchActivityTab('bookings')">
-            <i class="fas fa-hotel"></i> Room & Suite Reservations
+    <div class="activity-tabs d-flex flex-wrap gap-2" style="margin-top: 15px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 14px;">
+        <button type="button" class="activity-tab-btn active" id="tabBtnBookings" onclick="switchActivityTab('bookings')" style="border-radius: 20px;">
+            <i class="fas fa-hotel me-1"></i> Room &amp; Suite Reservations
             <span class="tab-count" id="countBookings">0</span>
         </button>
-        <button type="button" class="activity-tab-btn" id="tabBtnOrders" onclick="switchActivityTab('orders')">
-            <i class="fas fa-concierge-bell"></i> Dining & Food Orders
+        <button type="button" class="activity-tab-btn" id="tabBtnOrders" onclick="switchActivityTab('orders')" style="border-radius: 20px;">
+            <i class="fas fa-concierge-bell me-1"></i> Dining &amp; Food Orders
             <span class="tab-count" id="countOrders">0</span>
         </button>
-        <button type="button" class="activity-tab-btn" id="tabBtnFacilities" onclick="switchActivityTab('facilities')">
-            <i class="fas fa-spa"></i> Spa & Wellness Sessions
+        <button type="button" class="activity-tab-btn" id="tabBtnFacilities" onclick="switchActivityTab('facilities')" style="border-radius: 20px;">
+            <i class="fas fa-spa me-1"></i> Spa &amp; Wellness Sessions
             <span class="tab-count" id="countFacilities">0</span>
         </button>
     </div>

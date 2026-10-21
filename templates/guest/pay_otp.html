@@ -15,12 +15,14 @@
 
     .otp-card {
         width: 100%;
-        max-width: 440px;
-        background: var(--glass-bg, rgba(22, 34, 54, 0.9));
-        border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.25));
-        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(212, 175, 55, 0.12);
-        border-radius: 16px;
-        padding: 36px 30px;
+        max-width: 460px;
+        background: var(--card-gradient) !important;
+        border: 1px solid var(--border) !important;
+        border-top: 2px solid var(--border-strong) !important;
+        box-shadow: var(--card-shadow) !important;
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 38px 32px;
         text-align: center;
         position: relative;
     }
@@ -93,8 +95,8 @@
         <span class="step-pill upcoming"><i class="fas fa-qrcode me-1"></i> Step 2: UPI QR Payment</span>
     </div>
 
-    <div class="otp-card">
-        <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--primary-color, #d4af37); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+    <div class="otp-card nh-card">
+        <div style="width: 58px; height: 58px; border-radius: 50%; background: rgba(212, 175, 55, 0.15); border: 2px solid var(--primary-color, #d4af37); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);">
             <i class="fas fa-mobile-screen-button" style="font-size: 24px; color: var(--primary-color, #d4af37);"></i>
         </div>
 
@@ -142,8 +144,8 @@
                 <div class="form-field-error text-danger small mt-1" data-for="otp" style="justify-content: center;"></div>
             </div>
 
-            <button type="submit" class="btn btn-primary" id="btnVerifyOtp" style="width: 100%; padding: 12px 18px; font-weight: 600; letter-spacing: 0.5px;">
-                VERIFY & PROCEED TO PAYMENT <i class="fas fa-arrow-right ms-1"></i>
+            <button type="submit" class="btn btn-gold w-100 py-3" id="btnVerifyOtp" style="font-weight: 700; letter-spacing: 0.8px;">
+                VERIFY &amp; PROCEED TO PAYMENT <i class="fas fa-arrow-right ms-2"></i>
             </button>
 
             <div class="d-flex justify-content-between align-items-center mt-3" style="font-size: 12px; color: var(--text-secondary);">

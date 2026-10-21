@@ -173,8 +173,8 @@ def operations_reports():
             mimetype="text/csv",
             headers={"Content-Disposition": "attachment;filename=hotel_operations_report.csv"}
         )
-
-    return render_template('admin/revenue_dashboard.html', is_reports=True)
+    bookings = [doc.to_dict() for doc in bookings_col().stream()]
+    return render_template('manager/reports.html', bookings=bookings)
 
 # SCR-70: Announcements / Broadcasts
 @manager_bp.route('/manager/announcements', methods=['GET', 'POST'])

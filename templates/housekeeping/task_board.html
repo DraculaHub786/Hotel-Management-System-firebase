@@ -12,13 +12,13 @@
             <span class="badge bg-warning text-dark rounded-pill ms-2" id="totalTasksCount" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Tasks</span>
         </div>
         <div class="topbar-actions">
-            <button type="button" class="btn btn-secondary" onclick="loadTasks()" style="font-size: 13px; padding: 8px 16px;">
+            <button type="button" class="btn btn-secondary-glass" onclick="loadTasks()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/staff/front-desk/rooms" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/front-desk/rooms" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-th me-1"></i> Room Board
             </a>
-            <button type="button" class="btn btn-primary" onclick="openNewTaskModal()" style="font-size: 13px; padding: 8px 16px;">
+            <button type="button" class="btn btn-gold" onclick="openNewTaskModal()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-plus me-1"></i> New Task
             </button>
         </div>
@@ -54,7 +54,7 @@
     <div class="row g-3 mt-1" id="kanbanContainer">
         <!-- Column 1: Pending -->
         <div class="col-12 col-lg-4">
-            <div class="card p-3 h-100" style="background: rgba(22, 34, 54, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+            <div class="card p-3 h-100" style="background: rgba(18, 28, 45, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important;">
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-danger text-white rounded-pill px-2 py-1">Pending</span>
@@ -70,7 +70,7 @@
 
         <!-- Column 2: In Progress -->
         <div class="col-12 col-lg-4">
-            <div class="card p-3 h-100" style="background: rgba(22, 34, 54, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+            <div class="card p-3 h-100" style="background: rgba(18, 28, 45, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important;">
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-warning text-dark rounded-pill px-2 py-1">In Progress</span>
@@ -86,7 +86,7 @@
 
         <!-- Column 3: Done -->
         <div class="col-12 col-lg-4">
-            <div class="card p-3 h-100" style="background: rgba(22, 34, 54, 0.7); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
+            <div class="card p-3 h-100" style="background: rgba(18, 28, 45, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.2) !important;">
                     <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-success text-white rounded-pill px-2 py-1">Done</span>

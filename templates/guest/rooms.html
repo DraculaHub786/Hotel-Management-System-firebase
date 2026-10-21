@@ -3,109 +3,186 @@
 {% block title %}Luxury Rooms & Royal Suites — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 90px; padding-bottom: 70px;">
-    <!-- Screen Header -->
-    <div class="screen-topbar">
-        <div>
-            <span style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--primary-color); font-weight: bold;">
-                Palatial Living & Suites
-            </span>
-            <h1 class="h3 fw-bold mb-0" style="color: var(--text-bright); font-family: 'Cinzel', serif;">
-                <i class="fas fa-bed text-warning me-2"></i> Accommodations & Wings
-            </h1>
+<!-- Royelle Hero Header per Reference Design -->
+<div class="royelle-hero-banner" style="position: relative; background: linear-gradient(180deg, rgba(11, 19, 32, 0.75) 0%, rgba(11, 19, 32, 0.95) 100%), url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat; padding: 75px 0 50px; text-align: center; border-bottom: 1px solid rgba(212, 175, 55, 0.2);">
+    <div class="container">
+        <!-- Breadcrumbs -->
+        <div class="royelle-breadcrumb mb-2" style="font-size: 13px; color: var(--text-secondary); letter-spacing: 1px;">
+            <a href="/" style="color: inherit; text-decoration: none;">Home</a> <span class="mx-2">&bull;</span> <span style="color: var(--primary-color);">Rooms &amp; Suites</span>
         </div>
-        <div class="topbar-actions d-flex gap-2 align-items-center">
-            <div class="screen-search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="roomSearchInput" placeholder="Search by wing, flat, suite...">
+        
+        <!-- Flourish Decoration -->
+        <div style="color: var(--primary-color); font-size: 14px; opacity: 0.85; margin-bottom: 6px;">
+            <i class="fas fa-crown"></i>
+        </div>
+        <div style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--primary-color); font-weight: 700; margin-bottom: 8px;">
+            ROOMS &amp; SUITES
+        </div>
+        <h1 style="font-family: 'Cinzel', serif; font-size: 42px; font-weight: 700; color: var(--text-bright); margin: 0;">
+            Luxury Rooms &amp; Suites
+        </h1>
+        <p style="color: #c4baa7; font-size: 14.5px; max-width: 580px; margin: 12px auto 0;">
+            Immerse yourself in palatial sanctuaries engineered for absolute serenity, adorned with artisanal Italian marble, regal velvet furnishings, and private balconies.
+        </p>
+    </div>
+</div>
+
+<div class="container" style="padding-top: 35px; padding-bottom: 70px; max-width: 1280px;">
+    <!-- Screen Filter and Search Topbar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 pb-3 mb-4 border-bottom" style="border-color: rgba(212, 175, 55, 0.18) !important;">
+        <!-- Wing & Tier Filter Pills -->
+        <div class="filter-pills d-flex flex-wrap gap-2" id="roomFilterPills">
+            <button type="button" class="filter-pill active" data-filter="all">All Sanctuaries</button>
+            <button type="button" class="filter-pill" data-filter="Heritage Wing">
+                <i class="fas fa-landmark me-1 text-warning"></i> Heritage Wing
+            </button>
+            <button type="button" class="filter-pill" data-filter="Royal Wing">
+                <i class="fas fa-crown me-1 text-warning"></i> Royal Wing
+            </button>
+            <button type="button" class="filter-pill" data-filter="Skyline Tower">
+                <i class="fas fa-building me-1 text-warning"></i> Skyline Tower
+            </button>
+            <button type="button" class="filter-pill" data-filter="Suite">
+                <i class="fas fa-gem me-1 text-warning"></i> Royal Suites &amp; Penthouses
+            </button>
+        </div>
+
+        <!-- Search & Cart Actions -->
+        <div class="d-flex align-items-center gap-2">
+            <div class="screen-search-box" style="position: relative; min-width: 250px;">
+                <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--primary-color); font-size: 12px;"></i>
+                <input type="text" id="roomSearchInput" placeholder="Search suite, wing, flat..." style="width: 100%; padding: 8px 16px 8px 36px; border-radius: 999px; background: rgba(16, 28, 46, 0.85); border: 1px solid rgba(212, 175, 55, 0.25); color: #fff9e6; font-size: 13px; outline: none;">
             </div>
-            <a href="/cart" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
-                <i class="fas fa-shopping-cart"></i> Cart 
-                <span id="cartCountBadge" style="background: #0f1a2a; color: var(--primary-color); padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">0</span>
+            <a href="/cart" class="btn btn-secondary-glass" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 8px 18px; border-radius: 999px;">
+                <i class="fas fa-shopping-cart text-warning"></i> Cart 
+                <span id="cartCountBadge" style="background: var(--primary-color); color: #0b1320; padding: 1px 7px; border-radius: 12px; font-size: 11px; font-weight: bold;">0</span>
             </a>
         </div>
     </div>
 
-    <!-- Filter Pills for Wings and Types -->
-    <div class="screen-filterbar mt-3" style="overflow-x: auto; white-space: nowrap; padding-bottom: 8px;">
-        <span style="font-size: 13px; color: var(--text-secondary); font-family: 'Cinzel', serif; margin-right: 8px;">Wing & Tier:</span>
-        <div class="filter-pills" id="roomFilterPills">
-            <button type="button" class="filter-pill active" data-filter="all">All Wings & Suites</button>
-            <button type="button" class="filter-pill" data-filter="Heritage Wing">
-                <i class="fas fa-landmark me-1 text-warning"></i> Heritage Wing (HW)
-            </button>
-            <button type="button" class="filter-pill" data-filter="Royal Wing">
-                <i class="fas fa-crown me-1 text-warning"></i> Royal Wing (RW)
-            </button>
-            <button type="button" class="filter-pill" data-filter="Skyline Tower">
-                <i class="fas fa-building me-1 text-warning"></i> Skyline Tower (ST)
-            </button>
-            <button type="button" class="filter-pill" data-filter="Suite">
-                <i class="fas fa-gem me-1 text-warning"></i> Penthouses & Suites
-            </button>
-        </div>
+    <!-- 3x3 Luxury Rooms Grid per Reference Image 1 -->
+    <div id="roomsContainer" class="row g-4">
+        <!-- Injected via JavaScript -->
     </div>
 
-    <!-- Rooms Grid -->
-    <div id="roomsContainer" class="row g-4 mt-2">
-        <!-- Injected via JS -->
+    <!-- Feature Strip Ribbon per Reference Image 1 -->
+    <div class="mt-5 rounded-pill p-3 px-4 text-center d-flex flex-wrap justify-content-around align-items-center" style="background: linear-gradient(90deg, #0e1e33 0%, #152b47 50%, #0e1e33 100%); border: 1px solid rgba(212, 175, 55, 0.35); box-shadow: 0 10px 30px rgba(0,0,0,0.35); font-size: 13.5px; font-weight: 600; color: #fff9e6; letter-spacing: 0.5px;">
+        <span class="d-flex align-items-center gap-2"><i class="fas fa-utensils text-warning"></i> Breakfast Included</span>
+        <span class="text-warning opacity-50">&bull;</span>
+        <span class="d-flex align-items-center gap-2"><i class="fas fa-swimming-pool text-warning"></i> Infinity Pool Access</span>
+        <span class="text-warning opacity-50">&bull;</span>
+        <span class="d-flex align-items-center gap-2"><i class="fas fa-wifi text-warning"></i> High Speed Gigabit Wifi</span>
+        <span class="text-warning opacity-50">&bull;</span>
+        <span class="d-flex align-items-center gap-2"><i class="fas fa-spa text-warning"></i> Spa &amp; Wellness Sanctuary</span>
+        <span class="text-warning opacity-50">&bull;</span>
+        <span class="d-flex align-items-center gap-2"><i class="fas fa-concierge-bell text-warning"></i> 24/7 Royal Butler Service</span>
+    </div>
+
+    <!-- Bottom Reservation Callout Banner per Reference Image 1 -->
+    <div class="mt-5 p-4 p-md-5 text-center rounded-4" style="background: linear-gradient(135deg, rgba(16, 28, 46, 0.9), rgba(11, 19, 32, 0.95)), url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=1200&q=80') center/cover; border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 18px 45px rgba(0,0,0,0.4);">
+        <div style="color: var(--primary-color); font-size: 14px; margin-bottom: 6px;">
+            <i class="fas fa-crown"></i>
+        </div>
+        <div style="font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--primary-color); font-weight: 700; margin-bottom: 8px;">
+            MAKE A RESERVATION
+        </div>
+        <h2 style="font-family: 'Cinzel', serif; font-size: 32px; color: var(--text-bright); margin-bottom: 12px;">
+            Book Your Stay and Enjoy Exceptional Comfort
+        </h2>
+        <p style="color: #c4baa7; font-size: 14.5px; max-width: 520px; margin: 0 auto 24px;">
+            Experience unparalleled serenity with personal concierge check-in, bespoke dining menus, and priority access to all resort amenities.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/cart" class="btn btn-gold px-4 py-2" style="font-size: 13.5px; font-weight: 700; border-radius: 999px;">
+                Proceed to Checkout <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+            <a href="/support" class="btn btn-secondary-glass px-4 py-2" style="font-size: 13.5px; border-radius: 999px;">
+                Inquire with Concierge
+            </a>
+        </div>
     </div>
 </div>
 
 <style>
-.room-card {
-    background: rgba(22, 34, 54, 0.85);
+/* Royelle Card Styling */
+.royelle-room-card {
+    background: #111e30;
     border: 1px solid rgba(212, 175, 55, 0.22);
-    border-radius: 14px;
+    border-radius: 18px;
     overflow: hidden;
-    height: 100%;
+    transition: all 0.32s ease;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.35);
     display: flex;
     flex-direction: column;
-    box-shadow: 0 6px 22px rgba(0,0,0,0.35);
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    height: 100%;
 }
-.room-card:hover {
-    transform: translateY(-3px);
+.royelle-room-card:hover {
+    transform: translateY(-6px);
     border-color: var(--primary-color);
-    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.25);
+    box-shadow: 0 18px 40px rgba(212, 175, 55, 0.22);
 }
-.room-image-box {
-    height: 220px;
-    background-size: cover;
-    background-position: center;
+.royelle-card-photo-box {
     position: relative;
+    height: 220px;
+    overflow: hidden;
+    background-color: #0b1320;
 }
-.room-flat-badge {
+.royelle-card-photo-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+.royelle-room-card:hover .royelle-card-photo-box img {
+    transform: scale(1.05);
+}
+.royelle-badge-overlap {
     position: absolute;
     bottom: 12px;
-    left: 12px;
-    background: rgba(15, 26, 42, 0.9);
-    border: 1px solid rgba(212,175,55,0.4);
-    border-radius: 6px;
-    padding: 3px 10px;
-    font-size: 11px;
-    font-weight: 600;
-    color: #fff;
-}
-.room-price-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(15, 26, 42, 0.9);
-    border: 1px solid var(--primary-color);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 13px;
-    font-weight: bold;
+    left: 14px;
+    background: rgba(11, 23, 38, 0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 175, 55, 0.38);
     color: var(--primary-color);
-}
-.amenity-chip {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 3px 8px;
     font-size: 11px;
-    color: var(--text-primary);
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.royelle-rating {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.royelle-spec-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-top: 1px solid rgba(212, 175, 55, 0.12);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.12);
+    margin: 12px 0 14px;
+    color: #bfaea2;
+    font-size: 12px;
+}
+.royelle-spec-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.royelle-spec-item i {
+    color: var(--primary-color);
+    font-size: 11px;
+}
+.royelle-spec-divider {
+    width: 1px;
+    height: 14px;
+    background: rgba(212, 175, 55, 0.2);
 }
 </style>
 
@@ -161,65 +238,90 @@ function renderRooms() {
     if (list.length === 0) {
         container.innerHTML = `
             <div class="col-12 py-5 text-center">
-                <div style="font-size: 3rem; color: var(--primary-color); opacity: 0.5;"><i class="fas fa-bed"></i></div>
-                <h4 class="mt-3 text-light">No Accommodations Found</h4>
-                <p class="text-secondary small">No rooms or suites match your selected wing or search criteria.</p>
+                <div style="font-size: 3.5rem; color: var(--primary-color); opacity: 0.6; filter: drop-shadow(0 0 15px rgba(212,175,55,0.4));">
+                    <i class="fas fa-bed"></i>
+                </div>
+                <h3 class="mt-3" style="color: var(--text-bright); font-family: 'Cinzel', serif;">No Accommodations Found</h3>
+                <p class="text-secondary small" style="max-width: 420px; margin: 0 auto 16px;">No rooms or suites match your selected wing or search criteria. Try selecting another wing.</p>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="resetRoomFilters()">Reset Filters</button>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = list.map(room => {
+    container.innerHTML = list.map((room, idx) => {
         const imgUrl = room.image_url || room.image || 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&q=80';
         const flatCode = room.flat_no || `Flat ${room.number}`;
         const wing = room.wing || 'Imperial Wing';
         const floor = room.floor ? `${room.floor}${room.floor === 1 ? 'st' : room.floor === 2 ? 'nd' : room.floor === 3 ? 'rd' : 'th'} Floor` : 'Elevated Floor';
-        const amenities = room.amenities || ['High-Speed WiFi', 'Climate Control AC', 'Smart 4K TV', 'Ensuite Jacuzzi'];
-        const view = room.view || 'Royal Courtyard View';
-
-        let statusBadge = '<span class="badge bg-success text-white" style="font-size: 11px;">Available</span>';
-        if (room.status === 'occupied') {
-            statusBadge = '<span class="badge bg-danger text-white" style="font-size: 11px;">Occupied</span>';
-        } else if (room.status === 'cleaning') {
-            statusBadge = '<span class="badge bg-warning text-dark" style="font-size: 11px;">Sanitizing</span>';
-        }
+        const isSuite = (room.type || '').toLowerCase().includes('suite');
+        const badgeLabel = isSuite ? 'Luxury Suite' : 'Luxury Room';
+        const rating = (4.8 + (idx % 3) * 0.1).toFixed(1);
+        const bedCount = isSuite ? '2 Bed' : '1 Bed';
+        const bathCount = isSuite ? '2 Bath' : '1 Bath';
+        const sqft = isSuite ? '700 sqft' : '400 sqft';
 
         return `
             <div class="col-12 col-md-6 col-lg-4">
-                <div class="room-card">
-                    <div class="room-image-box" style="background-image: url('${imgUrl}');">
-                        <div class="room-price-badge">
-                            ₹${room.price} <span style="font-size: 11px; font-weight: normal; color: #fff;">/ night</span>
-                        </div>
-                        <div class="room-flat-badge">
-                            <i class="fas fa-door-closed text-warning me-1"></i> ${flatCode}
-                        </div>
-                        <div style="position: absolute; top: 12px; left: 12px;">
-                            ${statusBadge}
+                <div class="royelle-room-card">
+                    <!-- Top Photo with Overlapping Category Badge -->
+                    <div class="royelle-card-photo-box">
+                        <img src="${imgUrl}" alt="${room.name || room.type}">
+                        <span class="royelle-badge-overlap">${badgeLabel}</span>
+                        <div style="position: absolute; top: 12px; right: 12px; background: rgba(11, 19, 32, 0.75); backdrop-filter: blur(4px); padding: 3px 8px; border-radius: 6px; font-size: 11px; color: #fff; border: 1px solid rgba(255,255,255,0.1);">
+                            ${flatCode}
                         </div>
                     </div>
-                    <div class="p-3 d-flex flex-column justify-content-between flex-grow-1">
+
+                    <!-- Card Body -->
+                    <div class="p-3 p-md-4 d-flex flex-column justify-content-between flex-grow-1">
                         <div>
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="badge bg-secondary" style="font-size: 10px; letter-spacing: 0.5px;">${wing} · ${floor}</span>
-                                <span class="small text-secondary"><i class="fas fa-users me-1"></i> Max ${room.max_guests || 2}</span>
+                            <!-- Price & Star Rating Row per Reference 1 -->
+                            <div class="d-flex justify-content-between align-items-baseline mb-2">
+                                <div>
+                                    <span style="font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: var(--primary-color);">₹${room.price.toLocaleString()}</span>
+                                    <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">/ night</span>
+                                </div>
+                                <div class="royelle-rating">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <span>${rating}</span>
+                                </div>
                             </div>
-                            <h5 class="fw-bold mb-1" style="color: var(--text-bright); font-size: 17px;">
-                                ${room.name || `${room.type} Room`}
-                            </h5>
-                            <p class="small mb-2" style="color: var(--primary-color); font-size: 12px;">
-                                <i class="fas fa-eye me-1"></i> ${view}
-                            </p>
-                            <div class="d-flex flex-wrap gap-1 mb-3">
-                                ${amenities.slice(0, 4).map(a => `<span class="amenity-chip">${a}</span>`).join('')}
+
+                            <!-- Room Title -->
+                            <h4 class="mb-1" style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: var(--text-bright);">
+                                ${room.name || `${room.type} Sanctuary`}
+                            </h4>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 8px;">
+                                ${wing} &bull; ${floor}
+                            </div>
+
+                            <!-- Amenity Spec Row per Reference 1: Bed | Bath | Sqft -->
+                            <div class="royelle-spec-row">
+                                <div class="royelle-spec-item">
+                                    <i class="fas fa-bed"></i>
+                                    <span>${bedCount}</span>
+                                </div>
+                                <div class="royelle-spec-divider"></div>
+                                <div class="royelle-spec-item">
+                                    <i class="fas fa-bath"></i>
+                                    <span>${bathCount}</span>
+                                </div>
+                                <div class="royelle-spec-divider"></div>
+                                <div class="royelle-spec-item">
+                                    <i class="fas fa-ruler-combined"></i>
+                                    <span>${sqft}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="d-flex gap-2 pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
-                            <a href="/rooms/${room.id}" class="btn btn-secondary flex-fill text-center" style="font-size: 12px; padding: 8px 12px;">
-                                Details
+
+                        <!-- Card Action Buttons -->
+                        <div class="d-flex gap-2 pt-2">
+                            <a href="/rooms/${room.id}" class="btn btn-secondary-glass flex-fill text-center" style="font-size: 12px; padding: 9px 12px; border-radius: 999px;">
+                                <i class="fas fa-info-circle me-1"></i> Details
                             </a>
-                            <button type="button" class="btn btn-primary flex-fill fw-bold" onclick="bookRoomDirectly('${room.id}', '${room.name || room.type}', ${room.price}, '${room.number}')" style="font-size: 12px; padding: 8px 12px;">
-                                <i class="fas fa-cart-plus me-1"></i> Reserve
+                            <button type="button" class="btn btn-gold flex-fill fw-bold" onclick="bookRoomDirectly('${room.id}', '${(room.name || room.type).replace(/'/g, "\\'")}', ${room.price}, '${room.number}')" style="font-size: 12px; padding: 9px 14px; border-radius: 999px;">
+                                <i class="fas fa-calendar-check me-1"></i> Reserve
                             </button>
                         </div>
                     </div>
@@ -227,6 +329,14 @@ function renderRooms() {
             </div>
         `;
     }).join('');
+}
+
+function resetRoomFilters() {
+    activeFilter = 'all';
+    document.querySelectorAll('#roomFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+    document.querySelector('#roomFilterPills .filter-pill[data-filter="all"]').classList.add('active');
+    document.getElementById('roomSearchInput').value = '';
+    renderRooms();
 }
 
 function bookRoomDirectly(id, name, price, number) {
@@ -249,7 +359,7 @@ function bookRoomDirectly(id, name, price, number) {
     updateCartBadge();
 
     if (window.Toast) {
-        Toast.success(`${name} added to cart! Check-in: ${checkIn}`);
+        Toast.success(`${name} added to cart! Proceed to checkout.`);
     } else {
         alert(`${name} (Room ${number}) added to cart! Proceed to checkout.`);
     }

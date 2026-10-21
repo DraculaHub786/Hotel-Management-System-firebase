@@ -12,13 +12,13 @@
             <span class="badge bg-warning text-dark rounded-pill ms-2" id="tableStatsBadge" style="font-size: 12px; font-family: 'Raleway', sans-serif;">26 Tables</span>
         </div>
         <div class="topbar-actions d-flex gap-2">
-            <button type="button" class="btn btn-secondary" onclick="fetchTables()" style="font-size: 13px; padding: 8px 16px;">
+            <button type="button" class="btn btn-secondary-glass" onclick="fetchTables()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh Layout
             </button>
-            <a href="/staff/kitchen" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/kitchen" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-fire me-1 text-warning"></i> Kitchen KDS
             </a>
-            <a href="/staff/room-service" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/room-service" class="btn btn-gold" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-concierge-bell me-1"></i> Waiter Pass & Orders
             </a>
         </div>
@@ -234,46 +234,46 @@ function renderTables() {
         let actionBtn = '';
 
         if (status === 'available') {
-            statusBadge = '<span class="badge bg-success text-white">Available</span>';
+            statusBadge = '<span class="badge rounded-pill bg-success text-white" style="font-size: 11px; padding: 4px 10px;">Available</span>';
             actionBtn = `
-                <button class="btn btn-sm btn-outline-primary w-100" onclick="seatWalkin('${tbl.id}', '${tbl.table_no}')">
+                <button class="btn btn-gold w-100 fw-bold" onclick="seatWalkin('${tbl.id}', '${tbl.table_no}')" style="font-size: 12px; padding: 7px 12px;">
                     <i class="fas fa-user-plus me-1"></i> Seat Guests
                 </button>
             `;
         } else if (status === 'occupied') {
             statusBadge = hasReadyOrder 
-                ? '<span class="badge bg-success text-white"><i class="fas fa-bell me-1"></i>Food Cooked!</span>' 
-                : '<span class="badge bg-primary text-white">Dining In-Progress</span>';
+                ? '<span class="badge rounded-pill bg-success text-white" style="font-size: 11px; padding: 4px 10px;"><i class="fas fa-bell me-1"></i>Food Cooked!</span>' 
+                : '<span class="badge rounded-pill bg-primary text-white" style="font-size: 11px; padding: 4px 10px;">Dining In-Progress</span>';
             
             actionBtn = `
                 ${hasReadyOrder ? `
-                    <button class="btn btn-sm btn-success w-100 fw-bold mb-2" onclick="deliverOrder('${hasReadyOrder.id || hasReadyOrder.order_no}', '${tbl.table_no}')">
+                    <button class="btn btn-gold w-100 fw-bold mb-2" onclick="deliverOrder('${hasReadyOrder.id || hasReadyOrder.order_no}', '${tbl.table_no}')" style="font-size: 12px; padding: 7px 12px;">
                         <i class="fas fa-concierge-bell me-1"></i> Give to Table ${tbl.table_no} (Served)
                     </button>
                 ` : `
-                    <button class="btn btn-sm btn-outline-warning w-100 mb-2" onclick="setTableStatus('${tbl.id}', 'bill_pending', 'Bill Requested')">
+                    <button class="btn btn-secondary-glass w-100 mb-2" onclick="setTableStatus('${tbl.id}', 'bill_pending', 'Bill Requested')" style="font-size: 12px; padding: 6px 12px; border-color: #fbbc05; color: #fbbc05;">
                         <i class="fas fa-file-invoice-dollar me-1"></i> Request Bill
                     </button>
                 `}
-                <button class="btn btn-sm btn-outline-danger w-100" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')">
+                <button class="btn btn-secondary-glass w-100" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')" style="font-size: 12px; padding: 6px 12px; border-color: rgba(234,67,53,0.4); color: #ff6b6b;">
                     <i class="fas fa-sign-out-alt me-1"></i> Guest Leaving &rarr; Clean Table
                 </button>
             `;
         } else if (status === 'bill_pending') {
-            statusBadge = '<span class="badge bg-warning text-dark fw-bold">Bill Pending</span>';
+            statusBadge = '<span class="badge rounded-pill bg-warning text-dark fw-bold" style="font-size: 11px; padding: 4px 10px;">Bill Pending</span>';
             actionBtn = `
-                <button class="btn btn-sm btn-warning w-100 fw-bold text-dark mb-2" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')">
+                <button class="btn btn-gold w-100 fw-bold mb-2" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')" style="font-size: 12px; padding: 7px 12px;">
                     <i class="fas fa-receipt me-1"></i> Settle &amp; Clean Table
                 </button>
-                <button class="btn btn-sm btn-outline-danger w-100" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')">
+                <button class="btn btn-secondary-glass w-100" onclick="triggerTableTurnover('${tbl.id}', '${tbl.table_no}', '${tbl.guest_name || 'Guest'}')" style="font-size: 12px; padding: 6px 12px; border-color: rgba(234,67,53,0.4); color: #ff6b6b;">
                     <i class="fas fa-sign-out-alt me-1"></i> Guest Leaving &rarr; Clean Table
                 </button>
             `;
         } else if (status === 'busing') {
-            statusBadge = '<span class="badge bg-danger text-white"><i class="fas fa-broom me-1"></i>Cleaning Staff Notified</span>';
+            statusBadge = '<span class="badge rounded-pill bg-danger text-white" style="font-size: 11px; padding: 4px 10px;"><i class="fas fa-broom me-1"></i>Cleaning Notified</span>';
             actionBtn = `
                 <div class="small text-secondary mb-2 text-center"><i class="fas fa-clock me-1 text-warning"></i> Cleaning in progress...</div>
-                <button class="btn btn-sm btn-success w-100 fw-bold" onclick="setTableStatus('${tbl.id}', 'available', 'Cleaned & Reset')">
+                <button class="btn btn-gold w-100 fw-bold" onclick="setTableStatus('${tbl.id}', 'available', 'Cleaned & Reset')" style="font-size: 12px; padding: 7px 12px;">
                     <i class="fas fa-check-circle me-1"></i> Mark Clean &amp; Ready
                 </button>
             `;

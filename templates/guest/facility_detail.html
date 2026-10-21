@@ -74,22 +74,22 @@
 {% endblock %}
 
 {% block content %}
-<div class="container" style="padding-top: 85px; padding-bottom: 70px;">
+<div class="container py-4" style="max-width: 1280px;">
     
     <!-- Top Navigation Bar -->
-    <div class="facility-detail-header">
+    <div class="facility-detail-header d-flex justify-content-between align-items-center mb-4">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <a href="/facilities" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
-                <i class="fas fa-arrow-left me-1"></i> All Facilities & Experiences
+            <a href="/facilities" class="btn btn-secondary-glass" style="font-size: 0.82rem; padding: 8px 18px;">
+                <i class="fas fa-arrow-left me-1"></i> All Facilities &amp; Experiences
             </a>
             <span style="color: var(--text-secondary); font-size: 13px;">/</span>
-            <span style="color: #ffd700; font-size: 13px; font-weight: 500;">{{ facility.category or 'Wellness' }}</span>
+            <span style="color: var(--primary-color); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">{{ facility.category or 'Wellness' }}</span>
         </div>
         <div style="display: flex; gap: 10px;">
-            <a href="/my-bookings" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/my-bookings" class="btn btn-secondary-glass" style="font-size: 0.82rem; padding: 8px 18px;">
                 <i class="fas fa-calendar-check me-1"></i> My Bookings
             </a>
-            <a href="/cart" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/cart" class="btn btn-secondary-glass" style="font-size: 0.82rem; padding: 8px 18px;">
                 <i class="fas fa-shopping-cart me-1"></i> View Cart
             </a>
         </div>
@@ -239,10 +239,10 @@
 
                 <!-- Action Buttons -->
                 <div style="display: flex; flex-direction: column; gap: 12px;">
-                    <button type="button" class="btn btn-primary" id="btnDetailInstantBook" style="padding: 12px; font-size: 14px;" onclick="submitDetailBooking()">
+                    <button type="button" class="btn btn-gold w-100 py-3" id="btnDetailInstantBook" style="font-weight: 700; font-size: 14px; letter-spacing: 0.5px;" onclick="submitDetailBooking()">
                         <i class="fas fa-check-circle me-1"></i> Instant Confirm Reservation
                     </button>
-                    <button type="button" class="btn btn-secondary" style="padding: 12px; font-size: 14px;" onclick="addDetailToCart()">
+                    <button type="button" class="btn btn-secondary-glass w-100 py-2" style="font-size: 13px;" onclick="addDetailToCart()">
                         <i class="fas fa-cart-plus me-1"></i> Add Experience to Cart
                     </button>
                 </div>

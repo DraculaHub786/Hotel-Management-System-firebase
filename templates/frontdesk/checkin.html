@@ -12,10 +12,10 @@
       <p class="text-secondary small mb-0">Process expected arrivals, verify government ID, and assign keycards.</p>
     </div>
     <div class="d-flex gap-2">
-      <a href="/staff/front-desk" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+      <a href="/staff/front-desk" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
         <i class="fas fa-concierge-bell me-1"></i> Arrivals Board
       </a>
-      <a href="/frontdesk/walkin" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+      <a href="/frontdesk/walkin" class="btn btn-gold" style="font-size: 13px; padding: 8px 16px;">
         <i class="fas fa-plus me-1"></i> New Walk-in
       </a>
     </div>
@@ -46,16 +46,16 @@
                 <td><span class="badge bg-secondary text-warning">Room {{ b.room_number or '101' }}</span></td>
                 <td>
                   {% if b.status == 'checked_in' %}
-                  <span class="badge bg-success">In House</span>
+                  <span class="badge bg-success rounded-pill px-2 py-1">In House</span>
                   {% elif b.status == 'confirmed' %}
-                  <span class="badge bg-primary">Confirmed</span>
+                  <span class="badge bg-primary rounded-pill px-2 py-1">Confirmed</span>
                   {% else %}
-                  <span class="badge bg-secondary">{{ b.status or 'Pending' }}</span>
+                  <span class="badge bg-secondary rounded-pill px-2 py-1">{{ b.status or 'Pending' }}</span>
                   {% endif %}
                 </td>
                 <td style="text-align: right;">
                   {% if b.status != 'checked_in' %}
-                  <button type="button" class="btn btn-primary btn-sm px-3" onclick="performCheckin('{{ b.id or b.booking_no }}', '{{ b.room_number or '101' }}')">
+                  <button type="button" class="btn btn-gold btn-sm px-3" onclick="performCheckin('{{ b.id or b.booking_no }}', '{{ b.room_number or '101' }}')">
                     <i class="fas fa-key me-1"></i> Check In
                   </button>
                   {% else %}
@@ -94,7 +94,7 @@
             <label class="form-label small fw-semibold">Check-in Notes (Optional)</label>
             <textarea id="manualNotes" class="form-control" rows="2" placeholder="Keycard issued, luggage in room..."></textarea>
           </div>
-          <button type="submit" class="btn btn-primary w-100 py-2">
+          <button type="submit" class="btn btn-gold w-100 py-2">
             <i class="fas fa-check-circle me-1"></i> Complete Express Check-In
           </button>
         </form>

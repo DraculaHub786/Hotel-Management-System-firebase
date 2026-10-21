@@ -12,10 +12,10 @@
             <span class="badge bg-warning text-dark rounded-pill ms-2" id="totalActiveOrders" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Active</span>
         </div>
         <div class="topbar-actions">
-            <button type="button" class="btn btn-secondary" onclick="fetchOrders()" style="font-size: 13px; padding: 8px 16px;">
+            <button type="button" class="btn btn-secondary-glass" onclick="fetchOrders()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/staff/kitchen" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/kitchen" class="btn btn-gold" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-utensils me-1"></i> Kitchen KDS
             </a>
         </div>
@@ -187,13 +187,13 @@ function renderOrders() {
         let quickActionHtml = '';
         if (order.status === 'ready') {
             quickActionHtml = `
-                <button class="btn btn-sm btn-warning w-100 fw-bold text-dark mt-2" onclick="advanceOrderStatus('${oid}', 'delivering', false)">
+                <button class="btn btn-gold w-100 fw-bold mt-2" onclick="advanceOrderStatus('${oid}', 'delivering', false)" style="font-size: 12px; padding: 7px 12px;">
                     <i class="fas fa-walking me-1"></i> Pick Up from Pass & Deliver
                 </button>
             `;
         } else if (order.status === 'delivering') {
             quickActionHtml = `
-                <button class="btn btn-sm btn-success w-100 fw-bold mt-2" onclick="advanceOrderStatus('${oid}', 'delivered', ${order.require_otp ? 'true' : 'false'})">
+                <button class="btn btn-success w-100 fw-bold mt-2" onclick="advanceOrderStatus('${oid}', 'delivered', ${order.require_otp ? 'true' : 'false'})" style="font-size: 12px; padding: 7px 12px;">
                     <i class="fas fa-check-double me-1"></i> Confirm Served / Delivered
                 </button>
             `;
@@ -229,7 +229,7 @@ function renderOrders() {
                         </div>
                         <div class="d-flex gap-2 align-items-center">
                             ${order.require_otp ? '<span class="badge bg-danger text-white d-flex align-items-center" title="Requires Guest OTP"><i class="fas fa-shield-alt me-1"></i>OTP</span>' : ''}
-                            <a href="/staff/room-service/orders/${oid}" class="btn btn-sm btn-secondary" style="font-size: 12px; padding: 4px 10px;">
+                            <a href="/staff/room-service/orders/${oid}" class="btn btn-secondary-glass btn-sm" style="font-size: 11px; padding: 4px 10px;">
                                 Details
                             </a>
                         </div>

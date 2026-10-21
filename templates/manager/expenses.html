@@ -1,68 +1,319 @@
 {% extends "base.html" %}
 
-{% block title %}Department Expense Approvals — General Manager{% endblock %}
+{% block title %}Department Expense Approvals — General Manager — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="app-shell">
-  {% include "components/sidebar.html" %}
-  <div class="app-main">
-    {% include "components/topbar.html" %}
-
-    <main class="app-content">
-      <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding: 25px 20px 60px;">
+    <!-- Topbar Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 pb-3 border-bottom" style="border-color: rgba(212, 175, 55, 0.18) !important;">
         <div>
-          <h1 class="h3 fw-bold mb-1">Department Expense Approvals (SCR-72)</h1>
-          <p class="text-secondary small mb-0">Review departmental petty cash, procurement requests, and emergency facility spends.</p>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-1" style="background: rgba(212, 175, 55, 0.12); border: 1px solid rgba(212, 175, 55, 0.3); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--primary-color); font-weight: 700;">
+                <i class="fas fa-file-invoice-dollar"></i> Financial Governance &bull; SCR-72
+            </div>
+            <h1 style="font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; color: var(--text-bright); margin: 0;">
+                Department Expense Approvals
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0 0;">
+                Executive review of departmental petty cash, procurement vouchers, and emergency facility repair allocations.
+            </p>
         </div>
-      </div>
 
-      <div class="nh-card">
-        <h3 class="nh-card-title mb-3">Requisitions Pending Executive Sign-Off</h3>
-        <div class="nh-table-container">
-          <table class="nh-table">
-            <thead>
-              <tr>
-                <th>Requisition #</th>
-                <th>Department</th>
-                <th>Description / Purpose</th>
-                <th>Requested Amount (₹)</th>
-                <th>Status</th>
-                <th>Approval Decision</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for exp in expenses %}
-              <tr>
-                <td class="fw-bold">{{ exp.expense_id }}</td>
-                <td><span class="badge-pill priority-medium">{{ exp.department }}</span></td>
-                <td>{{ exp.item }}</td>
-                <td class="fw-bold text-danger">₹{{ exp.amount }}</td>
-                <td>
-                  {% if exp.status == 'approved' %}
-                  <span class="badge-pill status-completed">Approved</span>
-                  {% else %}
-                  <span class="badge-pill status-ready">Pending Approval</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if exp.status != 'approved' %}
-                  <button class="btn-nh btn-nh-success btn-nh-sm" onclick="showToast('Expense voucher approved and routed to accounts!', 'success')">
-                    <i class="fas fa-check me-1"></i> Approve
-                  </button>
-                  <button class="btn-nh btn-nh-danger btn-nh-sm ms-1" onclick="showToast('Requisition rejected.', 'info')">
-                    Reject
-                  </button>
-                  {% else %}
-                  <span class="text-success small fw-semibold"><i class="fas fa-file-invoice"></i> Dispatched to Bank</span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-secondary-glass btn-sm" onclick="showNewRequisitionModal()" style="font-size: 12.5px; padding: 8px 18px; border-radius: 999px;">
+                <i class="fas fa-plus me-1 text-warning"></i> New Requisition
+            </button>
+            <button type="button" class="btn btn-gold btn-sm" onclick="alert('Exporting monthly approved expense voucher report as PDF...')" style="font-size: 12.5px; padding: 8px 18px; border-radius: 999px;">
+                <i class="fas fa-file-pdf me-1"></i> Export Vouchers
+            </button>
         </div>
-      </div>
-    </main>
-  </div>
+    </div>
+
+    <!-- 4 KPI Expense Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- KPI 1: Total Requisitioned -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="p-4 rounded-4 h-100" style="background: #111e30; border: 1px solid rgba(212, 175, 55, 0.22); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span style="font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Total Requisitioned</span>
+                    <i class="fas fa-receipt text-warning" style="font-size: 14px;"></i>
+                </div>
+                <div style="font-family: 'Cinzel', serif; font-size: 28px; font-weight: 800; color: var(--text-bright);">
+                    ₹19,000
+                </div>
+                <div class="small mt-1 text-secondary" style="font-size: 11.5px;">
+                    3 Departmental vouchers filed
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 2: Pending Approval -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="p-4 rounded-4 h-100" style="background: #111e30; border: 1px solid rgba(245, 158, 11, 0.35); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span style="font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Pending Sign-Off</span>
+                    <span class="pulse-dot" style="background: #f59e0b; box-shadow: 0 0 6px #f59e0b;"></span>
+                </div>
+                <div style="font-family: 'Cinzel', serif; font-size: 28px; font-weight: 800; color: #f59e0b;" id="pendingSum">
+                    ₹10,500
+                </div>
+                <div class="small mt-1" style="color: #f59e0b; font-size: 11.5px;">
+                    2 Vouchers awaiting GM signature
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 3: Approved & Dispatched -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="p-4 rounded-4 h-100" style="background: #111e30; border: 1px solid rgba(46, 229, 157, 0.35); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span style="font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Approved &amp; Dispatched</span>
+                    <i class="fas fa-check-circle text-success" style="font-size: 14px;"></i>
+                </div>
+                <div style="font-family: 'Cinzel', serif; font-size: 28px; font-weight: 800; color: #2ee59d;">
+                    ₹8,500
+                </div>
+                <div class="small mt-1" style="color: #2ee59d; font-size: 11.5px;">
+                    Routed to accounts disbursement
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 4: Monthly Budget Left -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="p-4 rounded-4 h-100" style="background: #111e30; border: 1px solid rgba(212, 175, 55, 0.22); box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span style="font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Petty Budget Remaining</span>
+                    <i class="fas fa-wallet text-info" style="font-size: 14px;"></i>
+                </div>
+                <div style="font-family: 'Cinzel', serif; font-size: 28px; font-weight: 800; color: var(--primary-color);">
+                    ₹31,000
+                </div>
+                <div class="small mt-1 text-secondary" style="font-size: 11.5px;">
+                    62% of ₹50,000 cap available
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Budget Progress Overview -->
+    <div class="p-4 rounded-4 mb-4" style="background: #111e30; border: 1px solid rgba(212, 175, 55, 0.22); box-shadow: 0 12px 35px rgba(0,0,0,0.4);">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 style="font-family: 'Cinzel', serif; font-size: 16px; color: var(--text-bright); margin: 0;">
+                <i class="fas fa-chart-bar text-warning me-2"></i> Departmental Petty Cash Allocation Trajectory
+            </h3>
+            <span style="font-size: 12px; color: var(--text-secondary);">Cycle: October 2026</span>
+        </div>
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <div class="d-flex justify-content-between small mb-1" style="color: #cbd5e0;">
+                    <span><i class="fas fa-utensils text-warning me-1"></i> Kitchen &amp; F&amp;B</span>
+                    <strong>₹4,200 / ₹15,000 (28%)</strong>
+                </div>
+                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px;">
+                    <div class="progress-bar" style="width: 28%; background: var(--primary-color); border-radius: 999px;"></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="d-flex justify-content-between small mb-1" style="color: #cbd5e0;">
+                    <span><i class="fas fa-tools text-info me-1"></i> Engineering &amp; Maintenance</span>
+                    <strong>₹8,500 / ₹20,000 (42.5%)</strong>
+                </div>
+                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px;">
+                    <div class="progress-bar" style="width: 42.5%; background: #38bdf8; border-radius: 999px;"></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="d-flex justify-content-between small mb-1" style="color: #cbd5e0;">
+                    <span><i class="fas fa-broom text-success me-1"></i> Housekeeping &amp; Laundry</span>
+                    <strong>₹6,300 / ₹15,000 (42%)</strong>
+                </div>
+                <div class="progress" style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 999px;">
+                    <div class="progress-bar" style="width: 42%; background: #2ee59d; border-radius: 999px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Pills Bar -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="filter-pill active" onclick="filterVouchers('all', this)">All Requisitions</button>
+        <button type="button" class="filter-pill" onclick="filterVouchers('pending', this)"><i class="fas fa-clock text-warning me-1"></i> Pending Approval</button>
+        <button type="button" class="filter-pill" onclick="filterVouchers('approved', this)"><i class="fas fa-check text-success me-1"></i> Approved Vouchers</button>
+        <button type="button" class="filter-pill" onclick="filterVouchers('Kitchen', this)"><i class="fas fa-utensils me-1"></i> Kitchen</button>
+        <button type="button" class="filter-pill" onclick="filterVouchers('Maintenance', this)"><i class="fas fa-tools me-1"></i> Maintenance</button>
+    </div>
+
+    <!-- Requisitions Luxury Table Card -->
+    <div class="p-4 rounded-4" style="background: #111e30; border: 1px solid rgba(212, 175, 55, 0.22); box-shadow: 0 12px 35px rgba(0,0,0,0.4);">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.15) !important;">
+            <h3 style="font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-bright); margin: 0;">
+                <i class="fas fa-stamp text-warning me-2"></i> Requisitions Pending Executive Sign-Off
+            </h3>
+            <span class="badge bg-secondary rounded-pill px-3 py-1" style="font-size: 11px;">Dual-Authorized</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-borderless align-middle m-0" style="color: #e6dfd3;">
+                <thead style="border-bottom: 1px solid rgba(212, 175, 55, 0.2); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary);">
+                    <tr>
+                        <th style="padding-left: 12px;">Voucher #</th>
+                        <th>Department</th>
+                        <th>Item &amp; Purpose Description</th>
+                        <th>Requested Amount</th>
+                        <th>Status</th>
+                        <th class="text-end" style="padding-right: 12px;">Executive Decision</th>
+                    </tr>
+                </thead>
+                <tbody id="vouchersTableBody">
+                    {% for exp in expenses %}
+                    <tr class="voucher-row" data-status="{{ exp.status }}" data-dept="{{ exp.department }}" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); transition: background 0.2s;">
+                        <td style="padding-left: 12px;">
+                            <span class="badge" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-color); color: var(--primary-color); font-weight: 700; font-size: 11px; padding: 4px 8px; border-radius: 6px;">
+                                {{ exp.expense_id }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge rounded-pill px-3 py-1" style="background: rgba(16, 28, 46, 0.9); border: 1px solid rgba(212, 175, 55, 0.25); color: #fff9e6; font-size: 11.5px;">
+                                {% if exp.department == 'Kitchen' %}<i class="fas fa-utensils text-warning me-1"></i>{% elif exp.department == 'Maintenance' %}<i class="fas fa-tools text-info me-1"></i>{% else %}<i class="fas fa-broom text-success me-1"></i>{% endif %}
+                                {{ exp.department }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: #fff9e6; font-size: 13.5px;">{{ exp.item }}</div>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Verified Vendor Invoice Attached &bull; Tax Receipt on file</div>
+                        </td>
+                        <td>
+                            <span style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: var(--primary-color);">
+                                ₹{{ exp.amount }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if exp.status == 'approved' %}
+                            <span class="badge rounded-pill px-3 py-1" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 11px;">
+                                <i class="fas fa-check-circle me-1"></i> Approved
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill px-3 py-1" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px;">
+                                <span class="pulse-dot" style="background: #f59e0b; box-shadow: 0 0 6px #f59e0b;"></span> Pending Approval
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end" style="padding-right: 12px;">
+                            {% if exp.status != 'approved' %}
+                            <button type="button" class="btn btn-gold btn-sm px-3 py-1 fw-bold me-1" onclick="approveVoucher(this, '{{ exp.expense_id }}')" style="font-size: 11.5px; border-radius: 999px;">
+                                <i class="fas fa-check me-1"></i> Approve
+                            </button>
+                            <button type="button" class="btn btn-secondary-glass btn-sm px-3 py-1" onclick="rejectVoucher(this, '{{ exp.expense_id }}')" style="font-size: 11.5px; border-radius: 999px;">
+                                Reject
+                            </button>
+                            {% else %}
+                            <span class="text-success small fw-semibold" style="font-size: 12px;">
+                                <i class="fas fa-file-invoice text-success me-1"></i> Dispatched to Bank
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script>
+function filterVouchers(filter, btn) {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const rows = document.querySelectorAll('#vouchersTableBody .voucher-row');
+    rows.forEach(r => {
+        if (filter === 'all') {
+            r.style.display = '';
+        } else if (filter === 'pending' || filter === 'approved') {
+            r.style.display = r.dataset.status === filter ? '' : 'none';
+        } else {
+            r.style.display = r.dataset.dept === filter ? '' : 'none';
+        }
+    });
+}
+
+function approveVoucher(btn, id) {
+    const row = btn.closest('tr');
+    row.dataset.status = 'approved';
+    const tdStatus = row.children[4];
+    const tdAction = row.children[5];
+
+    tdStatus.innerHTML = '<span class="badge rounded-pill px-3 py-1" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 11px;"><i class="fas fa-check-circle me-1"></i> Approved</span>';
+    tdAction.innerHTML = '<span class="text-success small fw-semibold" style="font-size: 12px;"><i class="fas fa-file-invoice text-success me-1"></i> Dispatched to Bank</span>';
+
+    if (window.AppConventions && AppConventions.Toast) {
+        AppConventions.Toast.success(`Expense voucher ${id} approved & routed to Accounts.`);
+    } else {
+        alert(`Expense voucher ${id} approved & routed to Accounts.`);
+    }
+}
+
+function rejectVoucher(btn, id) {
+    if (confirm(`Are you sure you want to reject requisition voucher ${id}?`)) {
+        const row = btn.closest('tr');
+        row.style.opacity = '0.4';
+        const tdStatus = row.children[4];
+        tdStatus.innerHTML = '<span class="badge bg-danger rounded-pill px-3 py-1" style="font-size: 11px;">Rejected</span>';
+        btn.closest('td').innerHTML = '<span class="text-danger small">Declined by GM</span>';
+    }
+}
+
+function showNewRequisitionModal() {
+    const dept = prompt("Department (Kitchen / Maintenance / Housekeeping):", "Maintenance");
+    if (!dept) return;
+    const item = prompt("Requisition description:", "Spare HVAC Filters");
+    if (!item) return;
+    const amount = prompt("Requested Amount (₹):", "3500");
+    if (!amount) return;
+
+    const tbody = document.getElementById('vouchersTableBody');
+    const newId = `EXP-${Math.floor(100 + Math.random() * 900)}`;
+    const tr = document.createElement('tr');
+    tr.className = 'voucher-row';
+    tr.dataset.status = 'pending';
+    tr.dataset.dept = dept;
+    tr.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
+    tr.innerHTML = `
+        <td style="padding-left: 12px;">
+            <span class="badge" style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--primary-color); color: var(--primary-color); font-weight: 700; font-size: 11px; padding: 4px 8px; border-radius: 6px;">
+                ${newId}
+            </span>
+        </td>
+        <td>
+            <span class="badge rounded-pill px-3 py-1" style="background: rgba(16, 28, 46, 0.9); border: 1px solid rgba(212, 175, 55, 0.25); color: #fff9e6; font-size: 11.5px;">
+                ${dept}
+            </span>
+        </td>
+        <td>
+            <div style="font-weight: 600; color: #fff9e6; font-size: 13.5px;">${item}</div>
+            <div style="font-size: 11px; color: var(--text-secondary);">Direct Requisition &bull; Pending Verification</div>
+        </td>
+        <td>
+            <span style="font-family: 'Cinzel', serif; font-size: 16px; font-weight: 700; color: var(--primary-color);">
+                ₹${Number(amount).toLocaleString()}
+            </span>
+        </td>
+        <td>
+            <span class="badge rounded-pill px-3 py-1" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px;">
+                <span class="pulse-dot" style="background: #f59e0b; box-shadow: 0 0 6px #f59e0b;"></span> Pending Approval
+            </span>
+        </td>
+        <td class="text-end" style="padding-right: 12px;">
+            <button type="button" class="btn btn-gold btn-sm px-3 py-1 fw-bold me-1" onclick="approveVoucher(this, '${newId}')" style="font-size: 11.5px; border-radius: 999px;">
+                <i class="fas fa-check me-1"></i> Approve
+            </button>
+            <button type="button" class="btn btn-secondary-glass btn-sm px-3 py-1" onclick="rejectVoucher(this, '${newId}')" style="font-size: 11.5px; border-radius: 999px;">
+                Reject
+            </button>
+        </td>
+    `;
+    tbody.prepend(tr);
+    alert(`Requisition ${newId} logged successfully and presented for sign-off!`);
+}
+</script>
 {% endblock %}

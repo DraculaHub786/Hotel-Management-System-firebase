@@ -1,86 +1,217 @@
 {% extends "base.html" %}
 
-{% block title %}Incident & Maintenance Rollup - Admin - Nur-E-Haya{% endblock %}
+{% block title %}Incident & Maintenance Rollup — Admin — Nur-e-Haya Luxury Hotel{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+<div class="screen-shell" style="max-width: 1400px; margin: 0 auto; padding: 25px 20px 60px;">
+    <!-- Topbar Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 pb-3 border-bottom" style="border-color: rgba(212, 175, 55, 0.18) !important;">
         <div>
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-danger-subtle text-danger fw-medium px-2 py-1 rounded-pill">Risk & Operations</span>
-                <span class="badge bg-secondary-subtle text-secondary px-2 py-1 rounded-pill">Executive Rollup</span>
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-1" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: #ff6b6b; font-weight: 700;">
+                <i class="fas fa-shield-alt"></i> Risk &amp; Operations Executive Rollup
             </div>
-            <h2 class="h3 fw-bold mt-1 mb-0">Incident & Maintenance Rollup</h2>
-            <p class="text-muted small mb-0">Consolidated overview of hotel physical security breaches, alarms, and engineering faults</p>
+            <h1 style="font-family: 'Cinzel', serif; font-size: 28px; font-weight: 700; color: var(--text-bright); margin: 0;">
+                Incident &amp; Maintenance Rollup
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 13px; margin: 4px 0 0;">
+                Consolidated executive overview of physical security incidents, perimeter alarms, and engineering work orders.
+            </p>
         </div>
+
         <div class="d-flex align-items-center gap-2">
-            <a href="/staff/security" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                <i class="fas fa-shield-alt me-1"></i> Security Log
+            <a href="/staff/security" class="btn btn-secondary-glass btn-sm" style="font-size: 12.5px; padding: 8px 18px; border-radius: 999px;">
+                <i class="fas fa-shield-alt text-danger me-1"></i> Security Log
             </a>
-            <a href="/staff/maintenance" class="btn btn-outline-warning btn-sm rounded-pill px-3 text-dark">
-                <i class="fas fa-tools me-1"></i> Maintenance
+            <a href="/staff/maintenance" class="btn btn-secondary-glass btn-sm" style="font-size: 12.5px; padding: 8px 18px; border-radius: 999px;">
+                <i class="fas fa-tools text-warning me-1"></i> Maintenance Desk
             </a>
+            <button type="button" class="btn btn-gold btn-sm" onclick="location.reload()" style="font-size: 12.5px; padding: 8px 18px; border-radius: 999px;">
+                <i class="fas fa-sync-alt me-1"></i> Refresh Feed
+            </button>
         </div>
     </div>
 
-    <!-- Summary Metrics -->
+    <!-- 3 Executive Risk KPI Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
-                <div class="text-muted small fw-semibold">Critical Security Alerts</div>
-                <div class="fs-4 fw-bold text-danger mt-1">0 Active</div>
-                <div class="small text-muted">Zero critical perimeter alarms</div>
+        <!-- Critical Security Alerts -->
+        <div class="col-12 col-md-4">
+            <div class="p-4 rounded-4 h-100" style="background: #111e30; border: 1px solid rgba(239, 68, 68, 0.35); border-left: 4px solid #ef4444; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Critical Security Alerts</span>
+                    <span class="pulse-dot" style="background: #ef4444; box-shadow: 0 0 8px #ef4444;"></span>
+                </div>
+                <div style="font-family: 'Cinzel', serif; font-size: 32px; font-weight: 800; color: #ff6b6b;" id="activeCriticalCount">
+                    0 Active
+                </div>
+                <div class="small mt-1" style="color: #cbd5e0; font-size: 12px;">
+                    <i class="fas fa-check-circle text-success me-1"></i> Zero perimeter breaches or physical alarms active
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-warning">
-                <div class="text-muted small fw-semibold">Open Maintenance Tickets</div>
-                <div class="fs-4 fw-bold text-warning-emphasis mt-1">2 Pending</div>
-                <div class="small text-muted">HVAC and plumbing triage active</div>
+
+        <!-- Open Maintenance Tickets -->
+        <div class="col-12 col-md-4">
+            <div class="p-4 rounded-4 h-100" style="background: #111e30; border: 1px solid rgba(245, 158, 11, 0.35); border-left: 4px solid #f59e0b; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Pending Maintenance</span>
+                    <i class="fas fa-wrench text-warning"></i>
+                </div>
+                <div style="font-family: 'Cinzel', serif; font-size: 32px; font-weight: 800; color: #f59e0b;">
+                    2 In Progress
+                </div>
+                <div class="small mt-1" style="color: #cbd5e0; font-size: 12px;">
+                    <i class="fas fa-clock text-warning me-1"></i> HVAC &amp; smart lock repair units dispatched
+                </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
-                <div class="text-muted small fw-semibold">Resolved This Week</div>
-                <div class="fs-4 fw-bold text-success mt-1">11 Issues</div>
-                <div class="small text-muted">Average time to repair: 42 mins</div>
+
+        <!-- Resolved This Week -->
+        <div class="col-12 col-md-4">
+            <div class="p-4 rounded-4 h-100" style="background: #111e30; border: 1px solid rgba(46, 229, 157, 0.35); border-left: 4px solid #2ee59d; box-shadow: 0 10px 30px rgba(0,0,0,0.35);">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span style="font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Resolved This Week</span>
+                    <i class="fas fa-check-double text-success"></i>
+                </div>
+                <div style="font-family: 'Cinzel', serif; font-size: 32px; font-weight: 800; color: #2ee59d;">
+                    11 Tickets Closed
+                </div>
+                <div class="small mt-1" style="color: #cbd5e0; font-size: 12px;">
+                    <i class="fas fa-tachometer-alt text-info me-1"></i> Mean time to resolution: 38 minutes
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Incident History Log -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
-        <div class="card-header bg-white border-bottom p-3">
-            <h5 class="fw-bold mb-0">Recent Operational Events</h5>
+    <!-- Filter Pills Bar -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <button type="button" class="filter-pill active" onclick="filterEvents('all', this)">All Operational Events</button>
+        <button type="button" class="filter-pill" onclick="filterEvents('security', this)"><i class="fas fa-shield-alt text-danger me-1"></i> Security Reports</button>
+        <button type="button" class="filter-pill" onclick="filterEvents('maintenance', this)"><i class="fas fa-tools text-warning me-1"></i> Maintenance Orders</button>
+        <button type="button" class="filter-pill" onclick="filterEvents('urgent', this)"><i class="fas fa-exclamation-triangle text-danger me-1"></i> Urgent / Active</button>
+    </div>
+
+    <!-- Consolidated Operational Event Log Card -->
+    <div class="p-4 rounded-4" style="background: #111e30; border: 1px solid rgba(212, 175, 55, 0.22); box-shadow: 0 12px 35px rgba(0,0,0,0.4);">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.15) !important;">
+            <h3 style="font-family: 'Cinzel', serif; font-size: 18px; color: var(--text-bright); margin: 0;">
+                <i class="fas fa-history text-warning me-2"></i> Real-Time Operational Event Stream
+            </h3>
+            <span class="badge bg-secondary rounded-pill px-3 py-1" style="font-size: 11px;">Live Telemetry</span>
         </div>
-        <div class="p-3">
-            <div class="list-group list-group-flush">
-                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="badge bg-warning text-dark me-2">MAINTENANCE</span>
-                        <strong>Room 204:</strong> AC unit leaking water near window
-                        <div class="text-muted small mt-1">Reported by Housekeeping &bull; Assigned to Vikram (HVAC Tech)</div>
+
+        <div class="d-flex flex-column gap-3" id="operationalEventsList">
+            <!-- Event 1: Maintenance in Progress -->
+            <div class="event-item-card p-3 rounded-3" data-category="maintenance" data-status="urgent" style="background: rgba(16, 28, 46, 0.7); border: 1px solid rgba(212, 175, 55, 0.15); transition: transform 0.2s;">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 16px; flex-shrink: 0;">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge rounded-pill" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 10px;">MAINTENANCE</span>
+                                <strong style="color: #fff9e6; font-size: 14px;">Room 204: AC unit condensation line leak</strong>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                Reported by Housekeeping Supervisor &bull; Assigned to Vikram (HVAC Senior Tech) &bull; <i class="fas fa-clock text-warning"></i> 22 mins ago
+                            </div>
+                        </div>
                     </div>
-                    <span class="badge bg-warning text-dark">In Progress</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill px-3 py-1" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px;">In Progress</span>
+                        <button class="btn btn-secondary-glass btn-sm" onclick="alert('Work order WO-204 dispatched to mobile terminal.')" style="font-size: 11px; padding: 4px 12px; border-radius: 999px;">Triage</button>
+                    </div>
                 </div>
-                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="badge bg-primary text-white me-2">SECURITY</span>
-                        <strong>Room 309:</strong> Loud argument reported by neighboring guest
-                        <div class="text-muted small mt-1">Reported by Front Desk &bull; Guard dispatched to mediate</div>
+            </div>
+
+            <!-- Event 2: Security Investigation -->
+            <div class="event-item-card p-3 rounded-3" data-category="security" data-status="urgent" style="background: rgba(16, 28, 46, 0.7); border: 1px solid rgba(212, 175, 55, 0.15); transition: transform 0.2s;">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(59, 130, 246, 0.15); border: 1px solid #3b82f6; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-size: 16px; flex-shrink: 0;">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge rounded-pill" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.4); font-size: 10px;">SECURITY</span>
+                                <strong style="color: #fff9e6; font-size: 14px;">Room 309: Acoustic noise discrepancy flagged by neighbor</strong>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                Reported by Front Desk Concierge &bull; Officer Rajiv on scene &bull; <i class="fas fa-clock text-info"></i> 14 mins ago
+                            </div>
+                        </div>
                     </div>
-                    <span class="badge bg-primary text-white">Investigating</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill px-3 py-1" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); font-size: 11px;">Investigating</span>
+                        <button class="btn btn-secondary-glass btn-sm" onclick="alert('Security log SEC-309 updated with officer dispatch.')" style="font-size: 11px; padding: 4px 12px; border-radius: 999px;">Radio Log</button>
+                    </div>
                 </div>
-                <div class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="badge bg-secondary text-white me-2">MAINTENANCE</span>
-                        <strong>Room 101:</strong> Balcony ambient light replacement
-                        <div class="text-muted small mt-1">Resolution note: Installed new 12W warm LED bulb</div>
+            </div>
+
+            <!-- Event 3: Maintenance Resolved -->
+            <div class="event-item-card p-3 rounded-3" data-category="maintenance" data-status="resolved" style="background: rgba(16, 28, 46, 0.7); border: 1px solid rgba(212, 175, 55, 0.15); transition: transform 0.2s;">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(46, 229, 157, 0.15); border: 1px solid #2ee59d; display: flex; align-items: center; justify-content: center; color: #2ee59d; font-size: 16px; flex-shrink: 0;">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge rounded-pill" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 10px;">MAINTENANCE</span>
+                                <strong style="color: #fff9e6; font-size: 14px;">Room 101: Balcony ambient light fixture replacement</strong>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                Resolved: Installed 12W warm LED &bull; Verified by Housekeeping Inspector &bull; 1 hour ago
+                            </div>
+                        </div>
                     </div>
-                    <span class="badge bg-success">Resolved</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill px-3 py-1" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 11px;">Resolved</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event 4: Server Room Fire Safety Sensor Routine -->
+            <div class="event-item-card p-3 rounded-3" data-category="security" data-status="resolved" style="background: rgba(16, 28, 46, 0.7); border: 1px solid rgba(212, 175, 55, 0.15); transition: transform 0.2s;">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="width: 42px; height: 42px; border-radius: 10px; background: rgba(46, 229, 157, 0.15); border: 1px solid #2ee59d; display: flex; align-items: center; justify-content: center; color: #2ee59d; font-size: 16px; flex-shrink: 0;">
+                            <i class="fas fa-fire-extinguisher"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge rounded-pill" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 10px;">FIRE &amp; SAFETY</span>
+                                <strong style="color: #fff9e6; font-size: 14px;">Basement Data Center: FM-200 Fire Suppression Diagnostics</strong>
+                            </div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">
+                                Automated self-test passed &bull; Pressure at nominal 25 bar &bull; 3 hours ago
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill px-3 py-1" style="background: rgba(46, 229, 157, 0.2); color: #2ee59d; border: 1px solid rgba(46, 229, 157, 0.4); font-size: 11px;">Certified</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function filterEvents(category, btn) {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const items = document.querySelectorAll('#operationalEventsList .event-item-card');
+    items.forEach(card => {
+        if (category === 'all') {
+            card.style.display = 'block';
+        } else if (category === 'urgent') {
+            card.style.display = card.dataset.status === 'urgent' ? 'block' : 'none';
+        } else {
+            card.style.display = card.dataset.category === category ? 'block' : 'none';
+        }
+    });
+}
+</script>
 {% endblock %}

@@ -53,11 +53,13 @@
 }
 
 .skeleton-card {
-    background: var(--glass-bg, rgba(22, 34, 54, 0.7));
-    border: var(--glass-border, 1px solid rgba(212, 175, 55, 0.2));
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 15px;
+    background: var(--card-gradient, linear-gradient(145deg, rgba(23, 37, 59, 0.88) 0%, rgba(14, 23, 38, 0.94) 100%));
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-top: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .skeleton-row {
@@ -65,7 +67,7 @@
     align-items: center;
     gap: 15px;
     padding: 16px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(212, 175, 55, 0.08);
 }
 
 /* 2. Empty State */
@@ -74,34 +76,38 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
+    padding: 56px 24px;
     text-align: center;
-    background: rgba(22, 34, 54, 0.4);
-    border: 1px dashed rgba(212, 175, 55, 0.25);
-    border-radius: 12px;
-    margin: 20px 0;
+    background: rgba(16, 26, 42, 0.6);
+    border: 1.5px dashed rgba(212, 175, 55, 0.3);
+    border-radius: 16px;
+    margin: 24px 0;
+    backdrop-filter: blur(10px);
 }
 
 .ui-empty-icon {
-    font-size: 48px;
-    color: var(--text-secondary, #bda568);
+    font-size: 52px;
+    color: var(--primary-color, #d4af37);
     margin-bottom: 16px;
     opacity: 0.85;
+    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
 }
 
 .ui-empty-title {
     font-family: 'Cinzel', serif;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--text-bright, #fff9e6);
     margin-bottom: 8px;
+    letter-spacing: 0.5px;
 }
 
 .ui-empty-message {
-    color: var(--text-primary, #e8dfc1);
-    font-size: 14px;
-    max-width: 420px;
-    margin-bottom: 20px;
+    color: var(--text-secondary, #bda568);
+    font-size: 14.5px;
+    max-width: 440px;
+    margin-bottom: 22px;
+    line-height: 1.5;
 }
 
 /* 3. Error State */
@@ -110,18 +116,20 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px 24px;
+    padding: 44px 24px;
     text-align: center;
-    background: rgba(199, 0, 57, 0.08);
-    border: 1px solid rgba(199, 0, 57, 0.35);
-    border-radius: 12px;
-    margin: 20px 0;
+    background: rgba(199, 0, 57, 0.1);
+    border: 1.5px solid rgba(199, 0, 57, 0.4);
+    border-radius: 16px;
+    margin: 24px 0;
+    backdrop-filter: blur(10px);
 }
 
 .ui-error-icon {
-    font-size: 44px;
+    font-size: 48px;
     color: var(--danger-color, #c70039);
     margin-bottom: 14px;
+    filter: drop-shadow(0 0 10px rgba(199, 0, 57, 0.4));
 }
 
 .ui-error-message {

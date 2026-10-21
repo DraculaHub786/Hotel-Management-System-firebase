@@ -12,44 +12,40 @@
             <span class="badge bg-success text-white rounded-pill ms-2" style="font-size: 11px; font-family: 'Raleway', sans-serif;">All Systems Operational</span>
         </div>
         <div class="topbar-actions">
-            <a href="/admin/revenue" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/admin/revenue" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-chart-line text-success me-1"></i> Revenue Hub
             </a>
-            <a href="/admin/staff/invite" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/admin/staff/invite" class="btn btn-gold" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-user-plus me-1"></i> Invite Staff
             </a>
         </div>
     </div>
 
     <!-- KPI Cards Row -->
-    <div class="row g-3 mt-1 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
-                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Monthly Revenue</div>
-                <div class="fs-4 fw-bold mt-1" style="color: var(--primary-color);">₹8,12,400</div>
-                <div class="small" style="color: #2ee59d; font-size: 11px;"><i class="fas fa-arrow-up me-1"></i>+14.2% vs last month</div>
-            </div>
+    <div class="stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-green"><i class="fas fa-rupee-sign"></i></div>
+            <div class="stat-label">Monthly Revenue</div>
+            <div class="stat-value">₹8,12,400</div>
+            <div class="stat-trend trend-positive"><i class="fas fa-arrow-up"></i> +14.2% vs last month</div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
-                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Occupancy Rate</div>
-                <div class="fs-4 fw-bold mt-1" style="color: var(--text-bright);">78.4%</div>
-                <div class="small" style="color: var(--text-secondary); font-size: 11px;"><i class="fas fa-bed text-warning me-1"></i>24 of 30 Rooms Booked</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-blue"><i class="fas fa-bed"></i></div>
+            <div class="stat-label">Occupancy Rate</div>
+            <div class="stat-value">78.4%</div>
+            <div class="stat-trend trend-neutral"><i class="fas fa-door-open"></i> 24 of 30 Rooms Booked</div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
-                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Pending Refunds</div>
-                <div class="fs-4 fw-bold mt-1" style="color: var(--warning-color);">2 Requests</div>
-                <div class="small" style="font-size: 11px;"><a href="/admin/refunds" style="color: var(--primary-color); text-decoration: none;">Review Queue &rarr;</a></div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-yellow"><i class="fas fa-undo-alt"></i></div>
+            <div class="stat-label">Pending Refunds</div>
+            <div class="stat-value">2 Requests</div>
+            <div class="stat-trend trend-negative"><a href="/admin/refunds" style="color: inherit; text-decoration: none;"><i class="fas fa-arrow-right"></i> Review Queue</a></div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card p-3" style="background: rgba(22, 34, 54, 0.8); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px;">
-                <div class="small fw-semibold" style="color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Active Staff</div>
-                <div class="fs-4 fw-bold mt-1" style="color: var(--text-bright);">18 On Duty</div>
-                <div class="small" style="color: var(--text-secondary); font-size: 11px;"><i class="fas fa-users text-info me-1"></i>Across 6 departments</div>
-            </div>
+        <div class="stat-card">
+            <div class="stat-icon-wrapper stat-icon-purple"><i class="fas fa-users-cog"></i></div>
+            <div class="stat-label">Active Staff</div>
+            <div class="stat-value">18 On Duty</div>
+            <div class="stat-trend trend-positive"><i class="fas fa-id-badge"></i> Across 6 depts</div>
         </div>
     </div>
 
@@ -60,110 +56,110 @@
     <div class="row g-3 mb-4">
         <!-- Staff Management -->
         <div class="col-12 col-md-4">
-            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
+            <div class="console-card">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3 fs-5" style="background: rgba(212,175,55,0.15); color: var(--primary-color);">
+                    <div class="console-icon-wrapper">
                         <i class="fas fa-user-shield"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Staff & Roles</h5>
-                        <p class="small mb-0" style="color: var(--text-secondary);">Roster, schedules, token invites</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright); font-size: 16px;">Staff & Roles</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary); font-size: 12px;">Roster, schedules, token invites</p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/staff" class="btn btn-secondary btn-sm flex-grow-1">Staff Roster</a>
-                    <a href="/admin/staff/invite" class="btn btn-primary btn-sm">+ Invite</a>
+                <div class="d-flex gap-2 mt-auto pt-2">
+                    <a href="/admin/staff" class="btn btn-secondary-glass btn-sm flex-grow-1" style="font-size: 12px;">Staff Roster</a>
+                    <a href="/admin/staff/invite" class="btn btn-gold btn-sm" style="font-size: 12px; padding: 6px 14px;">+ Invite</a>
                 </div>
             </div>
         </div>
 
         <!-- Room Inventory -->
         <div class="col-12 col-md-4">
-            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
+            <div class="console-card">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3 fs-5" style="background: rgba(0,134,112,0.15); color: #2ee59d;">
+                    <div class="console-icon-wrapper" style="background: rgba(0,134,112,0.15); color: #2ee59d; border-color: rgba(0,134,112,0.3);">
                         <i class="fas fa-door-open"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Room Inventory</h5>
-                        <p class="small mb-0" style="color: var(--text-secondary);">Rates, amenities, capacity</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright); font-size: 16px;">Room Inventory</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary); font-size: 12px;">Rates, amenities, capacity</p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/rooms" class="btn btn-secondary btn-sm flex-grow-1">Rooms Catalog</a>
-                    <a href="/admin/rooms/new" class="btn btn-primary btn-sm">+ Add Room</a>
+                <div class="d-flex gap-2 mt-auto pt-2">
+                    <a href="/admin/rooms" class="btn btn-secondary-glass btn-sm flex-grow-1" style="font-size: 12px;">Rooms Catalog</a>
+                    <a href="/admin/rooms/new" class="btn btn-gold btn-sm" style="font-size: 12px; padding: 6px 14px;">+ Add Room</a>
                 </div>
             </div>
         </div>
 
         <!-- Revenue Dashboard -->
         <div class="col-12 col-md-4">
-            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
+            <div class="console-card">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3 fs-5" style="background: rgba(16,78,139,0.2); color: #4da3ff;">
+                    <div class="console-icon-wrapper" style="background: rgba(16,78,139,0.2); color: #4da3ff; border-color: rgba(16,78,139,0.35);">
                         <i class="fas fa-chart-line"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Revenue Analytics</h5>
-                        <p class="small mb-0" style="color: var(--text-secondary);">KPI breakdown, top menu items</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright); font-size: 16px;">Revenue Analytics</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary); font-size: 12px;">KPI breakdown, top menu items</p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/revenue" class="btn btn-primary btn-sm w-100">Open Analytics</a>
+                <div class="d-flex gap-2 mt-auto pt-2">
+                    <a href="/admin/revenue" class="btn btn-gold btn-sm w-100" style="font-size: 12px;">Open Analytics</a>
                 </div>
             </div>
         </div>
 
         <!-- Bookings Oversight -->
         <div class="col-12 col-md-4">
-            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
+            <div class="console-card">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3 fs-5" style="background: rgba(255,140,0,0.15); color: var(--warning-color);">
+                    <div class="console-icon-wrapper" style="background: rgba(255,140,0,0.15); color: var(--warning-color); border-color: rgba(255,140,0,0.3);">
                         <i class="fas fa-calendar-check"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Bookings Oversight</h5>
-                        <p class="small mb-0" style="color: var(--text-secondary);">Audit check-ins, guest stays</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright); font-size: 16px;">Bookings Oversight</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary); font-size: 12px;">Audit check-ins, guest stays</p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/bookings" class="btn btn-secondary btn-sm w-100">Master Bookings</a>
+                <div class="d-flex gap-2 mt-auto pt-2">
+                    <a href="/admin/bookings" class="btn btn-secondary-glass btn-sm w-100" style="font-size: 12px;">Master Bookings</a>
                 </div>
             </div>
         </div>
 
         <!-- Incident Rollup -->
         <div class="col-12 col-md-4">
-            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
+            <div class="console-card">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3 fs-5" style="background: rgba(199,0,57,0.15); color: #ff6b6b;">
+                    <div class="console-icon-wrapper" style="background: rgba(199,0,57,0.15); color: #ff6b6b; border-color: rgba(199,0,57,0.3);">
                         <i class="fas fa-shield-alt"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Incident Rollup</h5>
-                        <p class="small mb-0" style="color: var(--text-secondary);">Security & maintenance alerts</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright); font-size: 16px;">Incident Rollup</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary); font-size: 12px;">Security & maintenance alerts</p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/incidents" class="btn btn-secondary btn-sm w-100">View Rollup</a>
+                <div class="d-flex gap-2 mt-auto pt-2">
+                    <a href="/admin/incidents" class="btn btn-secondary-glass btn-sm w-100" style="font-size: 12px;">View Rollup</a>
                 </div>
             </div>
         </div>
 
         <!-- Refunds Approval Queue -->
         <div class="col-12 col-md-4">
-            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px;">
+            <div class="console-card">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3 fs-5" style="background: rgba(212,175,55,0.15); color: var(--primary-color);">
+                    <div class="console-icon-wrapper">
                         <i class="fas fa-undo-alt"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright);">Refund Queue</h5>
-                        <p class="small mb-0" style="color: var(--text-secondary);">Dispute review & ledger audit</p>
+                        <h5 class="fw-bold mb-0" style="font-family: 'Cinzel', serif; color: var(--text-bright); font-size: 16px;">Refund Queue</h5>
+                        <p class="small mb-0" style="color: var(--text-secondary); font-size: 12px;">Dispute review & ledger audit</p>
                     </div>
                 </div>
-                <div class="d-flex gap-2 mt-auto">
-                    <a href="/admin/refunds" class="btn btn-primary btn-sm w-100">Review Refunds (2)</a>
+                <div class="d-flex gap-2 mt-auto pt-2">
+                    <a href="/admin/refunds" class="btn btn-gold btn-sm w-100" style="font-size: 12px;">Review Refunds (2)</a>
                 </div>
             </div>
         </div>

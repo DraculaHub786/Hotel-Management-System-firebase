@@ -112,7 +112,11 @@ def create_app(config_class=None):
         if 'user_email' in session:
             from app.auth.routes import get_role_redirect
             return redirect(get_role_redirect(session.get('user_role', 'guest')))
-        return redirect('/login')
+        return render_template('landing.html')
+
+    @app.route('/landing')
+    def landing():
+        return render_template('landing.html')
 
     @app.route('/api/health', methods=['GET'])
     def health():

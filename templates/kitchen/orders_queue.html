@@ -12,13 +12,13 @@
             <span class="badge bg-warning text-dark rounded-pill ms-2" id="kdsTicketCount" style="font-size: 12px; font-family: 'Raleway', sans-serif;">0 Active Tickets</span>
         </div>
         <div class="topbar-actions">
-            <button type="button" class="btn btn-secondary" onclick="fetchKitchenTickets()" style="font-size: 13px; padding: 8px 16px;">
+            <button type="button" class="btn btn-secondary-glass" onclick="fetchKitchenTickets()" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-sync-alt me-1"></i> Refresh
             </button>
-            <a href="/staff/kitchen/menu" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/kitchen/menu" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-toggle-on me-1 text-warning"></i> 86 / Availability
             </a>
-            <a href="/staff/room-service" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+            <a href="/staff/room-service" class="btn btn-gold" style="font-size: 13px; padding: 8px 16px;">
                 <i class="fas fa-concierge-bell me-1"></i> Room Service Dispatch
             </a>
         </div>
@@ -209,12 +209,12 @@ function renderKds() {
 
                 <div class="d-flex gap-2 justify-content-between pt-2 border-top" style="border-color: rgba(255,255,255,0.08) !important;">
                     ${ticket.status === 'received' ? `
-                        <button class="btn btn-sm btn-warning w-100 fw-bold text-dark" onclick="advanceTicket('${tid}', 'preparing')">
+                        <button class="btn btn-secondary-glass w-100 fw-bold" onclick="advanceTicket('${tid}', 'preparing')" style="font-size: 12px; padding: 8px 12px; border-color: #fbbc05; color: #fbbc05;">
                             <i class="fas fa-fire me-1"></i> Start Cooking
                         </button>
                     ` : ''}
                     ${ticket.status === 'preparing' ? `
-                        <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="advanceTicket('${tid}', 'ready')">
+                        <button class="btn btn-gold w-100 fw-bold" onclick="advanceTicket('${tid}', 'ready')" style="font-size: 12px; padding: 8px 12px;">
                             <i class="fas fa-check-double me-1"></i> Cooked & Ready for Waiter
                         </button>
                     ` : ''}

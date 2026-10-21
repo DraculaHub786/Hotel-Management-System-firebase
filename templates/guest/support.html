@@ -9,83 +9,89 @@
             <i class="fas fa-headset me-2"></i> 24/7 Guest Concierge & Support
         </div>
         <div class="topbar-actions">
-            <a href="/dashboard" class="btn btn-sm btn-outline-warning rounded-pill px-3">Dashboard</a>
+            <a href="/dashboard" class="btn btn-secondary-glass" style="font-size: 13px; padding: 8px 16px;"><i class="fas fa-home me-1"></i> Dashboard</a>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: 320px 1fr; gap: 25px;">
+    <div class="row g-4">
         <!-- Left Help Channels -->
-        <div class="card p-3" style="background: rgba(22, 34, 54, 0.9); border: 1px solid rgba(212,175,55,0.25); border-radius: 12px;">
-            <h3 style="font-size: 16px; font-family: 'Cinzel', serif; color: var(--text-bright); margin-bottom: 14px;">Direct Channels</h3>
-            
-            <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
-                <div style="background: rgba(15,26,42,0.6); padding: 12px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.15);">
-                    <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-phone-alt me-1"></i> Front Desk Hotline</div>
-                    <div style="color: var(--text-primary); margin-top: 4px;">Dial 0 from room telephone or call +91 8010572845</div>
-                </div>
+        <div class="col-12 col-lg-4">
+            <div class="card p-4 h-100" style="background: rgba(22, 34, 54, 0.9); border: 1px solid rgba(212,175,55,0.25); border-radius: 14px;">
+                <h3 style="font-size: 16px; font-family: 'Cinzel', serif; color: var(--text-bright); margin-bottom: 16px;">
+                    <i class="fas fa-concierge-bell text-warning me-2"></i>Direct Channels
+                </h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px; font-size: 13px;">
+                    <div style="background: rgba(15,26,42,0.6); padding: 14px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.15);">
+                        <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-phone-alt me-1"></i> Front Desk Hotline</div>
+                        <div style="color: var(--text-secondary); margin-top: 4px; font-size: 12px;">Dial 0 from room telephone or call +91 8010572845</div>
+                    </div>
 
-                <div style="background: rgba(15,26,42,0.6); padding: 12px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.15);">
-                    <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-bell me-1"></i> Room Service Express</div>
-                    <div style="color: var(--text-primary); margin-top: 4px;">Dial 9 for immediate 24/7 culinary delivery</div>
-                </div>
+                    <div style="background: rgba(15,26,42,0.6); padding: 14px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.15);">
+                        <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-bell me-1"></i> Room Service Express</div>
+                        <div style="color: var(--text-secondary); margin-top: 4px; font-size: 12px;">Dial 9 for immediate 24/7 culinary delivery</div>
+                    </div>
 
-                <div style="background: rgba(15,26,42,0.6); padding: 12px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.15);">
-                    <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-ambulance me-1"></i> Medical Assistance</div>
-                    <div style="color: var(--text-primary); margin-top: 4px;">On-call doctor & urgent assistance available 24/7</div>
-                </div>
+                    <div style="background: rgba(15,26,42,0.6); padding: 14px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.15);">
+                        <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-ambulance me-1"></i> Medical Assistance</div>
+                        <div style="color: var(--text-secondary); margin-top: 4px; font-size: 12px;">On-call doctor & urgent assistance available 24/7</div>
+                    </div>
 
-                <div style="background: rgba(15,26,42,0.6); padding: 12px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.15);">
-                    <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-shuttle-van me-1"></i> Airport Transfers</div>
-                    <div style="color: var(--text-primary); margin-top: 4px;">Complimentary airport pick-up (24h advance request)</div>
+                    <div style="background: rgba(15,26,42,0.6); padding: 14px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.15);">
+                        <div style="color: var(--primary-color); font-weight: bold;"><i class="fas fa-shuttle-van me-1"></i> Airport Transfers</div>
+                        <div style="color: var(--text-secondary); margin-top: 4px; font-size: 12px;">Complimentary airport pick-up (24h advance request)</div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Right Live Chat Window -->
-        <div class="card" style="display: flex; flex-direction: column; height: 560px; padding: 0; overflow: hidden; background: rgba(22, 34, 54, 0.9); border: 1px solid rgba(212,175,55,0.25); border-radius: 12px;">
-            <div style="padding: 16px 20px; background: rgba(15,26,42,0.95); border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; align-items: center; justify-content: space-between;">
-                <div class="d-flex align-items-center gap-2">
-                    <div style="width: 10px; height: 10px; border-radius: 50%; background: #008670; box-shadow: 0 0 8px #008670;"></div>
-                    <div>
-                        <strong style="color: var(--text-bright); font-size: 14px; font-family: 'Cinzel', serif;">Nur-e-Haya Luxury AI Concierge</strong>
-                        <div style="font-size: 11px; color: var(--text-secondary);">Online 24/7 • Instant responses for rooms, dining & amenities</div>
+        <div class="col-12 col-lg-8">
+            <div class="card" style="display: flex; flex-direction: column; height: 580px; padding: 0; overflow: hidden; background: rgba(22, 34, 54, 0.9); border: 1px solid rgba(212,175,55,0.25); border-radius: 14px;">
+                <div style="padding: 16px 20px; background: rgba(15,26,42,0.95); border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; align-items: center; justify-content: space-between;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #008670; box-shadow: 0 0 8px #008670;"></div>
+                        <div>
+                            <strong style="color: var(--text-bright); font-size: 14px; font-family: 'Cinzel', serif;">Nur-e-Haya Luxury AI Concierge</strong>
+                            <div style="font-size: 11px; color: var(--text-secondary);">Online 24/7 • Instant responses for rooms, dining & amenities</div>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill bg-warning text-dark px-2 py-1" style="font-size: 10px; font-weight: 700;">AI LIVE</span>
+                </div>
+
+                <!-- Chat message log -->
+                <div id="chatMessages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+                    <div style="align-self: flex-start; max-width: 80%; background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.25); border-radius: 12px; padding: 14px 18px; color: var(--text-primary); font-size: 13px; line-height: 1.6;">
+                        <div class="fw-bold text-warning mb-1" style="font-family: 'Cinzel', serif;"><i class="fas fa-hotel me-1"></i> Welcome to Nur-e-Haya!</div>
+                        Greetings! I am your 24/7 AI Concierge. I can help you check room rates, reserve suites, review check-in/out procedures, explore dining, or arrange guest amenities. How may I serve you today?
                     </div>
                 </div>
-                <span class="badge bg-warning text-dark px-2 py-1 rounded-pill" style="font-size: 10px;">AI LIVE</span>
-            </div>
 
-            <!-- Chat message log -->
-            <div id="chatMessages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
-                <div style="align-self: flex-start; max-width: 80%; background: rgba(15,26,42,0.8); border: 1px solid rgba(212,175,55,0.25); border-radius: 12px; padding: 14px 18px; color: var(--text-primary); font-size: 13px; line-height: 1.6;">
-                    <div class="fw-bold text-warning mb-1" style="font-family: 'Cinzel', serif;"><i class="fas fa-hotel me-1"></i> Welcome to Nur-e-Haya!</div>
-                    Greetings! I am your 24/7 AI Concierge. I can help you check room rates, reserve suites, review check-in/out procedures, explore dining, or arrange guest amenities. How may I serve you today?
+                <!-- Quick Suggestion Chips -->
+                <div class="px-3 py-2 d-flex flex-wrap gap-1 border-top" style="background: rgba(15,26,42,0.7); border-color: rgba(212,175,55,0.15) !important;">
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('What are your room rates?')">Room Rates</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('What are the check-in and check-out times?')">Check-in / Check-out</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('What is your cancellation policy?')">Cancellation Policy</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('Tell me about your dining and room service options.')">Dining & Room Service</button>
+                    <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('Do you offer airport shuttle service?')">Airport Shuttle</button>
                 </div>
-            </div>
 
-            <!-- Quick Suggestion Chips -->
-            <div class="px-3 py-2 d-flex flex-wrap gap-1 border-top" style="background: rgba(15,26,42,0.7); border-color: rgba(212,175,55,0.15) !important;">
-                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('What are your room rates?')">Room Rates</button>
-                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('What are the check-in and check-out times?')">Check-in / Check-out</button>
-                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('What is your cancellation policy?')">Cancellation Policy</button>
-                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('Tell me about your dining and room service options.')">Dining & Room Service</button>
-                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-0 px-2" style="font-size: 11px;" onclick="sendQuickPrompt('Do you offer airport shuttle service?')">Airport Shuttle</button>
+                <!-- Input bar -->
+                <form id="chatForm" style="padding: 12px 16px; background: rgba(15,26,42,0.9); border-top: 1px solid rgba(212,175,55,0.2); display: flex; gap: 10px;">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        class="form-control" 
+                        placeholder="Ask a question or request a service..." 
+                        required 
+                        autocomplete="off"
+                        style="color: #fff9e6 !important; -webkit-text-fill-color: #fff9e6 !important; background: rgba(22, 34, 54, 0.95) !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; padding: 10px 16px; border-radius: 8px;"
+                    >
+                    <button type="submit" class="btn btn-gold" id="btnSendChat" style="padding: 10px 20px; font-size: 13px; border-radius: 8px;">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
             </div>
-
-            <!-- Input bar -->
-            <form id="chatForm" style="padding: 12px 16px; background: rgba(15,26,42,0.9); border-top: 1px solid rgba(212,175,55,0.2); display: flex; gap: 10px;">
-                <input 
-                    type="text" 
-                    id="chatInput" 
-                    class="form-control" 
-                    placeholder="Ask a question or request a service..." 
-                    required 
-                    autocomplete="off"
-                    style="color: #fff9e6 !important; -webkit-text-fill-color: #fff9e6 !important; background: rgba(22, 34, 54, 0.95) !important; border: 1px solid rgba(212, 175, 55, 0.3) !important; padding: 10px 16px; border-radius: 8px;"
-                >
-                <button type="submit" class="btn btn-primary" id="btnSendChat" style="padding: 10px 20px; font-size: 13px; border-radius: 8px;">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </form>
         </div>
     </div>
 </div>
